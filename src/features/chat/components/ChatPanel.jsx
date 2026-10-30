@@ -7,7 +7,7 @@ import { chatService } from '../../../services/chatService';
 import { socialService } from '../../../services/socialService';
 import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
-import { VoiceRecorder } from './VoiceRecorder';
+import { VoiceRecorder, AudioBubble } from './VoiceRecorder';
 
 const timeLabel = (iso) => {
   if (!iso) return '';
@@ -37,6 +37,7 @@ export function ChatPanel({ compact = false }) {
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState('');
+  const [voiceBusy, setVoiceBusy] = useState(false);
   const scrollRef = useRef(null);
 
   const { data: conversations = [], isLoading } = useQuery({
@@ -228,11 +229,12 @@ export function ChatPanel({ compact = false }) {
               }`}
             >
               {m.audioUrl ? (
-                <div className="flex items-center gap-2">
-                  <audio controls preload="none" src={mediaUrl(m.audioUrl)} className="h-8 max-w-[200px]" />
-                  <span className={`text-[10px] tabular-nums ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
-                    {Math.round((m.audioDurationMs ?? 0) / 1000)}s
-                  </span>
+                <div className={m.mine ? 'text-white' : 'text-slate-700'}>
+                  <AudioBubble
+                    src={mediaUrl(m.audioUrl)}
+                    durationMs={m.audioDurationMs}
+                    tone={m.mine ? 'dark' : 'light'}
+                  />
                 </div>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
@@ -245,25 +247,32 @@ export function ChatPanel({ compact = false }) {
         ))}
       </div>
       <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-slate-100 p-1.5">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          maxLength={500}
-          placeholder={`Nhắn cho ${active?.name}...`}
-          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-2.5 py-2 text-base focus:border-water-400 focus:outline-none sm:text-sm"
-        />
-        <VoiceRecorder
-          disabled={!activeId || sendVoice.isPending}
-          onSend={(blob, durationMs) => sendVoice.mutate({ blob, durationMs })}
-        />
-        <button
-          type="submit"
-          disabled={!draft.trim() || send.isPending}
-          className="rounded-xl bg-water-600 p-2 text-white transition hover:bg-water-700 disabled:opacity-50"
-          aria-label="Gửi tin nhắn"
-        >
-          <Send className="size-4" />
-        </button>
+        {!voiceBusy && (
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            maxLength={500}
+            placeholder={`Nhắn cho ${active?.name}...`}
+            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-2.5 py-2 text-base focus:border-water-400 focus:outline-none sm:text-sm"
+          />
+        )}
+        <span className={voiceBusy ? 'flex-1' : ''}>
+          <VoiceRecorder
+            disabled={!activeId || sendVoice.isPending}
+            onBusyChange={setVoiceBusy}
+            onSend={(blob, durationMs) => sendVoice.mutate({ blob, durationMs })}
+          />
+        </span>
+        {!voiceBusy && (
+          <button
+            type="submit"
+            disabled={!draft.trim() || send.isPending}
+            className="rounded-xl bg-water-600 p-2 text-white transition hover:bg-water-700 disabled:opacity-50"
+            aria-label="Gửi tin nhắn"
+          >
+            <Send className="size-4" />
+          </button>
+        )}
       </form>
     </>
   );
