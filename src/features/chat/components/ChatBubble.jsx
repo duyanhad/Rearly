@@ -52,14 +52,14 @@ export function ChatBubble() {
       v.removeEventListener('scroll', update);
     };
   }, [open]);
-  const sheetBox = narrow && vv && !panelBox
-    ? { left: 8, right: 8, top: vv.top + 8, height: vv.height - 16 }
-    : null;
-
   // Kéo cửa sổ chat bằng thanh tiêu đề (giữ nguyên kích thước đang có).
   const panelRef = useRef(null);
   const panelDragRef = useRef(null);
   const [panelBox, setPanelBox] = useState(null); // { left, top, width, height }
+
+  const sheetBox = narrow && vv && !panelBox
+    ? { left: 8, right: 8, top: vv.top + 8, height: vv.height - 16 }
+    : null;
 
   const onPanelDown = useCallback((event) => {
     const rect = panelRef.current?.getBoundingClientRect();
