@@ -472,11 +472,35 @@ function detectLiquidColor(ctx, w, h) {
 let aiModule = null;
 
 /**
+ * Safari/iOS thiếu OffscreenCanvas.convertToBlob() → thư viện AI ném lỗi khi xuất PNG
+ * ("convertToBlob is not a function") rồi rơi về thuật toán dự phòng (ảnh bị xé).
+ * Vá bằng cách vẽ sang canvas thường và dùng toBlob.
+ */
+function polyfillConvertToBlob() {
+  if (typeof OffscreenCanvas === 'undefined') return;
+  if (typeof OffscreenCanvas.prototype.convertToBlob === 'function') return;
+  OffscreenCanvas.prototype.convertToBlob = function convertToBlob(options) {
+    const canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    canvas.getContext('2d').drawImage(this, 0, 0);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob thất bại'))),
+        options?.type ?? 'image/png',
+        options?.quality,
+      );
+    });
+  };
+}
+
+/**
  * Tách nền bằng model AI (ISNet) chạy trong trình duyệt — chuẩn nhất với nền phức tạp.
  * Model tải từ CDN ở lần dùng đầu (được cache lại), lỗi/offline → trả false để dùng
  * thuật toán heuristic.
  */
 async function applyAiMask(url, px, w, h) {
+  polyfillConvertToBlob();
   if (!aiModule) {
     aiModule = await import('@imgly/background-removal');
   }
