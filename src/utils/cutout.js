@@ -1,7 +1,7 @@
 const MAX_SIDE = 1280;
 const PALETTE_TOLERANCE = 95; // tổng chênh lệch RGB so với màu nền mẫu còn coi là "nền"
 const SOFT_TOLERANCE = 30; // dưới ngưỡng này coi là nền hoàn toàn (viền mượt)
-const AI_TIMEOUT_MS = 60_000;
+const AI_TIMEOUT_MS = 150_000;
 
 function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -497,7 +497,8 @@ async function applyAiMask(url, px, w, h) {
   let run;
   try {
     run = remove(input, {
-      model: 'isnet_fp16',
+      // quint8: model nhỏ nhất (~22 MB) — điện thoại tải & chạy WASM nhanh hơn isnet_fp16 nhiều.
+      model: 'isnet_quint8',
       output: { format: 'image/png' },
       progress: () => {},
     });
@@ -726,8 +727,8 @@ function uprightCanvas(canvas) {
  */
 const cache = new Map();
 
-/** Bật lại nếu muốn trình duyệt tự chạy model tách nền (chậm, chỉ dùng khi server không có rembg). */
-const ENABLE_CLIENT_AI = false;
+/** Tách nền chạy trong trình duyệt — cần thiết khi server không có rembg (bản cloud). */
+const ENABLE_CLIENT_AI = true;
 
 /** Tách nền ảnh cốc (có cache theo URL để không xử lý lại mỗi lần render). */
 export function makeCutout(url) {
