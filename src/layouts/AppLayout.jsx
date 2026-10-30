@@ -8,6 +8,7 @@ import { NotificationBell } from '../features/social/components/NotificationBell
 import { BottomNav } from './BottomNav';
 import { InstallHint } from '../components/InstallHint';
 import { ChatBubble } from '../features/chat/components/ChatBubble';
+import { AppBadge } from '../components/AppBadge';
 import { DearlyMark } from '../components/DearlyLogo';
 import { SleepAlarmOverlay } from '../features/settings/components/SleepAlarmOverlay';
 const links = [{
@@ -118,6 +119,7 @@ export function AppLayout() {
 
       <BottomNav />
       <ChatBubble />
+      <AppBadge />
       <InstallHint />
       <SleepAlarmOverlay />
     </div>;
