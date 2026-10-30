@@ -8,17 +8,20 @@ import { AuthProvider } from './context/AuthProvider';
 import { ToastProvider } from './components/Toast';
 import { registerServiceWorker } from './utils/notify';
 import { queryClient } from './queryClient';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 createRoot(document.getElementById('root')).render(<StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>);
 
 // Đăng ký service worker để nhắc uống nước hiện được thông báo hệ thống.

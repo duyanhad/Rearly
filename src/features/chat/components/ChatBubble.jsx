@@ -31,8 +31,13 @@ export function ChatBubble() {
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 639px)');
     const onMq = () => setNarrow(mq.matches);
-    mq.addEventListener('change', onMq);
-    return () => mq.removeEventListener('change', onMq);
+    // Safari iOS cũ chỉ có addListener (addEventListener bị thiếu → crash cả app).
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+    else mq.addListener(onMq);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onMq);
+      else mq.removeListener(onMq);
+    };
   }, []);
   useEffect(() => {
     if (!open) return undefined;
