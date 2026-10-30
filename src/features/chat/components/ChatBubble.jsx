@@ -24,6 +24,33 @@ export function ChatBubble() {
   const dragRef = useRef(null);
   const unread = useChatUnread();
 
+  // iOS không thu nhỏ layout viewport khi mở bàn phím → đo vùng nhìn thấy thật
+  // (visualViewport) để cửa sổ chat luôn vừa khung nhìn, ô nhập nổi trên bàn phím.
+  const [vv, setVv] = useState(null);
+  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 639px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const onMq = () => setNarrow(mq.matches);
+    mq.addEventListener('change', onMq);
+    return () => mq.removeEventListener('change', onMq);
+  }, []);
+  useEffect(() => {
+    if (!open) return undefined;
+    const v = window.visualViewport;
+    if (!v) return undefined;
+    const update = () => setVv({ top: Math.round(v.offsetTop), height: Math.round(v.height) });
+    update();
+    v.addEventListener('resize', update);
+    v.addEventListener('scroll', update);
+    return () => {
+      v.removeEventListener('resize', update);
+      v.removeEventListener('scroll', update);
+    };
+  }, [open]);
+  const sheetBox = narrow && vv && !panelBox
+    ? { left: 8, right: 8, top: vv.top + 8, height: vv.height - 16 }
+    : null;
+
   // Kéo cửa sổ chat bằng thanh tiêu đề (giữ nguyên kích thước đang có).
   const panelRef = useRef(null);
   const panelDragRef = useRef(null);
@@ -115,10 +142,12 @@ export function ChatBubble() {
             style={
               panelBox
                 ? { left: panelBox.left, top: panelBox.top, width: panelBox.width, height: panelBox.height }
-                : undefined
+                : sheetBox
+                  ? { left: sheetBox.left, right: sheetBox.right, top: sheetBox.top, height: sheetBox.height }
+                  : undefined
             }
             className={`fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 ${
-              panelBox
+              panelBox || sheetBox
                 ? ''
                 : 'inset-x-3 bottom-24 h-[70vh] sm:inset-auto sm:bottom-24 sm:right-4 sm:h-[32rem] sm:w-[22rem]'
             }`}
