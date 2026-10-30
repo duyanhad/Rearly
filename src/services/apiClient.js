@@ -31,6 +31,7 @@ export function errorMessage(error) {
   }
   return error instanceof Error ? error.message : 'Có lỗi xảy ra';
 }
-export const mediaUrl = path => path ? `${API_URL}${path}` : null;
+export const mediaUrl = path =>
+  !path ? null : /^https?:\/\//i.test(path) ? path : `${API_URL}${path}`;
 
 export default api;
