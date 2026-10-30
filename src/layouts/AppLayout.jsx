@@ -64,7 +64,7 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2.5">
           <Link to="/" className="flex items-center gap-2 font-bold text-water-700">
             <DearlyMark className="size-7" />
-            <span className="font-brand hidden text-lg tracking-tight sm:inline">Dearly</span>
+            <span className="font-brand text-lg tracking-tight">Dearly</span>
           </Link>
 
           <nav className="hidden flex-1 items-center gap-0.5 md:flex">
