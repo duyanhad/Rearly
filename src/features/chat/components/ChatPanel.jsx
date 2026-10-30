@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, BellRing, MessageCircle, Send, Trash2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { errorMessage } from '../../../services/apiClient';
+import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { chatService } from '../../../services/chatService';
 import { socialService } from '../../../services/socialService';
 import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
+import { VoiceRecorder } from './VoiceRecorder';
 
 const timeLabel = (iso) => {
   if (!iso) return '';
@@ -58,9 +59,32 @@ export function ChatPanel({ compact = false }) {
 
   useEffect(() => {
     if (!activeId) return;
-    const box = scrollRef.current;
-    if (box) box.scrollTop = box.scrollHeight;
+    // Cuộn xuống tin mới nhất sau khi bố cục đã xong (iOS hay đổi chiều cao khi bàn phím mở).
+    const toBottom = () => {
+      const box = scrollRef.current;
+      if (box) box.scrollTop = box.scrollHeight;
+    };
+    toBottom();
+    const raf = requestAnimationFrame(toBottom);
+    const timer = window.setTimeout(toBottom, 120);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
   }, [activeId, messages.length]);
+
+  // Bàn phím mở/đóng làm khung chat đổi chiều cao → cuộn lại xuống đáy.
+  useEffect(() => {
+    if (!activeId) return undefined;
+    const v = window.visualViewport;
+    if (!v) return undefined;
+    const onResize = () => {
+      const box = scrollRef.current;
+      if (box) box.scrollTop = box.scrollHeight;
+    };
+    v.addEventListener('resize', onResize);
+    return () => v.removeEventListener('resize', onResize);
+  }, [activeId]);
 
   useEffect(() => {
     if (!activeId) return;
@@ -81,6 +105,15 @@ export function ChatPanel({ compact = false }) {
       void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
     },
     onError: (err) => toast.show('Không gửi được', errorMessage(err)),
+  });
+
+  const sendVoice = useMutation({
+    mutationFn: async ({ blob, durationMs }) => chatService.sendVoice(activeId, blob, durationMs),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['chat-thread', activeId] });
+      void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    },
+    onError: (err) => toast.show('Không gửi được ghi âm', errorMessage(err)),
   });
 
   const submit = (event) => {
@@ -194,7 +227,16 @@ export function ChatPanel({ compact = false }) {
                 m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
               }`}
             >
-              <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              {m.audioUrl ? (
+                <div className="flex items-center gap-2">
+                  <audio controls preload="none" src={mediaUrl(m.audioUrl)} className="h-8 max-w-[200px]" />
+                  <span className={`text-[10px] tabular-nums ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
+                    {Math.round((m.audioDurationMs ?? 0) / 1000)}s
+                  </span>
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              )}
               <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
                 {timeLabel(m.createdAt)}
               </p>
@@ -209,6 +251,10 @@ export function ChatPanel({ compact = false }) {
           maxLength={500}
           placeholder={`Nhắn cho ${active?.name}...`}
           className="min-w-0 flex-1 rounded-xl border border-slate-200 px-2.5 py-2 text-base focus:border-water-400 focus:outline-none sm:text-sm"
+        />
+        <VoiceRecorder
+          disabled={!activeId || sendVoice.isPending}
+          onSend={(blob, durationMs) => sendVoice.mutate({ blob, durationMs })}
         />
         <button
           type="submit"
