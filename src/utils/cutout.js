@@ -800,7 +800,12 @@ async function computeCutout(url) {
 
   // ---- 1) Model AI tách nền: MẶC ĐỊNH TẮT vì rất chậm (tải ~vài chục MB + chạy WASM).
   // Server đã tách nền sẵn (rembg) nên client chỉ cần thuật toán tại chỗ cho ảnh cũ.
-  const usedAi = ENABLE_CLIENT_AI ? await applyAiMask(url, px, w, h).catch(() => false) : false;
+  const usedAi = ENABLE_CLIENT_AI
+    ? await applyAiMask(url, px, w, h).catch((error) => {
+        console.warn('[cutout] AI tách nền lỗi, dùng thuật toán dự phòng:', error);
+        return false;
+      })
+    : false;
 
   if (usedAi) {
     // Model đã cho alpha: chỉ vá lỗ nhỏ bên trong cốc và bỏ đảo rác rời rạc.
