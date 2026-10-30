@@ -22,7 +22,7 @@ const FEATURES = [
   {
     icon: CupSoda,
     title: 'Nhắc uống nước',
-    text: 'Dòng quen uống nước ngọt, giúp em luôn khỏe mạnh và tươi tắn.',
+    text: 'Đừng quên uống nước, giúp em luôn khỏe mạnh và tươi tắn.',
   },
   {
     icon: Utensils,
@@ -149,9 +149,6 @@ export function LandingPage() {
                 <ChevronRight className="size-4 opacity-60 transition group-hover:translate-x-0.5" />
               </button>
             </div>
-            <p className="mt-2 text-center text-[11px] text-[#a08c86] sm:text-left">
-              Miễn phí · Không quảng cáo · Android &amp; iPhone
-            </p>
 
             {/* Danh sách tính năng */}
             <ul className="mt-6 space-y-2.5">
