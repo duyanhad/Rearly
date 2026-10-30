@@ -127,8 +127,8 @@ export function LandingPage() {
             </h1>
 
             <p className="mt-4 max-w-md text-[13px] leading-relaxed text-[#6b5a55]">
-              Dearly ở đây để nhắc bạn uống nước, ăn đủ bữa, uống thuốc, học vài trang sớm, ngủ một giấc
-              trọn vẹn — và thương bản thân mình nhiều hơn một chút.
+              Dearly ở đây để nhắc bạn uống nước, ăn đủ bữa, uống thuốc đúng giờ, ngủ một giấc
+              trọn vẹn — và thương yêu bản thân mình nhiều hơn một chút.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -195,8 +195,8 @@ export function LandingPage() {
           </svg>
 
           <p className="relative text-[15px] font-bold">
-            <Heart className="mr-1 inline size-4 -translate-y-0.5 fill-white text-white" /> Hôm nay bạn thương
-            mình chưa?
+            <Heart className="mr-1 inline size-4 -translate-y-0.5 fill-white text-white" /> Hôm nay bạn thế
+            nào ạ?
           </p>
           <p className="relative mt-1 text-[11px] text-white/80">
             Bắt đầu bằng một ý ngọt. Dearly sẽ nhắc bạn, phía còn lại, là yêu thương.

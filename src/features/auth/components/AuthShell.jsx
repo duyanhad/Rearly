@@ -123,11 +123,6 @@ export function AuthShell({
               để sống khoẻ mỗi ngày.
             </span>
           </h1>
-          <p className="mt-4 max-w-sm text-slate-600">
-            Nước, thuốc, bữa ăn và giấc ngủ — mỗi nhu cầu một kỷ nguyên linh vật, một loại điểm và một chuỗi ngày
-            riêng. Chỉ cần một lời nhắc đúng lúc.
-          </p>
-
           <ul className="mt-6 grid max-w-sm grid-cols-2 gap-2">
             {areas.map(({
             icon: Icon,
