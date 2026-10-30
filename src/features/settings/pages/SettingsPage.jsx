@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Camera, CupSoda, Trash2, Target, BellRing } from 'lucide-react';
-import { errorMessage, mediaUrl } from '../../../services/apiClient';
+import { errorMessage, mediaUrl, api } from '../../../services/apiClient';
 import { userService } from '../../../services/userService';
 import { cupService } from '../../../services/cupService';
 import { useAuth } from '../../../context/AuthProvider';
@@ -9,6 +9,7 @@ import { WaterLoader } from '../../../components/WaterLoader';
 import { askNotificationPermission, notificationState, subscribePush } from '../../../utils/notify';
 import { isNativeApp, scheduleNativeReminders } from '../../../utils/nativeReminders';
 import { SettingsTabs } from '../components/SettingsTabs';
+import { useToast } from '../../../components/Toast';
 /** Tiêu đề mục gọn: icon trong ô màu + tên, không kèm đoạn mô tả dài. */
 function SectionHeader({ icon: Icon, title }) {
   return (
@@ -27,6 +28,7 @@ export function SettingsPage() {
     refreshProfile
   } = useAuth();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [morning, setMorning] = useState(user?.morningTargetMl ?? 700);
   const [afternoon, setAfternoon] = useState(user?.afternoonTargetMl ?? 800);
   const [evening, setEvening] = useState(user?.eveningTargetMl ?? 500);
@@ -181,7 +183,20 @@ export function SettingsPage() {
   const askPermission = async () => {
     const result = await askNotificationPermission();
     setPermission(result);
-    if (result === 'granted') setPushReady(await subscribePush());
+    if (result === 'granted') {
+      setPushReady(await subscribePush());
+      // Bật quyền thông báo = muốn được nhắc → bật luôn công tắc nhắc, nếu không sẽ chẳng có thông báo nào.
+      if (!reminder.enabled) saveReminder.mutate({ reminderEnabled: true });
+    }
+  };
+  // Gửi thử một thông báo để kiểm chứng máy đã nhận được (kể cả khi app đóng).
+  const sendTestPush = async () => {
+    try {
+      await api.post('/api/push/test');
+      toast.show('Đã gửi thử', 'Khóa màn hình xem có thông báo hiện lên không nhé.');
+    } catch (err) {
+      toast.show('Không gửi được', errorMessage(err));
+    }
   };
   // Người dùng đã cho phép từ trước → đăng ký Web Push luôn (để nhắc cả khi tắt app).
   useEffect(() => {
@@ -378,6 +393,11 @@ export function SettingsPage() {
               {permission !== 'granted' && permission !== 'unsupported' && (
                 <button type="button" onClick={askPermission} className="rounded-lg bg-water-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-water-700">
                   Bật thông báo
+                </button>
+              )}
+              {permission === 'granted' && (
+                <button type="button" onClick={sendTestPush} className="rounded-lg border border-water-300 px-3 py-1.5 text-xs font-semibold text-water-700 transition hover:bg-water-50">
+                  Gửi thử
                 </button>
               )}
             </div>

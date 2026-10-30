@@ -1,6 +1,6 @@
 // Service worker tối giản: hiện thông báo hệ thống (nhắc uống nước) và mở lại app khi bấm vào.
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+// activate: xoá cache phiên bản cũ (xem phần bộ nhớ đệm ở cuối file).
 
 // Rung theo tính cách (Android/desktop có hỗ trợ; iOS bỏ qua).
 const VIBRATE = {
@@ -63,10 +63,22 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ---- Bộ nhớ đệm để mở app khi mất mạng (chỉ bật ở bản build production) ----
-const CACHE = 'drinkwater-shell-v1';
-const SHELL = ['/', '/icon.svg', '/icon-192.png', '/manifest.webmanifest'];
+// ---- Bộ nhớ đệm: chỉ cache tài nguyên có hash (an toàn), KHÔNG cache index.html ----
+// Lý do: index.html cũ trỏ tới /assets/index-<hash cũ>.js đã bị xoá sau mỗi lần deploy
+// → phục vụ index cũ = trang trắng. Vì vậy điều hướng luôn lấy từ mạng.
+const CACHE = 'drinkwater-shell-v2';
+const SHELL = ['/icon.svg', '/icon-192.png', '/manifest.webmanifest'];
 const isDev = new URL(self.location.href).searchParams.get('mode') !== 'prod';
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(names.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+      await self.clients.claim();
+    })(),
+  );
+});
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
@@ -76,24 +88,28 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/hubs') || url.pathname.startsWith('/uploads')) return;
 
-  // Điều hướng: ưu tiên mạng, mất mạng thì mở bản đã lưu.
+  // Điều hướng: luôn lấy bản mới trên mạng (không dùng index cũ trong cache).
   if (request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(request);
-          const cache = await caches.open(CACHE);
-          void cache.put('/', fresh.clone());
-          return fresh;
+          return await fetch(request, { cache: 'no-store' });
         } catch {
-          return (await caches.match('/')) ?? new Response('Offline', { status: 503 });
+          return new Response(
+            '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+              '<body style="font-family:system-ui;padding:2rem;text-align:center;color:#334155">' +
+              '<p style="font-size:1.1rem;font-weight:600">Không có kết nối mạng</p>' +
+              '<p style="font-size:.9rem">Bật mạng rồi mở lại Dearly nhé.</p>' +
+              '<button onclick="location.reload()" style="margin-top:1rem;padding:.6rem 1.2rem;border:0;border-radius:.8rem;background:#7d2836;color:#fff;font-weight:600">Thử lại</button>',
+            { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+          );
         }
       })(),
     );
     return;
   }
 
-  // Tài nguyên tĩnh của bản build: lấy từ cache trước.
+  // Tài nguyên tĩnh của bản build (tên có hash): lấy từ cache trước.
   if (url.pathname.startsWith('/assets/') || SHELL.includes(url.pathname)) {
     event.respondWith(
       (async () => {
