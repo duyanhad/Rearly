@@ -472,26 +472,34 @@ function detectLiquidColor(ctx, w, h) {
 let aiModule = null;
 
 /**
- * Safari/iOS thiếu OffscreenCanvas.convertToBlob() → thư viện AI ném lỗi khi xuất PNG
- * ("convertToBlob is not a function") rồi rơi về thuật toán dự phòng (ảnh bị xé).
- * Vá bằng cách vẽ sang canvas thường và dùng toBlob.
+ * Safari/iOS thiếu `convertToBlob()` (có trên OffscreenCanvas, KHÔNG có trên <canvas> thường).
+ * Thư viện AI tạo canvas rồi gọi convertToBlob → lỗi "convertToBlob is not a function" → rơi về
+ * thuật toán dự phòng (ảnh bị xé). Vá cho cả hai loại canvas bằng toBlob có sẵn.
  */
 function polyfillConvertToBlob() {
-  if (typeof OffscreenCanvas === 'undefined') return;
-  if (typeof OffscreenCanvas.prototype.convertToBlob === 'function') return;
-  OffscreenCanvas.prototype.convertToBlob = function convertToBlob(options) {
-    const canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
-    canvas.getContext('2d').drawImage(this, 0, 0);
+  const fromToBlob = function convertToBlob(options) {
     return new Promise((resolve, reject) => {
-      canvas.toBlob(
+      this.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error('toBlob thất bại'))),
         options?.type ?? 'image/png',
         options?.quality,
       );
     });
   };
+
+  if (typeof HTMLCanvasElement !== 'undefined' && typeof HTMLCanvasElement.prototype.convertToBlob !== 'function') {
+    HTMLCanvasElement.prototype.convertToBlob = fromToBlob;
+  }
+
+  if (typeof OffscreenCanvas !== 'undefined' && typeof OffscreenCanvas.prototype.convertToBlob !== 'function') {
+    OffscreenCanvas.prototype.convertToBlob = function convertToBlobOffscreen(options) {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      canvas.getContext('2d').drawImage(this, 0, 0);
+      return fromToBlob.call(canvas, options);
+    };
+  }
 }
 
 /**
