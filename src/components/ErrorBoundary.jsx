@@ -17,6 +17,7 @@ export class ErrorBoundary extends Component {
 
   render() {
     if (!this.state.error) return this.props.children;
+    const detail = String(this.state.error?.message ?? this.state.error ?? '');
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#fdf7f2] p-6 text-center">
         <p className="text-lg font-bold text-[#7d2836]">Có chút trục trặc</p>
@@ -30,6 +31,11 @@ export class ErrorBoundary extends Component {
         >
           Tải lại
         </button>
+        {detail && (
+          <p className="mt-2 max-w-xs select-text break-words rounded-lg bg-white/70 px-3 py-2 text-[10px] leading-snug text-slate-500 ring-1 ring-slate-200">
+            {detail}
+          </p>
+        )}
       </div>
     );
   }

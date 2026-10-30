@@ -25,11 +25,18 @@ export function AppBadge() {
     items.filter((n) => !n.isRead).length;
 
   useEffect(() => {
-    const badge = navigator.setAppBadge?.bind(navigator);
-    const clear = navigator.clearAppBadge?.bind(navigator);
-    if (!badge) return;
-    if (total > 0) void badge(total).catch(() => undefined);
-    else if (clear) void clear().catch(() => undefined);
+    // Một số bản WebKit trả undefined thay vì Promise → phải bọc, nếu không sẽ crash cả app.
+    try {
+      if (total > 0) {
+        const result = navigator.setAppBadge?.(total);
+        if (result && typeof result.catch === 'function') result.catch(() => undefined);
+      } else {
+        const result = navigator.clearAppBadge?.();
+        if (result && typeof result.catch === 'function') result.catch(() => undefined);
+      }
+    } catch {
+      // trình duyệt không hỗ trợ → bỏ qua
+    }
   }, [total]);
 
   return null;
