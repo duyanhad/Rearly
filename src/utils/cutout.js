@@ -3,6 +3,9 @@ const PALETTE_TOLERANCE = 95; // tổng chênh lệch RGB so với màu nền m�
 const SOFT_TOLERANCE = 30; // dưới ngưỡng này coi là nền hoàn toàn (viền mượt)
 const AI_TIMEOUT_MS = 150_000;
 
+/** Cạnh dài tối đa đưa vào model AI — lớn hơn sẽ ngốn RAM và làm Safari iOS crash tab. */
+const AI_MAX_SIDE = 640;
+
 function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -515,8 +518,11 @@ async function applyAiMask(url, px, w, h) {
   const remove = aiModule.removeBackground ?? aiModule.default;
   if (typeof remove !== 'function') return false;
 
-  // Model cần nguồn ảnh tuyệt đối: tải ảnh về blob URL trước (URL tương đối /uploads/...
-  // sẽ bị fetch nhầm thành trang HTML).
+  // Ảnh gốc có thể 3000×4000 → model ONNX hết RAM (tab Safari bị crash).
+  // Chạy AI trên bản thu nhỏ rồi phóng mask về kích thước đích.
+  const aiSide = Math.max(w, h);
+  const aiScale = aiSide > AI_MAX_SIDE ? AI_MAX_SIDE / aiSide : 1;
+
   let input = url;
   let inputBlob = null;
   if (!/^(blob:|data:)/.test(url)) {
@@ -524,6 +530,20 @@ async function applyAiMask(url, px, w, h) {
     if (!res.ok) return false;
     inputBlob = await res.blob();
     input = URL.createObjectURL(inputBlob);
+  }
+
+  let smallUrl = null;
+  if (aiScale < 1) {
+    try {
+      const small = document.createElement('canvas');
+      small.width = Math.max(1, Math.round(w * aiScale));
+      small.height = Math.max(1, Math.round(h * aiScale));
+      small.getContext('2d').drawImage(await loadImage(input), 0, 0, small.width, small.height);
+      smallUrl = URL.createObjectURL(await new Promise((resolve) => small.toBlob(resolve, 'image/png')));
+      input = smallUrl;
+    } catch {
+      // không thu nhỏ được thì chạy ảnh gốc
+    }
   }
 
   let run;
@@ -535,7 +555,9 @@ async function applyAiMask(url, px, w, h) {
       progress: () => {},
     });
   } finally {
-    if (inputBlob) setTimeout(() => URL.revokeObjectURL(input), 30_000);
+    if (inputBlob) setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    if (smallUrl) setTimeout(() => URL.revokeObjectURL(smallUrl), 60_000);
+    if (!/^(blob:|data:)/.test(url)) setTimeout(() => URL.revokeObjectURL(input), 60_000);
   }
 
   const blob = await Promise.race([
