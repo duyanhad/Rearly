@@ -1,0 +1,14 @@
+import api from './apiClient';
+
+/** Giấc ngủ: gửi phiếu (kèm ảnh), đọc thống kê, partner duyệt. */
+export const sleepService = {
+  summary: () => api.get('/api/sleep'),
+  month: ({ year, month }) => api.get('/api/sleep/month', { params: { year, month } }),
+  start: (form) => api.post('/api/sleep/start', form),
+  // FormData: bedTime, wakeTime, note, date?, photo?
+  submit: (form) => api.post('/api/sleep', form),
+  inbox: () => api.get('/api/sleep/inbox'),
+  review: (id, { approve, reason }) => api.post(`/api/sleep/${id}/review`, { approve, reason }),
+};
+
+export default sleepService;
