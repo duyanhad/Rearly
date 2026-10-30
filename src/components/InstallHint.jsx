@@ -46,7 +46,7 @@ export function InstallHint() {
   };
 
   return (
-    <div className="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-2xl border border-water-100 bg-white/95 p-3 shadow-lg backdrop-blur md:hidden">
+    <div className="fixed inset-x-2 bottom-[calc(10rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md rounded-2xl border border-water-100 bg-white/95 p-3 shadow-lg backdrop-blur md:hidden">
       <div className="flex items-start gap-2.5">
         <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-water-50 text-water-700">
           <Download className="size-4" />
