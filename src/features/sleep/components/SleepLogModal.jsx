@@ -11,7 +11,7 @@ const toHours = (m) => `${Math.floor((m || 0) / 60)}h${String((m || 0) % 60).pad
  * `bedEditable` = ghi tay một đêm đã xong (được sửa giờ đi ngủ và có thêm ảnh minh chứng đi ngủ);
  * khi đã bấm "Bắt đầu giấc ngủ" thì giờ đi ngủ khoá theo phiếu đang ngủ.
  */
-export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = true, defaultWake = '07:00' }) {
+export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = true, defaultWake = '07:00', running = null }) {
   const qc = useQueryClient();
   const fileRef = useRef(null);
   const [bed, setBed] = useState(bedProp);
@@ -29,7 +29,12 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
     [preview],
   );
 
+  // Đang ngủ: số giờ tính từ LÚC BẤM BẮT ĐẦU (server giữ), không phải giờ hẹn đi ngủ.
   const minutes = (() => {
+    if (running?.startedAtUtc) {
+      const elapsed = Math.round((Date.now() - new Date(running.startedAtUtc).getTime()) / 60000);
+      return Math.max(1, Math.min(1080, elapsed));
+    }
     const [bh, bm] = bed.split(':').map(Number);
     const [wh, wm] = wake.split(':').map(Number);
     let diff = wh * 60 + wm - (bh * 60 + bm);
@@ -49,6 +54,12 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
   const submit = useMutation({
     mutationFn: () => {
       const form = new FormData();
+      // Đang ngủ: chốt bằng endpoint stop (server tự tính số phút từ mốc bắt đầu).
+      if (running?.id) {
+        if (note.trim()) form.append('note', note.trim());
+        if (photo) form.append('photo', photo);
+        return sleepService.stop(running.id, form);
+      }
       if (bedEditable) form.append('bedTime', bed);
       form.append('wakeTime', wake);
       if (note.trim()) form.append('note', note.trim());
@@ -84,31 +95,46 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <label>
-            <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              <Moon className="size-3.5" /> Đi ngủ
-            </span>
-            <input
-              type="time"
-              value={bed}
-              onChange={(e) => setBed(e.target.value)}
-              readOnly={!bedEditable}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none read-only:text-slate-500"
-            />
-          </label>
-          <label>
-            <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              <Sunrise className="size-3.5" /> Thức dậy
-            </span>
-            <input
-              type="time"
-              value={wake}
-              onChange={(e) => setWake(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-            />
-          </label>
-        </div>
+        {running?.id ? (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Bắt đầu</span>
+              <span className="block text-base font-bold tabular-nums text-slate-800">{bed}</span>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Kết thúc</span>
+              <span className="block text-base font-bold tabular-nums text-slate-800">
+                {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <label>
+              <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <Moon className="size-3.5" /> Đi ngủ
+              </span>
+              <input
+                type="time"
+                value={bed}
+                onChange={(e) => setBed(e.target.value)}
+                readOnly={!bedEditable}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none read-only:text-slate-500"
+              />
+            </label>
+            <label>
+              <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <Sunrise className="size-3.5" /> Thức dậy
+              </span>
+              <input
+                type="time"
+                value={wake}
+                onChange={(e) => setWake(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
+              />
+            </label>
+          </div>
+        )}
 
         <div className="mt-2 flex items-baseline justify-between rounded-xl bg-water-50 px-3 py-2">
           <span className="text-xs font-medium text-water-700">Số giờ đạt được</span>

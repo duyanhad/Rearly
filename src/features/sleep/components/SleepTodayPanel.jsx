@@ -309,6 +309,7 @@ export function SleepTodayPanel() {
           bed={mode === 'end' ? last?.bedTime ?? bedTime : bedTime}
           bedEditable={mode !== 'end'}
           defaultWake={mode === 'end' ? nowHhmm() : wakeTime}
+          running={mode === 'end' ? last : null}
           onClose={() => setLogOpen(false)}
         />
       )}
