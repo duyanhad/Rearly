@@ -18,6 +18,18 @@ export function FriendsPage() {
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
   const nav = useNavigate();
+
+  // Xoá bạn bè: bỏ follow cả hai chiều (backend xoá luôn chiều kia).
+  const unfriend = useMutation({
+    mutationFn: async (id) => socialService.unfollow(id),
+    onSuccess: async () => {
+      toast.show('Đã xoá bạn bè', 'Cả hai không còn trong danh sách bạn bè.');
+      for (const key of ['friends', 'feed', 'partner-clients', 'followers', 'following']) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
+    },
+    onError: (err) => toast.show('Không xoá được', errorMessage(err)),
+  });
   const toast = useToast();
   const { user, refreshProfile } = useAuth();
   const {
@@ -139,17 +151,12 @@ export function FriendsPage() {
           </ul>}
       </section>
 
-      <section className="rounded-2xl bg-white p-4 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-slate-700">
-            Lời mời kết bạn{requests.length > 0 ? ` (${requests.length})` : ''}
+      {requests.length > 0 && (
+      <section className="rounded-2xl bg-white p-3 shadow-sm">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">
+            Lời mời kết bạn ({requests.length})
           </h2>
-          <p className="mb-3 text-xs text-slate-500">
-            Chấp nhận để hai bạn thấy tiến trình uống nước của nhau.
-          </p>
-          {requests.length === 0 ? (
-            <p className="py-2 text-sm text-slate-500">Chưa có lời mời nào.</p>
-          ) : (
-            <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100">
               {requests.map(r => <li key={r.id} className="flex items-center gap-3 py-2.5">
                   <Avatar url={r.avatarUrl} name={r.fullName} size="md" />
                   <div className="min-w-0 flex-1">
@@ -170,23 +177,22 @@ export function FriendsPage() {
                   </button>
                 </li>)}
             </ul>
-          )}
         </section>
+      )}
 
       <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
           <h2 className="text-sm font-semibold text-slate-700">Danh sách bạn bè</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Bấm biểu tượng khiên để chọn người duyệt ảnh cốc nước. Mỗi tài khoản chỉ nhờ <strong>1 người</strong>;
-            một người có thể làm partner cho nhiều người.
-          </p>
+          <span className="text-[11px] text-slate-400" title="Bấm khiên để chọn người duyệt ảnh cốc nước (mỗi tài khoản chỉ nhờ 1 người)">
+            Khiên = chọn partner duyệt ảnh
+          </span>
         </div>
 
         {friends.length === 0 ? <p className="px-4 py-6 text-sm text-slate-500">
             Chưa có ai. Tìm bạn ở trên để gửi lời mời kết bạn.
           </p> : <ul className="divide-y divide-slate-100">
-            {friends.map(f => <li key={f.id} className="px-4 py-3">
-                <div className="flex items-center gap-3">
+            {friends.map(f => <li key={f.id} className="px-3 py-2">
+                <div className="flex items-center gap-2.5">
                   <button
                     onClick={() => nav(`/friends/${f.id}`)}
                     className="shrink-0 rounded-full transition hover:scale-105"
@@ -205,24 +211,37 @@ export function FriendsPage() {
                       {f.theirNickname && ` · họ gọi bạn là “${f.theirNickname}”`}
                     </p>
                   </div>
-                  <button
-                    onClick={() => partner.mutate(f.isMyPartner ? null : f.id)}
-                    disabled={partner.isPending}
-                    title={f.isMyPartner ? 'Bỏ chọn partner' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
-                    className={`rounded-lg border p-2 disabled:opacity-50 ${f.isMyPartner ? 'border-water-600 bg-water-600 text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                    aria-label={`Chọn ${f.fullName} làm partner`}
-                  >
-                    <ShieldCheck className="size-4" />
-                  </button>
-                  <button onClick={() => nudge.mutate(f.id)} disabled={nudge.isPending} className="rounded-lg border border-water-200 p-2 text-water-700 hover:bg-water-50 disabled:opacity-50" aria-label={`Nhắc ${f.fullName} uống nước`}>
-                    <BellRing className="size-4" />
-                  </button>
-                  <button onClick={() => {
-              setEditing(editing === f.id ? null : f.id);
-              setDraft(f.nickname ?? '');
-            }} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`Đặt biệt hiệu cho ${f.fullName}`}>
-                    <Pencil className="size-4" />
-                  </button>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => partner.mutate(f.isMyPartner ? null : f.id)}
+                      disabled={partner.isPending}
+                      title={f.isMyPartner ? 'Bỏ chọn partner' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
+                      className={`rounded-lg p-1.5 disabled:opacity-50 ${f.isMyPartner ? 'bg-water-600 text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
+                      aria-label={`Chọn ${f.fullName} làm partner`}
+                    >
+                      <ShieldCheck className="size-3.5" />
+                    </button>
+                    <button onClick={() => nudge.mutate(f.id)} disabled={nudge.isPending} className="rounded-lg p-1.5 text-water-600 hover:bg-water-50 disabled:opacity-50" aria-label={`Nhắc ${f.fullName} uống nước`} title="Nhắc uống nước">
+                      <BellRing className="size-3.5" />
+                    </button>
+                    <button onClick={() => {
+                setEditing(editing === f.id ? null : f.id);
+                setDraft(f.nickname ?? '');
+              }} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600" aria-label={`Đặt biệt hiệu cho ${f.fullName}`} title="Biệt hiệu">
+                      <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Xoá ${f.nickname || f.fullName} khỏi danh sách bạn bè?`)) unfriend.mutate(f.id);
+                      }}
+                      disabled={unfriend.isPending}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                      aria-label={`Xoá ${f.fullName} khỏi bạn bè`}
+                      title="Xoá bạn bè"
+                    >
+                      <UserMinus className="size-3.5" />
+                    </button>
+                  </span>
                 </div>
 
                 {editing === f.id && <form onSubmit={e => {
@@ -231,7 +250,7 @@ export function FriendsPage() {
               id: f.id,
               value: draft
             });
-          }} className="mt-2 flex gap-2 pl-12">
+          }} className="mt-1.5 flex gap-2 pl-11">
                     <input value={draft} maxLength={50} autoFocus onChange={e => setDraft(e.target.value)} placeholder="Biệt hiệu (để trống để xoá)" className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm" />
                     <button disabled={nickname.isPending} className="rounded-lg bg-water-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
                       Lưu

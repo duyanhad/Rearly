@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, BellRing, ImageIcon, MessageCircle, Pencil, Search, Send, Smile, Trash2, Undo2, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { chatService } from '../../../services/chatService';
 import { socialService } from '../../../services/socialService';
@@ -256,6 +256,7 @@ export function useChatUnread() {
 export function ChatPanel({ compact = false }) {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const nav = useNavigate();
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState('');
   const [voiceBusy, setVoiceBusy] = useState(false);
@@ -497,8 +498,21 @@ export function ChatPanel({ compact = false }) {
         >
           <ArrowLeft className="size-4" />
         </button>
-        <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{active?.name}</span>
+        <button
+          onClick={() => active && nav(`/friends/${active.userId}`)}
+          className="shrink-0 rounded-full transition hover:scale-105"
+          aria-label={`Xem trang cá nhân của ${active?.name ?? ''}`}
+          title="Xem trang cá nhân"
+        >
+          <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
+        </button>
+        <button
+          onClick={() => active && nav(`/friends/${active.userId}`)}
+          className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-slate-800 hover:text-water-700"
+          title="Xem trang cá nhân"
+        >
+          {active?.name}
+        </button>
         <button
           onClick={() => {
             setSearchOpen((v) => !v);

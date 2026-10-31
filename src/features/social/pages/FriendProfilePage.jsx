@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router-dom';
-import { BellRing, ChevronLeft, Droplets, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { BellRing, ChevronLeft, Droplets, MessageCircle, ShieldCheck, UserMinus } from 'lucide-react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { Avatar } from '../../../components/Avatar';
@@ -24,6 +24,16 @@ export function FriendProfilePage() {
   const { data: feed = [] } = useQuery({
     queryKey: ['feed'],
     queryFn: async () => (await socialService.getFeed()).data,
+  });
+
+  const nav = useNavigate();
+  const unfriend = useMutation({
+    mutationFn: async (id) => socialService.unfollow(id),
+    onSuccess: () => {
+      toast.show('Đã xoá bạn bè', 'Người này không còn trong danh sách bạn bè.');
+      nav('/friends');
+    },
+    onError: (err) => toast.show('Không xoá được', errorMessage(err)),
   });
 
   const nudge = useMutation({
@@ -108,6 +118,15 @@ export function FriendProfilePage() {
               <BellRing className="size-4" /> Nhắc uống nước
             </button>
           </div>
+          <button
+            onClick={() => {
+              if (window.confirm(`Xoá ${friend.nickname || friend.fullName} khỏi danh sách bạn bè?`)) unfriend.mutate(friend.id);
+            }}
+            disabled={unfriend.isPending}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+          >
+            <UserMinus className="size-3.5" /> Xoá bạn bè
+          </button>
         </div>
       </section>
 
