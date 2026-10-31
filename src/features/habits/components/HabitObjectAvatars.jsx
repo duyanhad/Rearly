@@ -8,7 +8,7 @@ import { CupAvatarFx } from '../../water/components/CupAvatarFx';
  * - trái: bạn (nghiêng vào tác động khi vừa ghi / được cộng → vật thể sáng lên),
  * - phải: partner (đập vào khi từ chối → vật thể rớt ra và tối đi).
  */
-export function HabitObjectAvatars({ pour = 0, spill = 0, color = '#c07a72', left, right }) {
+export function HabitObjectAvatars({ pour = 0, approve = 0, spill = 0, color = '#c07a72', left, right }) {
   const { user } = useAuth();
   const { data: partner } = useQuery({
     queryKey: ['my-partner'],
@@ -34,12 +34,13 @@ export function HabitObjectAvatars({ pour = 0, spill = 0, color = '#c07a72', lef
       />
       {rightAvatar && (
         <CupAvatarFx
-          action="hit"
+          // Partner tác động: duyệt thì "rót sáng", từ chối thì "đập" cho vật thể rơi ra.
+          action={approve > spill ? 'pour' : 'hit'}
           avatarUrl={rightAvatar.avatarUrl}
           name={rightAvatar.name}
           side="right"
-          signal={spill}
-          color="#f43f5e"
+          signal={approve > spill ? approve : spill}
+          color={approve > spill ? '#16a34a' : '#f43f5e'}
         />
       )}
     </div>

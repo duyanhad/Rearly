@@ -55,7 +55,7 @@ export function SleepTodayPanel() {
 
   const logs = data?.logs ?? [];
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
-  const { pour, spill } = useHabitEvents(logs);
+  const { pour, approve, spill } = useHabitEvents(logs);
   const approvedNights = logs.filter((l) => l.status === 'approved').length;
   // Trang Hôm nay chỉ quan tâm đêm của hôm nay; lịch sử xem ở trang Lịch.
   // Dùng ngày địa phương (toISOString là UTC → sau 00:00 sẽ lệch một ngày).
@@ -114,7 +114,7 @@ export function SleepTodayPanel() {
     <div className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <section className="relative min-w-0 rounded-2xl bg-white p-4 shadow-sm">
-          <HabitObjectAvatars pour={pour + approvedNights} spill={spill} color="#6366f1" />
+          <HabitObjectAvatars pour={pour + approvedNights} approve={approve} spill={spill} color="#6366f1" />
           <div className="flex h-56 items-center justify-center">
             <HabitAvatar3D
               imageUrl={setting?.imageUrl ?? last?.photoUrl}

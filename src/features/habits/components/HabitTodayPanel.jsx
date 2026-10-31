@@ -53,14 +53,14 @@ export function HabitTodayPanel({ kind }) {
       : 0;
   const litPercent = kind === 'meal' ? Math.round((reportedMain / MAIN_MEAL_SLOTS.length) * 100) : percent;
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
-  const { pour, spill } = useHabitEvents(logs);
+  const { pour, approve, spill } = useHabitEvents(logs);
   const Icon = cfg.icon;
 
   return (
     <div className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <section className="relative min-w-0 rounded-2xl bg-white p-4 shadow-sm">
-          <HabitObjectAvatars pour={pour + done} spill={spill} />
+          <HabitObjectAvatars pour={pour + done} approve={approve} spill={spill} />
           <div className="flex h-56 items-center justify-center">
             <HabitAvatar3D
               imageUrl={setting?.imageUrl}

@@ -50,7 +50,7 @@ export function WeightTodayPanel() {
   const targetG = (setting?.targetValue ?? today?.target ?? 60000) || 60000;
   const targetKg = targetG / 1000;
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
-  const { pour, spill } = useHabitEvents(history);
+  const { pour, approve, spill } = useHabitEvents(history);
   const approvedCount = history.filter((h) => h.status === 'approved').length;
   // Bỏ phiếu bị từ chối; lịch sử trả mới nhất trước.
   const entries = history.filter((h) => h.status !== 'rejected' && h.value);
@@ -135,7 +135,7 @@ export function WeightTodayPanel() {
       <div className="grid gap-5 md:grid-cols-2">
         <section className="relative min-w-0 rounded-2xl bg-white p-4 shadow-sm">
           <div className="relative flex h-56 items-center justify-center">
-            <HabitObjectAvatars pour={pour + approvedCount} spill={spill} color="#0d9488" />
+            <HabitObjectAvatars pour={pour + approvedCount} approve={approve} spill={spill} color="#0d9488" />
             <HabitAvatar3D
               imageUrl={setting?.imageUrl}
               cutoutUrl={setting?.cutoutUrl}
