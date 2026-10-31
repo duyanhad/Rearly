@@ -260,7 +260,7 @@ export function ChatPanel({ compact = false }) {
 
   // Thả cảm xúc: cập nhật thẳng vào cache để chip hiện ngay, không chờ refetch.
   const react = useMutation({
-    mutationFn: async ({ id, emoji }) => chatService.react(id, emoji),
+    mutationFn: async ({ id, emoji }) => (await chatService.react(id, emoji)).data,
     onSuccess: (reactions, vars) => {
       queryClient.setQueryData(['chat-thread', activeId], (old = []) =>
         old.map((m) => (m.id === vars.id ? { ...m, reactions } : m)),
