@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { mediaUrl } from '../services/apiClient';
 const sizes = {
   sm: 'size-8 text-xs',
@@ -20,9 +21,21 @@ export function Avatar({
   size = 'md',
   className = ''
 }) {
-  const src = mediaUrl(url ?? null);
-  if (src) {
-    return <img src={src} alt={name} className={`${sizes[size]} shrink-0 rounded-full object-cover ring-2 ring-white ${className}`} />;
+  const [bust, setBust] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const base = mediaUrl(url ?? null);
+  // Trình duyệt có thể giữ bản 404/403 cũ trong cache → thử lại một lần kèm tham số phá cache.
+  const src = base && bust ? `${base}${base.includes('?') ? '&' : '?'}v=${bust}` : base;
+  if (src && !failed) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        decoding="async"
+        onError={() => (bust ? setFailed(true) : setBust(Date.now()))}
+        className={`${sizes[size]} shrink-0 rounded-full object-cover ring-2 ring-white ${className}`}
+      />
+    );
   }
   return <span aria-label={name} className={`${sizes[size]} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-teal-500 font-semibold text-white ring-2 ring-white ${className}`}>
       {initials(name)}

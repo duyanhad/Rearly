@@ -9,7 +9,7 @@ import { cupService } from '../../../services/cupService';
 import { socialService } from '../../../services/socialService';
 import { useAuth } from '../../../context/AuthProvider';
 import { eraService } from '../../../services/eraService';
-import { WaterCup3D } from '../components/WaterCup3D';
+import { WaterCup3DLazy as WaterCup3D } from '../components/WaterCup3DLazy';
 import { CupAvatarFx } from '../components/CupAvatarFx';
 import { useLiquidColor } from '../hooks/useLiquidColor';
 import { AddWaterModal } from '../components/AddWaterModal';
@@ -69,7 +69,7 @@ export function DashboardPage() {
   const displayCup = cups.find(cup => cup.isDefault) ?? cups.find(cup => cup.imageUrl) ?? null;
   // Server đã tách nền sẵn (PNG trong suốt) thì dùng luôn, không tách lại trên máy.
   const isPreCut = !!displayCup?.cutoutUrl;
-  const cupTexture = mediaUrl(displayCup?.cutoutUrl ?? displayCup?.imageUrl ?? null);
+  const cupTexture = mediaUrl(displayCup?.cutoutUrl || displayCup?.imageUrl || null);
   const liquidColor = useLiquidColor(cupTexture, isPreCut);
 
   // Uống thêm nước → nước rót vào cốc. Tính cả phần chờ duyệt để bấm "Uống nước" là có hiệu ứng ngay.

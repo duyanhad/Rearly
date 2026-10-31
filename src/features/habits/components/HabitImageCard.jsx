@@ -88,7 +88,7 @@ export function HabitImageCard({ kind }) {
         <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-water-50 to-white ring-1 ring-slate-200">
           {hasPhoto ? (
             <img
-              src={mediaUrl(row.cutoutUrl ?? row.imageUrl) ?? ''}
+              src={mediaUrl(row.cutoutUrl || row.imageUrl) ?? ''}
               alt={title}
               className={`size-full object-cover ${
                 row.cutoutUrl ? 'bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:12px_12px]' : ''

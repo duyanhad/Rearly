@@ -35,7 +35,7 @@ import { HabitObjectAvatars } from '../../habits/components/HabitObjectAvatars';
 import { useAuth } from '../../../context/AuthProvider';
 import { useToast } from '../../../components/Toast';
 import { Avatar } from '../../../components/Avatar';
-import { WaterCup3D } from '../../water/components/WaterCup3D';
+import { WaterCup3DLazy as WaterCup3D } from '../../water/components/WaterCup3DLazy';
 import { CupAvatarFx } from '../../water/components/CupAvatarFx';
 import { WaterBar } from '../../../components/WaterBar';
 import { accent, shade } from '../../../utils/color';
@@ -105,7 +105,7 @@ export function PartnerPage() {
     queryKey: ['partner-clients'],
     queryFn: async () => (await socialService.getPartnerClients()).data,
     refetchOnWindowFocus: true,
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
   });
 
   const { data: proofs = [], isLoading: proofsLoading } = useQuery({
@@ -121,11 +121,11 @@ export function PartnerPage() {
     queryKey: ['partner-today', selectedId],
     queryFn: async () => (await socialService.getClientToday(selectedId)).data,
     enabled: !!selectedId,
-    refetchInterval: 8_000,
+    refetchInterval: 20_000,
   });
 
   const isPreCut = !!selected?.cupCutoutUrl;
-  const cupUrl = mediaUrl(selected?.cupCutoutUrl ?? selected?.cupImageUrl ?? null);
+  const cupUrl = mediaUrl(selected?.cupCutoutUrl || selected?.cupImageUrl || null);
   const liquidColor = useLiquidColor(cupUrl, isPreCut);
 
   // Tổng nước nhìn thấy trong cốc = đã duyệt + chờ duyệt (khách thêm nước là phiếu chờ duyệt).
@@ -529,16 +529,27 @@ export function PartnerPage() {
               />
             </div>
 
-            <WaterCup3D
-              percent={Math.max(0, dailyPercent)}
-              textureUrl={cupUrl}
-              spill={spillFx.ml}
-              spillKey={spillFx.key}
-              pourIn={pourFx.ml}
-              pourKey={pourFx.key}
-              pourOrigin={pourOrigin}
-              preCut={isPreCut}
-            />
+            {cupUrl && !isPreCut ? (
+              // Ảnh cốc chưa tách nền: hiển thị ảnh phẳng sáng dần theo % (không chạy AI/3D bên máy duyệt).
+              <HabitAvatar3D
+                imageUrl={cupUrl}
+                percent={Math.max(0, dailyPercent)}
+                kind="water"
+                plain
+                className="h-64 w-full md:h-80"
+              />
+            ) : (
+              <WaterCup3D
+                percent={Math.max(0, dailyPercent)}
+                textureUrl={cupUrl}
+                spill={spillFx.ml}
+                spillKey={spillFx.key}
+                pourIn={pourFx.ml}
+                pourKey={pourFx.key}
+                pourOrigin={pourOrigin}
+                preCut={isPreCut}
+              />
+            )}
 
             <div className="mt-2 text-center">
               <div className="flex items-baseline justify-center gap-0.5">

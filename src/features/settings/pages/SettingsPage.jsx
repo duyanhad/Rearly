@@ -259,7 +259,7 @@ export function SettingsPage() {
 
         <div className="flex items-center gap-4">
           <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-50 to-white ring-1 ring-slate-200">
-            {hasPhoto ? <img src={mediaUrl(customCup.cutoutUrl ?? customCup.imageUrl) ?? ''} alt="Cốc của bạn" className={`size-full object-cover ${customCup.cutoutUrl ? 'bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:12px_12px]' : ''}`} /> : <div className="flex size-full flex-col items-center justify-center gap-1 text-slate-300">
+            {hasPhoto ? <img src={mediaUrl(customCup.cutoutUrl || customCup.imageUrl) ?? ''} alt="Cốc của bạn" className={`size-full object-cover ${customCup.cutoutUrl ? 'bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:12px_12px]' : ''}`} /> : <div className="flex size-full flex-col items-center justify-center gap-1 text-slate-300">
                 <CupSoda className="size-8" />
                 <span className="text-[10px]">Ly mặc định</span>
               </div>}

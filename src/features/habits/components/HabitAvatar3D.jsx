@@ -44,7 +44,7 @@ export function HabitAvatar3D({
     lastSignal.current = signal;
   }, [signal]);
 
-  const src = cutoutUrl ?? imageUrl;
+  const src = cutoutUrl || imageUrl;
   const cut = Boolean(cutoutUrl);
   // `plain` = không khung nền/viền, dùng cho thẻ lớn ở trang Hôm nay (giống cốc nước).
   // Ảnh chưa tách nền thì vẫn cần khung để không thành một khối trắng trên nền trắng.

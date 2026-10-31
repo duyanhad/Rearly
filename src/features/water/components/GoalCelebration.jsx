@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Flame, Sparkles, Trophy } from 'lucide-react';
-import { WaterCup3D } from './WaterCup3D';
+import { WaterCup3DLazy as WaterCup3D } from './WaterCup3DLazy';
 
 const CONFETTI = [
   { left: '8%', delay: '0s', color: '#38bdf8', size: 8 },

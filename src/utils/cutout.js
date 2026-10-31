@@ -6,12 +6,19 @@ const AI_TIMEOUT_MS = 150_000;
 /** Cạnh dài tối đa đưa vào model AI — lớn hơn sẽ ngốn RAM và làm Safari iOS crash tab. */
 const AI_MAX_SIDE = 640;
 
-function loadImage(url) {
+function loadImage(url, retried = false) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Không tải được ảnh cốc'));
+    img.onerror = () => {
+      // Cache trình duyệt có thể giữ bản lỗi cũ → phá cache thử lại một lần.
+      if (!retried && /^https?:/i.test(url)) {
+        loadImage(`${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`, true).then(resolve, reject);
+        return;
+      }
+      reject(new Error('Không tải được ảnh cốc'));
+    };
     img.src = url;
   });
 }

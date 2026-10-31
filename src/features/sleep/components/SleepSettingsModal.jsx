@@ -159,7 +159,7 @@ export function SleepSettingsModal({ onClose }) {
         <div className="mb-2 flex items-center gap-2 rounded-xl bg-slate-50 p-2">
           <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
             {row?.cutoutUrl || row?.imageUrl ? (
-              <img src={mediaUrl(row.cutoutUrl ?? row.imageUrl)} alt="Ảnh của bạn" className="size-full object-cover" />
+              <img src={mediaUrl(row.cutoutUrl || row.imageUrl)} alt="Ảnh của bạn" className="size-full object-cover" />
             ) : (
               <Moon className="size-5 text-slate-300" />
             )}
