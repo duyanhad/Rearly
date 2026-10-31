@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Clock, Moon, Plus, Settings, Sunrise } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronRight, Clock, Moon, Plus, RotateCcw, Settings, Sunrise } from 'lucide-react';
 import { mediaUrl } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
 import { habitService } from '../../../services/habitService';
@@ -26,6 +26,7 @@ const STATUS = {
 
 /** Khung giấc ngủ nằm ngay trong trang Hôm nay (lật bằng mũi tên 2 bên). */
 export function SleepTodayPanel() {
+  const qc = useQueryClient();
   const [logOpen, setLogOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -41,6 +42,14 @@ export function SleepTodayPanel() {
     refetchInterval: 20_000,
   });
   const { data: habits = [] } = useQuery({ queryKey: ['habits'], queryFn: async () => (await habitService.list()).data });
+
+  // Chốt ngày: reset % và quỹ giấc ngủ để bắt đầu ngày mới (server lưu mốc).
+  const closeDay = useMutation({
+    mutationFn: () => sleepService.closeDay(),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['sleep'] });
+    },
+  });
   const setting = habits.find((h) => h.kind === 'sleep');
 
   const logs = data?.logs ?? [];
@@ -82,11 +91,10 @@ export function SleepTodayPanel() {
     if (m < 0) m += 1440;
     return m;
   })();
-  // % dựa trên TỔNG thời gian đã ngủ trong ngày (phiếu đã duyệt + phiên đang chạy).
-  const approvedTodayMin = logs
-    .filter((l) => l.status === 'approved' && l.date === todayIso)
-    .reduce((sum, l) => sum + (l.minutes || 0), 0);
-  const shownMinutes = approvedTodayMin + elapsedMin;
+  // % do server tính (cộng cả giấc CHỜ DUYỆT và giấc đang chạy) → kết thúc không bị reset về 0.
+  const approvedTodayMin = data?.minutesToday ?? 0;
+  // Đang chạy thì cộng thêm phần vừa trôi để thanh nhích ngay, không chờ refetch 20s.
+  const shownMinutes = inProgress ? Math.max(approvedTodayMin, approvedTodayMin + elapsedMin) : approvedTodayMin;
   // Giữ phần trăm lẻ để thanh/ảnh nhích dần mỗi phút thay vì nhảy từng 1%.
   const shownPercentExact = goal > 0 ? Math.min(100, (shownMinutes / goal) * 100) : 0;
   const shownPercent = Math.round(shownPercentExact);
@@ -199,6 +207,14 @@ export function SleepTodayPanel() {
                 ? 'Đang ngủ — bấm để dừng và chụp ảnh minh chứng lúc thức'
                 : 'Nhập giờ ngủ → giờ thức → ảnh minh chứng → bộ đếm chạy'}
             </p>
+            <button
+              onClick={() => closeDay.mutate()}
+              disabled={closeDay.isPending || inProgress}
+              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-600 transition hover:border-water-300 hover:text-water-700 disabled:opacity-50"
+              title={inProgress ? 'Hãy kết thúc giấc ngủ trước khi chốt ngày' : 'Bắt đầu ngày mới: % và quỹ giấc ngủ về 0'}
+            >
+              <RotateCcw className="size-3.5" /> {closeDay.isPending ? 'Đang chốt…' : 'Chốt ngày · bắt đầu ngày mới'}
+            </button>
           </div>
 
           <div className="rounded-2xl bg-white p-4 shadow-sm">

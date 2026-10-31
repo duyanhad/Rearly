@@ -7,6 +7,8 @@ export const sleepService = {
   start: (form) => api.post('/api/sleep/start', form),
   // FormData: photo? (ảnh minh chứng lúc dậy), note?
   stop: (id, form) => api.post(`/api/sleep/${id}/stop`, form),
+  /** Chốt ngày: % và quỹ giấc ngủ bắt đầu lại từ 0 cho ngày mới. */
+  closeDay: () => api.post('/api/sleep/close-day'),
   // FormData: bedTime, wakeTime, note, date?, photo?
   submit: (form) => api.post('/api/sleep', form),
   inbox: () => api.get('/api/sleep/inbox'),
