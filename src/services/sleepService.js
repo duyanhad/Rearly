@@ -5,6 +5,8 @@ export const sleepService = {
   summary: () => api.get('/api/sleep'),
   month: ({ year, month }) => api.get('/api/sleep/month', { params: { year, month } }),
   start: (form) => api.post('/api/sleep/start', form),
+  // FormData: photo? (ảnh minh chứng lúc dậy), note?
+  stop: (id, form) => api.post(`/api/sleep/${id}/stop`, form),
   // FormData: bedTime, wakeTime, note, date?, photo?
   submit: (form) => api.post('/api/sleep', form),
   inbox: () => api.get('/api/sleep/inbox'),

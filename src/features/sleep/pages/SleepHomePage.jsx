@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Clock, ImageIcon, Moon, Plus, Settings, Target } from 'lucide-react';
 import { mediaUrl } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
 import { SleepLogModal } from '../components/SleepLogModal';
 import { SleepSettingsModal } from '../components/SleepSettingsModal';
+import { SleepDayProgress, SleepRunningCard, SleepStartCard } from '../components/SleepSessionCards';
 
 const toHours = (minutes) => `${Math.floor((minutes || 0) / 60)}h${String((minutes || 0) % 60).padStart(2, '0')}`;
 
@@ -20,11 +21,41 @@ const STATUS = {
 export function SleepHomePage() {
   const [logOpen, setLogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['sleep'], queryFn: async () => (await sleepService.summary()).data });
+
+  const refreshSleep = () => {
+    void queryClient.invalidateQueries({ queryKey: ['sleep'] });
+    void queryClient.invalidateQueries({ queryKey: ['today'] });
+  };
+
+  // Bắt đầu ngủ: gửi 1 ảnh + giờ đi ngủ hiện tại, bộ đếm do server giữ mốc StartedAtUtc.
+  const startSession = useMutation({
+    mutationFn: async ({ file }) => {
+      const form = new FormData();
+      const now = new Date();
+      form.append('bedTime', `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      if (file) form.append('photo', file);
+      return sleepService.start(form);
+    },
+    onSuccess: refreshSleep,
+  });
+
+  const stopSession = useMutation({
+    mutationFn: async ({ file }) => {
+      const form = new FormData();
+      if (file) form.append('photo', file);
+      return sleepService.stop(running.id, form);
+    },
+    onSuccess: refreshSleep,
+  });
 
   const logs = data?.logs ?? [];
   const last = logs.at(-1);
   const goal = data?.goalMinutes ?? 480;
+  const running = logs.find((l) => l.status === 'sleeping') ?? null;
+  const today = new Date().toISOString().slice(0, 10);
+  const todaySessions = logs.filter((l) => String(l.date) === today);
   const minutes = last?.minutes ?? 0;
   const percent = goal ? Math.min(100, Math.round((minutes / goal) * 100)) : 0;
   const hit = minutes >= goal;
@@ -104,7 +135,15 @@ export function SleepHomePage() {
         <p className="mt-1 text-right text-[11px] font-semibold tabular-nums text-water-700">{percent}%</p>
       </section>
 
-      {/* Hành động: sang trang ghi phiếu */}
+      {/* Hành động: bắt đầu ngủ bằng 1 ảnh, hoặc ghi phiếu thủ công */}
+      {running ? (
+        <SleepRunningCard session={running} onStop={stopSession.mutate} stopping={stopSession.isPending} />
+      ) : (
+        <SleepStartCard onStart={startSession.mutate} starting={startSession.isPending} goalMinutes={goal} />
+      )}
+
+      <SleepDayProgress sessions={todaySessions} goalMinutes={goal} percent={data?.percentToday ?? 0} />
+
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setLogOpen(true)}
