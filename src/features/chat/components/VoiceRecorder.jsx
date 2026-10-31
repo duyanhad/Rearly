@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUp, Lock, Mic, Pause, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { Lock, Mic, Pause, Play, RotateCcw, Send, Square, Trash2 } from 'lucide-react';
 
 /**
  * Ghi âm tin nhắn thoại kiểu Messenger (React + Pointer Events + Web Audio API).
@@ -39,7 +39,9 @@ export function AudioBubble({ src, durationMs, tone = 'light', peaks, onSeek, au
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
 
-  const bars = peaks?.length ? peaks : Array.from({ length: BUBBLE_BARS }, (_, i) => [8, 14, 20, 12, 18, 24, 10, 16, 22, 14][i % 10]);
+  const fallback = Array.from({ length: BUBBLE_BARS }, (_, i) => [8, 14, 20, 12, 18, 24, 10, 16, 22, 14][i % 10]);
+  // Bản thu quá ngắn / im lặng → dùng sóng mẫu để khung không trông trống.
+  const bars = peaks?.length >= 8 ? peaks : fallback;
   const heights = bars.map((raw) => (raw <= 1 ? raw * 100 : raw));
   const maxHeight = Math.max(...heights, 1);
 
@@ -109,7 +111,7 @@ export function AudioBubble({ src, durationMs, tone = 'light', peaks, onSeek, au
           if (!onSeek || !e.currentTarget.hasPointerCapture?.(e.pointerId)) return;
           seekAt(e.clientX);
         }}
-        className={`flex h-7 flex-1 items-center gap-[2px] ${onSeek ? 'cursor-pointer touch-none' : ''}`}
+        className={`flex h-9 flex-1 items-center gap-[2px] ${onSeek ? 'cursor-pointer touch-none' : ''}`}
         aria-hidden="true"
       >
         {heights.map((height, i) => (
@@ -120,7 +122,7 @@ export function AudioBubble({ src, durationMs, tone = 'light', peaks, onSeek, au
                 ? i / heights.length <= progress ? 'bg-white' : 'bg-white/40'
                 : i / heights.length <= progress ? 'bg-water-600' : 'bg-water-600/30'
             }`}
-            style={{ height: `${Math.max(3, (height / maxHeight) * 26)}px` }}
+            style={{ height: `${Math.max(4, (height / maxHeight) * 32)}px` }}
           />
         ))}
       </span>
@@ -131,26 +133,42 @@ export function AudioBubble({ src, durationMs, tone = 'light', peaks, onSeek, au
   );
 }
 
-/** Bản thu đang xem lại: bottom sheet có sóng chạm/vuốt để tua + Xoá / Thu lại / Gửi. */
+/** Bản thu đang xem lại: bottom sheet waveform tua được + Xoá / Thu lại / Gửi. */
 function PreviewSheet({ take, onDiscard, onRetry, onSend, sending }) {
-  const [autoPlay, setAutoPlay] = useState(true);
+  const [autoPlay, setAutoPlay] = useState(false);
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40" role="dialog" aria-label="Xem lại bản ghi âm">
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/50 backdrop-blur-[2px]" role="dialog" aria-label="Xem lại bản ghi âm">
       <button type="button" aria-label="Đóng" onClick={onDiscard} className="flex-1" />
-      <div className="rounded-t-3xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-300" />
-        <p className="mb-3 text-center text-xs text-slate-500">Chạm hoặc vuốt trên sóng để nghe từ đoạn bất kỳ</p>
-        <div className="rounded-2xl bg-water-50 px-3 py-2.5 ring-1 ring-water-200">
+      <div className="rounded-t-[28px] bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl">
+        <div className="mx-auto mb-4 h-1.5 w-11 rounded-full bg-slate-200" />
+
+        <div className="mb-4 flex items-center gap-2.5">
+          <span className="flex size-9 items-center justify-center rounded-full bg-water-50 text-water-700">
+            <Mic className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-900">Nghe lại trước khi gửi</p>
+            <p className="text-[11px] text-slate-500">
+              {timeOf(take.durationMs)} · chạm hoặc vuốt trên sóng để tua
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-slate-50 px-3 py-3 ring-1 ring-slate-200/70">
           <AudioBubble src={take.url} durationMs={take.durationMs} peaks={take.peaks} onSeek autoPlay={autoPlay} />
         </div>
-        <div className="mt-4 flex items-center justify-between">
+
+        <div className="mt-6 grid grid-cols-3 items-center gap-3">
           <button
             type="button"
             onClick={onDiscard}
-            className="flex size-11 items-center justify-center rounded-full bg-rose-50 text-rose-600"
+            className="group flex flex-col items-center gap-1.5 text-[11px] font-medium text-slate-500"
             aria-label="Xoá bản ghi"
           >
-            <Trash2 className="size-5" />
+            <span className="flex size-12 items-center justify-center rounded-full bg-rose-50 text-rose-600 transition group-active:scale-95">
+              <Trash2 className="size-5" />
+            </span>
+            Xoá
           </button>
           <button
             type="button"
@@ -158,16 +176,19 @@ function PreviewSheet({ take, onDiscard, onRetry, onSend, sending }) {
               setAutoPlay(false);
               onRetry();
             }}
-            className="flex size-11 items-center justify-center rounded-full bg-slate-100 text-slate-600"
+            className="group flex flex-col items-center gap-1.5 text-[11px] font-medium text-slate-500"
             aria-label="Thu lại"
           >
-            <RotateCcw className="size-5" />
+            <span className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-active:scale-95">
+              <RotateCcw className="size-5" />
+            </span>
+            Thu lại
           </button>
           <button
             type="button"
             onClick={onSend}
             disabled={sending}
-            className="flex h-11 items-center gap-2 rounded-full bg-water-600 px-5 text-sm font-semibold text-white disabled:opacity-60"
+            className="flex h-12 items-center justify-center gap-2 rounded-full bg-[#0084FF] text-sm font-semibold text-white shadow-lg shadow-[#0084FF]/30 transition active:scale-[0.98] disabled:opacity-60"
             aria-label="Gửi tin nhắn thoại"
           >
             <Send className="size-4" /> Gửi
@@ -388,7 +409,7 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
   };
 
   const shownPeaks = useMemo(() => {
-    if (!peaks.length) return Array.from({ length: BARS }, () => 0.15);
+    if (peaks.length < 6) return Array.from({ length: BARS }, (_, i) => 0.25 + 0.2 * Math.sin(i / 2));
     return peaks.length <= BARS ? peaks : peaks.slice(-BARS);
   }, [peaks]);
 
@@ -413,46 +434,67 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
 
   if (recording) {
     return (
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[65] flex flex-col items-center gap-1.5">
-        <span className="rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] text-white">
-          {state === 'LOCKED_RECORDING'
-            ? 'Đang ghi · thả tay vẫn tiếp tục'
-            : cancelling
-              ? 'Buông ra để huỷ'
-              : 'Vuốt sang trái để huỷ hoặc vuốt lên để khoá'}
-        </span>
-        <div className="flex w-full max-w-md items-center gap-2 px-3">
-          <Trash2
-            className={`size-6 shrink-0 transition-colors duration-150 ${cancelling ? 'text-rose-500' : 'text-slate-400'}`}
-            aria-hidden="true"
-          />
-          <div
-            className={`flex h-11 flex-1 items-center gap-2 rounded-full px-3 text-white shadow-lg transition-colors duration-150 ${
-              cancelling ? 'bg-rose-500' : 'bg-[#0084FF]'
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex items-center justify-center">
+          <span
+            className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors duration-150 ${
+              cancelling ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
             }`}
           >
-            <span className="flex h-7 flex-1 items-center gap-[2px]">
+            {state === 'LOCKED_RECORDING'
+              ? 'Đang ghi · thả tay vẫn tiếp tục'
+              : cancelling
+                ? 'Buông ra để huỷ'
+                : 'Vuốt sang trái để huỷ · vuốt lên để khoá'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => finish(true)}
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-150 ${
+              cancelling ? 'scale-110 bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400'
+            }`}
+            aria-label="Huỷ ghi âm"
+          >
+            <Trash2 className="size-4" />
+          </button>
+
+          <div
+            className={`flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full px-3.5 text-white shadow-lg transition-colors duration-150 ${
+              cancelling ? 'bg-rose-500 shadow-rose-500/30' : 'bg-[#0084FF] shadow-[#0084FF]/30'
+            }`}
+          >
+            <span className="flex size-2 shrink-0 animate-pulse rounded-full bg-white" aria-hidden="true" />
+            <span className="flex h-6 min-w-0 flex-1 items-end gap-[2px] overflow-hidden" aria-hidden="true">
               {shownPeaks.map((value, i) => (
                 <span
                   key={i}
-                  className="w-[2px] rounded-full bg-white/90"
-                  style={{ height: `${Math.max(3, value * 26)}px` }}
+                  className="w-[2px] shrink-0 rounded-full bg-white/85"
+                  style={{ height: `${Math.max(3, value * 22)}px` }}
                 />
               ))}
             </span>
-            <span className="shrink-0 text-xs font-semibold tabular-nums">{timeOf(seconds * 1000)}</span>
+            <span className="shrink-0 text-[13px] font-semibold tabular-nums">{timeOf(seconds * 1000)}</span>
           </div>
+
           {state === 'LOCKED_RECORDING' ? (
             <button
               type="button"
               onClick={stopLocked}
-              className="pointer-events-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-[#0084FF] text-white"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-lg shadow-[#0084FF]/30"
               aria-label="Dừng ghi âm"
             >
-              <ArrowUp className="size-4 rotate-90" />
+              <Square className="size-3.5 fill-white" />
             </button>
           ) : (
-            <Lock className="size-5 shrink-0 text-slate-500" aria-hidden="true" />
+            <span
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+              aria-hidden="true"
+              title="Vuốt lên để khoá"
+            >
+              <Lock className="size-4" />
+            </span>
           )}
         </div>
       </div>
