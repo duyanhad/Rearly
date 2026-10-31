@@ -63,7 +63,10 @@ export function SleepTodayPanel() {
   const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   // Phiếu "đang ngủ" có thể mang ngày hôm sau (bắt đầu trước nửa đêm) → luôn ưu tiên nó.
   const running = logs.find((l) => l.status === 'sleeping');
-  const last = running ?? logs.find((l) => l.date === todayIso);
+  // Nhiều phiếu trong ngày → lấy phiếu MỚI NHẤT (theo mốc bắt đầu/kết thúc), không lấy phiếu đầu tiên.
+  const stamp = (l) => l.endedAtUtc ?? l.startedAtUtc ?? '';
+  const todayLogs = logs.filter((l) => l.date === todayIso);
+  const last = running ?? [...todayLogs].sort((a, b) => stamp(a).localeCompare(stamp(b))).at(-1);
   const goal = data?.goalMinutes ?? 480;
   const logged = last?.minutes ?? 0;
   // Chỉ phiếu đã duyệt mới được cộng (giống backend khi tính chuỗi/trung bình).
