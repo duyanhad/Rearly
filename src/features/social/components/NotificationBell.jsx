@@ -12,7 +12,8 @@ const TYPE_META = {
   Nudge: { icon: BellRing, tone: 'bg-amber-50 text-amber-600' },
   GoalAchieved: { icon: Trophy, tone: 'bg-emerald-50 text-emerald-600' },
   Deduct: { icon: MinusCircle, tone: 'bg-rose-50 text-rose-600' },
-  Broadcast: { icon: Megaphone, tone: 'bg-slate-100 text-slate-600' }
+  Broadcast: { icon: Megaphone, tone: 'bg-slate-100 text-slate-600' },
+  Proof: { icon: CheckCheck, tone: 'bg-amber-50 text-amber-600' }
 };
 
 /** Chỉ hiện vài thông báo mới nhất cho gọn. */
@@ -164,7 +165,9 @@ export function NotificationBell() {
                             type="button"
                             onClick={() => {
                               if (!n.isRead) markRead.mutate(n.id);
-                              if (n.type === 'Friend' || n.type === 'Partner') {
+                              if (n.type === 'Proof') {
+                                navigate('/partner');
+                              } else if (n.type === 'Friend' || n.type === 'Partner') {
                                 setOpen(false);
                                 navigate(n.type === 'Partner' ? '/partner' : '/friends');
                               }

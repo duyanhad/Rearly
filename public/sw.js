@@ -34,6 +34,14 @@ self.addEventListener('push', (event) => {
           vibrate: VIBRATE[style] ?? VIBRATE.normal,
           data: { url: data.url ?? '/' },
         });
+        // Chấm đỏ trên icon app (PWA đã cài): dùng số backend gửi kèm, không hỗ trợ thì bỏ qua.
+        if (typeof data.badge === 'number' && navigator.setAppBadge) {
+          try {
+            await navigator.setAppBadge(data.badge);
+          } catch {
+            // trình duyệt không hỗ trợ badge → bỏ qua
+          }
+        }
         await broadcast({ type: 'push-received', title, ok: true });
       } catch (error) {
         await broadcast({ type: 'push-received', title, ok: false, error: String(error) });
