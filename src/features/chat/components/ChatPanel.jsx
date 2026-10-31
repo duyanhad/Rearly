@@ -170,7 +170,7 @@ function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
             )}
             <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
               {timeLabel(m.createdAt)}
-              {m.editedAt ? ' · đã sửa' : ''}
+              {m.editedAt && !m.recalledAt ? ' · đã sửa' : ''}
             </p>
             {!barOpen && !m.pending && !m.recalledAt && (
               <span
@@ -375,6 +375,7 @@ export function ChatPanel({ compact = false }) {
       queryClient.setQueryData(['chat-thread', activeId], (old = []) =>
         old.map((m) => (m.id === dto.id ? { ...m, body: dto.body, editedAt: dto.editedAt } : m)),
       );
+      void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
       toast.show('Đã sửa tin nhắn');
     },
     onError: (err) => toast.show('Không sửa được', errorMessage(err)),
@@ -388,6 +389,7 @@ export function ChatPanel({ compact = false }) {
           m.id === dto.id ? { ...m, body: '', imageUrl: null, audioUrl: null, reactions: [], recalledAt: dto.recalledAt } : m,
         ),
       );
+      void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
       toast.show('Đã thu hồi tin nhắn');
     },
     onError: (err) => toast.show('Không thu hồi được', errorMessage(err)),
