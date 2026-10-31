@@ -1,4 +1,5 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import { SafeCanvas } from '../../../components/SafeCanvas';
 import { ContactShadows, useTexture } from '@react-three/drei';
 import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -50,7 +51,7 @@ export function WaterCup3D({
 
   return (
     <div className={dims}>
-      <Canvas camera={{ position: [0, 0.35, 4.1], fov: 40 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
+      <SafeCanvas camera={{ position: [0, 0.35, 4.1], fov: 40 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }} fallback={<GlassCup percent={percent} color={liquidColor} fillMs={fillMs} />}>
         <ambientLight intensity={0.9} />
         <directionalLight position={[2.5, 4, 3]} intensity={1.3} />
         <directionalLight position={[-3, 1.5, -2]} intensity={0.5} />
@@ -80,7 +81,7 @@ export function WaterCup3D({
         )}
         {!celebrate && <SpillPuddle spill={spill} spillKey={spillKey} tiltRef={tiltRef} pourPointRef={pourPointRef} color={liquidColor} />}
         <ContactShadows position={[0, BASE_Y - 0.01, 0]} opacity={0.28} scale={4} blur={2.6} far={2} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }

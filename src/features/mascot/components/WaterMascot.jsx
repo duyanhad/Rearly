@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import { SafeCanvas } from '../../../components/SafeCanvas';
 import * as THREE from 'three';
 
 /**
@@ -535,7 +536,7 @@ export function WaterMascot({
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`${height} w-full ${className}`}>
-      <Canvas
+      <SafeCanvas
         camera={{ position: [0, 0.15, 5.1], fov: 38 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
@@ -547,7 +548,7 @@ export function WaterMascot({
         <directionalLight position={[-3, 1.5, -2]} intensity={0.55} color="#bfe9ff" />
         <pointLight position={[0, -2, 2.5]} intensity={0.5} color={tier.palette.deep} />
         <MascotModel tier={tier} evolving={evolving} hovered={hovered} />
-      </Canvas>
+      </SafeCanvas>
     </div>
   );
 }
