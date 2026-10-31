@@ -94,6 +94,16 @@ export function CalendarPage() {
     { key: 'weight', label: 'Cân nặng', dot: 'bg-teal-500', chip: 'bg-teal-50 text-teal-700' }
   ];
   const catsOf = (rec) => (rec ? CATS.filter((c) => (c.key === 'water' || c.key === 'sleep' ? !!rec[c.key] : rec[c.key].length > 0)) : []);
+  // Chi tiết từng loại, để mỗi nhu cầu nằm một dòng riêng (không gộp chips khó nhìn).
+  const catDetail = (c, rec) => {
+    if (c.key === 'water' && rec.water) return `${rec.water.totalDrankMl} ml`;
+    if (c.key === 'sleep' && rec.sleep)
+      return `${Math.floor(rec.sleep.minutes / 60)}h${String(rec.sleep.minutes % 60).padStart(2, '0')}`;
+    if (c.key === 'weight' && rec.weight.length) return `${(rec.weight[rec.weight.length - 1].value / 1000).toFixed(1)} kg`;
+    if ((c.key === 'medicine' || c.key === 'meal' || c.key === 'study') && rec[c.key].length)
+      return `${rec[c.key].length} lần`;
+    return '';
+  };
 
   const {
     data: day
@@ -180,15 +190,13 @@ export function CalendarPage() {
             const cats = catsOf(rec);
             if (!rec || cats.length === 0) return null;
             return (
-              <div className="mb-3 flex flex-wrap items-center gap-1.5">
+              <div className="mb-3 space-y-1">
                 {cats.map((c) => (
-                  <span key={c.key} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c.chip}`}>
-                    {c.label}
-                    {c.key === 'water' && rec.water ? ` ${rec.water.totalDrankMl} ml` : ''}
-                    {c.key === 'sleep' && rec.sleep ? ` ${Math.floor(rec.sleep.minutes / 60)}h${String(rec.sleep.minutes % 60).padStart(2, '0')}` : ''}
-                    {c.key === 'weight' && rec.weight.length ? ` ${(rec.weight[rec.weight.length - 1].value / 1000).toFixed(1)} kg` : ''}
-                    {(c.key === 'medicine' || c.key === 'meal' || c.key === 'study') && rec[c.key].length ? ` ${rec[c.key].length} lần` : ''}
-                  </span>
+                  <div key={c.key} className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${c.chip}`}>
+                    <span className={`size-2 shrink-0 rounded-full ${c.dot}`} />
+                    <span className="text-[12px] font-semibold">{c.label}</span>
+                    <span className="ml-auto text-[12px] font-semibold tabular-nums">{catDetail(c, rec)}</span>
+                  </div>
                 ))}
               </div>
             );
@@ -235,15 +243,13 @@ export function CalendarPage() {
                     ))}
                   </span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1.5">
+                <div className="mt-1 space-y-0.5">
                   {catsOf(rec).map((c) => (
-                    <span key={c.key} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c.chip}`}>
-                      {c.label}
-                      {c.key === 'water' && rec.water ? ` ${rec.water.totalDrankMl}/${rec.water.targetMl} ml` : ''}
-                      {c.key === 'sleep' && rec.sleep ? ` ${Math.floor(rec.sleep.minutes / 60)}h${String(rec.sleep.minutes % 60).padStart(2, '0')}` : ''}
-                      {c.key === 'weight' && rec.weight.length ? ` ${(rec.weight[0].value / 1000).toFixed(1)} kg` : ''}
-                      {(c.key === 'medicine' || c.key === 'meal' || c.key === 'study') && rec[c.key].length ? ` ${rec[c.key].length} lần` : ''}
-                    </span>
+                    <div key={c.key} className="flex items-center gap-1.5">
+                      <span className={`size-1.5 shrink-0 rounded-full ${c.dot}`} />
+                      <span className="text-[11px] font-semibold text-slate-600">{c.label}</span>
+                      <span className="text-[11px] tabular-nums text-slate-500">{catDetail(c, rec)}</span>
+                    </div>
                   ))}
                 </div>
               </button>

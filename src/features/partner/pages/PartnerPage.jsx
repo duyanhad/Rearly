@@ -42,6 +42,7 @@ import { accent, shade } from '../../../utils/color';
 import { useLiquidColor } from '../../water/hooks/useLiquidColor';
 import { periodLabel, timeLabel } from '../../../utils/format';
 import { readLastAction, saveLastAction } from '../../../utils/lastAction';
+import { NudgeSheet } from '../../social/components/NudgeSheet';
 
 const periodLabels = { Morning: 'Sáng', Afternoon: 'Trưa', Evening: 'Tối' };
 const emptyFx = { key: 0, ml: 0 };
@@ -235,10 +236,14 @@ export function PartnerPage() {
 
   const pendingCountOf = (userId) => proofs.filter((p) => p.userId === userId).length;
 
-  // Chuông: nhắc khách đang xem uống nước (realtime/push như nút ở trang Bạn bè).
+  // Chuông: chọn loại nhắc (nước/bữa ăn/thuốc…) + lời nhắn, gửi realtime/push.
+  const [nudgeOpen, setNudgeOpen] = useState(false);
   const nudge = useMutation({
-    mutationFn: async (userId) => socialService.nudge(userId),
-    onSuccess: () => toast.show('Đã gửi nhắc nhở', `${selected ? displayName(selected) : 'Khách'} sẽ nhận thông báo uống nước ngay.`),
+    mutationFn: async ({ userId, kind, message }) => socialService.nudge(userId, { kind, message }),
+    onSuccess: () => {
+      setNudgeOpen(false);
+      toast.show('Đã gửi nhắc nhở', `${selected ? displayName(selected) : 'Khách'} sẽ nhận thông báo ngay.`);
+    },
     onError: (err) => toast.show('Không gửi được', errorMessage(err)),
   });
 
@@ -586,13 +591,13 @@ export function PartnerPage() {
               </button>
               <button
                 type="button"
-                onClick={() => selected && nudge.mutate(selected.id)}
-                disabled={nudge.isPending}
+                onClick={() => setNudgeOpen(true)}
+                disabled={!selected}
                 className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-water-700 hover:bg-water-50 disabled:opacity-50"
-                aria-label={`Nhắc ${displayName(selected)} uống nước`}
-                title="Nhắc uống nước"
+                aria-label={`Nhắc ${displayName(selected)}`}
+                title="Nhắc nhở"
               >
-                <BellRing className="size-3" /> Nhắc uống nước
+                <BellRing className="size-3" /> Nhắc nhở
               </button>
             </div>
           </section>
@@ -836,6 +841,14 @@ export function PartnerPage() {
       </div>
 
       {/* Dialog đặt biệt hiệu */}
+      {nudgeOpen && selected && (
+        <NudgeSheet
+          name={displayName(selected)}
+          sending={nudge.isPending}
+          onClose={() => setNudgeOpen(false)}
+          onSend={({ kind, message }) => nudge.mutate({ userId: selected.id, kind, message })}
+        />
+      )}
       {renaming && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">

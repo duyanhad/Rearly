@@ -9,6 +9,7 @@ import { socialService } from '../../../services/socialService';
 import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
 import { VoiceRecorder, AudioBubble } from './VoiceRecorder';
+import { NudgeSheet } from '../../social/components/NudgeSheet';
 
 const timeLabel = (iso) => {
   if (!iso) return '';
@@ -141,10 +142,14 @@ export function ChatPanel({ compact = false }) {
     send.mutate(body);
   };
 
-  // Chuông trong hội thoại: nhắc người đang chat uống nước (thông báo realtime/push như nút ở trang Bạn bè).
+  // Chuông trong hội thoại: chọn loại nhắc (nước/bữa ăn/thuốc…) + lời nhắn, gửi realtime/push.
+  const [nudgeOpen, setNudgeOpen] = useState(false);
   const nudge = useMutation({
-    mutationFn: async (userId) => socialService.nudge(userId),
-    onSuccess: () => toast.show('Đã gửi nhắc nhở', `${active?.name ?? 'Bạn ấy'} sẽ nhận thông báo uống nước ngay.`),
+    mutationFn: async ({ userId, kind, message }) => socialService.nudge(userId, { kind, message }),
+    onSuccess: () => {
+      setNudgeOpen(false);
+      toast.show('Đã gửi nhắc nhở', `${active?.name ?? 'Bạn ấy'} sẽ nhận thông báo ngay.`);
+    },
     onError: (err) => toast.show('Không gửi được', errorMessage(err)),
   });
 
@@ -216,11 +221,11 @@ export function ChatPanel({ compact = false }) {
         <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{active?.name}</span>
         <button
-          onClick={() => active && nudge.mutate(active.userId)}
-          disabled={nudge.isPending}
+          onClick={() => setNudgeOpen(true)}
+          disabled={!active}
           className="rounded-lg p-1.5 text-water-700 transition hover:bg-water-50 disabled:opacity-50"
-          aria-label={`Nhắc ${active?.name ?? 'bạn ấy'} uống nước`}
-          title="Nhắc uống nước"
+          aria-label={`Nhắc ${active?.name ?? 'bạn ấy'}`}
+          title="Nhắc nhở"
         >
           <BellRing className="size-4" />
         </button>
@@ -292,6 +297,14 @@ export function ChatPanel({ compact = false }) {
           </button>
         )}
       </form>
+      {nudgeOpen && active && (
+        <NudgeSheet
+          name={active.name}
+          sending={nudge.isPending}
+          onClose={() => setNudgeOpen(false)}
+          onSend={({ kind, message }) => nudge.mutate({ userId: active.userId, kind, message })}
+        />
+      )}
     </>
   );
 
