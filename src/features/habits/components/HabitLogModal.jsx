@@ -51,7 +51,6 @@ export function HabitLogModal({ kind, onClose }) {
     () =>
       ({
         medicine: ['Thuốc sáng', 'Thuốc trưa', 'Thuốc tối'],
-        meal: ['Bữa sáng', 'Bữa trưa', 'Bữa tối'],
         study: ['Học 30 phút', 'Đọc sách', 'Ôn bài'],
       })[kind] ?? [],
     [kind],
