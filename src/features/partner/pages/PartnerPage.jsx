@@ -529,27 +529,16 @@ export function PartnerPage() {
               />
             </div>
 
-            {cupUrl && !isPreCut ? (
-              // Ảnh cốc chưa tách nền: hiển thị ảnh phẳng sáng dần theo % (không chạy AI/3D bên máy duyệt).
-              <HabitAvatar3D
-                imageUrl={cupUrl}
-                percent={Math.max(0, dailyPercent)}
-                kind="water"
-                plain
-                className="h-64 w-full md:h-80"
-              />
-            ) : (
-              <WaterCup3D
-                percent={Math.max(0, dailyPercent)}
-                textureUrl={cupUrl}
-                spill={spillFx.ml}
-                spillKey={spillFx.key}
-                pourIn={pourFx.ml}
-                pourKey={pourFx.key}
-                pourOrigin={pourOrigin}
-                preCut={isPreCut}
-              />
-            )}
+            <WaterCup3D
+              percent={Math.max(0, dailyPercent)}
+              textureUrl={cupUrl}
+              spill={spillFx.ml}
+              spillKey={spillFx.key}
+              pourIn={pourFx.ml}
+              pourKey={pourFx.key}
+              pourOrigin={pourOrigin}
+              preCut={isPreCut}
+            />
 
             <div className="mt-2 text-center">
               <div className="flex items-baseline justify-center gap-0.5">
