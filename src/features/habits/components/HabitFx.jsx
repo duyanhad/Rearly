@@ -66,6 +66,11 @@ export function HabitFx({ kind, signal = 0, hit = false, spill = 0, sleeping = f
     lastSpill.current = spill;
   }, [spill]);
 
+  // Mở lại trang khi hành động gần nhất là bị từ chối: diễn lại cảnh "ói ra" một lần.
+  useEffect(() => {
+    if (spill > 0) setSpillKey((k) => k + 1);
+  }, []);
+
   if (!hit && !drops.length && !spillKey && !sleeping) return null;
 
   // Giấc ngủ: đang ngủ → Zzz bay lên liên tục (gấu sáng dần nhờ HabitAvatar3D bên dưới);
