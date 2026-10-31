@@ -65,7 +65,8 @@ export function SleepTodayPanel() {
   const running = logs.find((l) => l.status === 'sleeping');
   // Nhiều phiếu trong ngày → lấy phiếu MỚI NHẤT (theo mốc bắt đầu/kết thúc), không lấy phiếu đầu tiên.
   const stamp = (l) => l.endedAtUtc ?? l.startedAtUtc ?? '';
-  const todayLogs = logs.filter((l) => l.date === todayIso);
+  // Đêm nay có thể mang ngày mai (bắt đầu sau 18h) → lấy cả phiếu từ hôm nay trở đi.
+  const todayLogs = logs.filter((l) => l.date >= todayIso);
   const last = running ?? [...todayLogs].sort((a, b) => stamp(a).localeCompare(stamp(b))).at(-1);
   const goal = data?.goalMinutes ?? 480;
   const logged = last?.minutes ?? 0;
