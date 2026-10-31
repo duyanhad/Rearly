@@ -79,9 +79,10 @@ export function HabitFx({ kind, signal = 0, hit = false, spill = 0, sleeping = f
                 key={`zz-${i}`}
                 className="habit-zz-loop absolute font-extrabold text-indigo-400"
                 style={{
-                  right: `${18 + i * 9}%`,
-                  bottom: `${30 + i * 3}%`,
-                  fontSize: `${12 + i * 5}px`,
+                  // Bốc ra từ phía trên đầu con gấu (góc phải trên của khung ảnh).
+                  right: `${22 + i * 7}%`,
+                  bottom: `${52 + i * 4}%`,
+                  fontSize: `${13 + i * 6}px`,
                   animationDelay: `${i * 1.05}s`,
                 }}
               >

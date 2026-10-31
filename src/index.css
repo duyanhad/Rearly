@@ -526,8 +526,9 @@ body {
 }
 
 .habit-sleep-glow {
-  background: radial-gradient(58% 52% at 50% 47%, rgba(255, 226, 175, 0.8), rgba(255, 210, 150, 0.25) 48%, rgba(255, 210, 150, 0) 72%);
-  animation: habit-breathe 5s ease-in-out infinite;
+  background: radial-gradient(60% 56% at 50% 46%, rgba(255, 236, 190, 0.95), rgba(255, 206, 130, 0.4) 45%, rgba(255, 196, 110, 0) 75%);
+  animation: habit-breathe 3.4s ease-in-out infinite;
+  filter: blur(2px);
 }
 
 @keyframes habit-zz {

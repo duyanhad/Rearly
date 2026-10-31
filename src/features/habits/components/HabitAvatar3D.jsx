@@ -52,13 +52,14 @@ export function HabitAvatar3D({
   // Thẻ lớn: chưa đủ chỉ tiêu thì ảnh tối đi, đủ rồi mới sáng lên (như nước dâng đầy cốc).
   // Có `percent` (0–100) thì sáng dần theo đúng % đã làm được — dùng cho giấc ngủ.
   const tone = typeof percent === 'number' ? 'habit-tone' : plain ? (hit ? 'habit-lit' : 'habit-dim') : '';
+  const pct = typeof percent === 'number' ? Math.min(100, Math.max(0, percent)) / 100 : 0;
   const litStyle =
     typeof percent === 'number'
       ? {
-          filter: `brightness(${(0.5 + (0.6 * Math.min(100, Math.max(0, percent))) / 100).toFixed(2)}) saturate(${(
-            0.55 +
-            (0.53 * Math.min(100, Math.max(0, percent))) / 100
-          ).toFixed(2)}) drop-shadow(0 6px 14px rgba(255, 205, 140, ${(0.15 + (0.4 * Math.min(100, Math.max(0, percent))) / 100).toFixed(2)}))`,
+          // Sáng dần theo % đã ngủ: 0% hơi tối, 100% rực sáng + quầng ấm.
+          filter: `brightness(${(0.82 + 0.38 * pct).toFixed(3)}) saturate(${(0.85 + 0.35 * pct).toFixed(3)}) drop-shadow(0 0 ${(
+            6 + 22 * pct
+          ).toFixed(0)}px rgba(255, 214, 150, ${(0.25 + 0.6 * pct).toFixed(2)}))`,
         }
       : undefined;
   if (!src) {
@@ -77,8 +78,13 @@ export function HabitAvatar3D({
   }
   return (
     <span className={`habit-stage relative flex items-center justify-center overflow-hidden ${frame} ${className}`}>
-      {/* Quầng ấm nằm sau vật thể: đủ mục tiêu thì "sáng cả gối" */}
-      {hit && <span className="habit-sleep-glow pointer-events-none absolute inset-0" />}
+      {/* Quầng ấm nằm sau vật thể: đang ngủ → sáng dần theo %, đủ mục tiêu → "sáng cả gối" */}
+      {(hit || sleeping) && (
+        <span
+          className="habit-sleep-glow pointer-events-none absolute inset-0"
+          style={{ opacity: hit ? 1 : 0.35 + 0.65 * pct }}
+        />
+      )}
       {/* Bóng tiếp xúc dưới vật thể, như cốc nước đặt trên mặt bàn */}
       {cut && plain && <span className="habit-object-shadow" />}
       <span className={`flex size-full items-center justify-center ${react === 'pop' ? 'habit-object-pop' : react === 'hit' ? 'habit-object-hit' : ''}`}>
