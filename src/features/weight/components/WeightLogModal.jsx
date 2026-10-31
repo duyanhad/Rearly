@@ -14,7 +14,7 @@ export function WeightLogModal({ onClose, lastKg }) {
   const qc = useQueryClient();
   const fileRef = useRef(null);
   const [weight, setWeight] = useState(lastKg ? lastKg.toFixed(1) : '');
-  const [time, setTime] = useState(nowHhmm());
+  const [time] = useState(nowHhmm());
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState('');
@@ -50,7 +50,8 @@ export function WeightLogModal({ onClose, lastKg }) {
   const submit = useMutation({
     mutationFn: () => {
       const form = new FormData();
-      form.append('time', time);
+      // Không cho chỉnh giờ: ghi nhận đúng lúc bấm lưu.
+      form.append('time', nowHhmm());
       form.append('value', String(value));
       if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
@@ -93,15 +94,12 @@ export function WeightLogModal({ onClose, lastKg }) {
               className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:border-water-400 focus:bg-white focus:outline-none"
             />
           </label>
-          <label>
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Giờ cân</span>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-            />
-          </label>
+          <div>
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cân lúc</span>
+            <p className="w-full rounded-xl bg-slate-50 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800">
+              {time}
+            </p>
+          </div>
         </div>
 
         {preview ? (

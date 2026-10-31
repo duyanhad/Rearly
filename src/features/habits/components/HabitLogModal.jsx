@@ -23,7 +23,6 @@ export function HabitLogModal({ kind, onClose }) {
   const cfg = HABIT_KINDS[kind];
   const qc = useQueryClient();
   const fileRef = useRef(null);
-  const [time, setTime] = useState(nowText());
   const [mealSlot, setMealSlot] = useState('lunch');
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
@@ -33,7 +32,8 @@ export function HabitLogModal({ kind, onClose }) {
   const submit = useMutation({
     mutationFn: () => {
       const form = new FormData();
-      form.append('time', kind === 'meal' ? nowText() : time);
+      // Không cho chỉnh giờ: luôn ghi nhận đúng lúc bấm lưu.
+      form.append('time', nowText());
       if (kind === 'meal') form.append('mealSlot', mealSlot);
       if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
@@ -72,21 +72,12 @@ export function HabitLogModal({ kind, onClose }) {
           </button>
         </div>
 
-        {/* Bữa ăn: không cho chỉnh giờ — lấy đúng lúc báo cáo. */}
+        {/* Không cho chỉnh giờ: ghi nhận đúng lúc báo cáo. */}
         <label className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
           <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-            <Clock className="size-3.5" /> {kind === 'meal' ? 'Báo cáo lúc' : 'Lúc'}
+            <Clock className="size-3.5" /> Báo cáo lúc
           </span>
-          {kind === 'meal' ? (
-            <span className="text-sm font-bold tabular-nums text-slate-800">{nowText()}</span>
-          ) : (
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-bold tabular-nums text-slate-800"
-            />
-          )}
+          <span className="text-sm font-bold tabular-nums text-slate-800">{nowText()}</span>
         </label>
 
         {/* Chọn bữa: 3 bữa chính cộng %, bữa phụ / ăn vặt chỉ ghi nhận. */}
