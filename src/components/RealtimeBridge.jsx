@@ -95,9 +95,31 @@ export function RealtimeBridge() {
         toast.show(payload.title ?? 'Bị trừ nước', payload.message);
       });
 
-    // Tin nhắn mới: cập nhật hội thoại rồi báo (toast + rung + âm + thông báo hệ thống).
-    const onMessage = (payload) =>
-      void syncThen(['chat-conversations', 'chat-thread'], () => {
+    // Tin nhắn mới: ghép thẳng vào cache hội thoại đang mở (hiện ngay không chờ tải lại),
+    // sau đó mới làm mới danh sách hội thoại + báo.
+    const onMessage = (payload) => {
+      const from = payload.fromUserId;
+      if (from && payload.id) {
+        queryClient.setQueryData(['chat-thread', from], (old = []) =>
+          old.some((m) => m.id === payload.id)
+            ? old
+            : [
+                ...old,
+                {
+                  id: payload.id,
+                  mine: false,
+                  body: payload.body ?? '',
+                  createdAt: payload.createdAt,
+                  readAt: null,
+                  audioUrl: payload.audioUrl ?? null,
+                  audioDurationMs: payload.audioDurationMs ?? null,
+                  imageUrl: payload.imageUrl ?? null,
+                  reactions: [],
+                },
+              ],
+        );
+      }
+      void syncThen(['chat-conversations'], () => {
         const title = payload.title ?? payload.fromName ?? 'Tin nhắn mới';
         const body = payload.message ?? payload.body ?? '';
         toast.show(title, body);
@@ -105,6 +127,7 @@ export function RealtimeBridge() {
         playChime('normal');
         void showSystemNotification(title, body, 'normal');
       });
+    };
 
     // Nhắc uống nước tự động: banner trong app + rung + âm báo + thông báo hệ thống.
     const onReminder = (payload) => {

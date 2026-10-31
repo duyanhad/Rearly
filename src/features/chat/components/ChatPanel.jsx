@@ -286,7 +286,8 @@ export function ChatPanel({ compact = false }) {
     queryKey: ['chat-thread', activeId],
     queryFn: async () => (await chatService.thread(activeId)).data,
     enabled: !!activeId,
-    refetchInterval: 10_000,
+    // Realtime push tin mới thẳng vào cache nên chỉ poll thưa làm lưới an toàn.
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {
@@ -467,7 +468,13 @@ export function ChatPanel({ compact = false }) {
               activeId === c.userId ? 'bg-water-50 ring-1 ring-water-200' : 'hover:bg-slate-50'
             }`}
           >
-            <Avatar url={c.avatarUrl} name={c.name} size="md" />
+            <span className="relative shrink-0">
+              <Avatar url={c.avatarUrl} name={c.name} size="md" />
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-white ${c.online ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                title={c.online ? 'Đang online' : 'Ngoại tuyến'}
+              />
+            </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-baseline justify-between gap-2">
                 <span className="truncate text-sm font-semibold text-slate-800">{c.name}</span>
@@ -506,7 +513,12 @@ export function ChatPanel({ compact = false }) {
           aria-label={`Xem trang cá nhân của ${active?.name ?? ''}`}
           title="Xem trang cá nhân"
         >
-          <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
+          <span className="relative block">
+              <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-white ${active?.online ? 'bg-emerald-500' : 'bg-slate-300'}`}
+              />
+            </span>
         </button>
         <button
           onClick={() => active && nav(`/friends/${active.userId}`)}

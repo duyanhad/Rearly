@@ -308,12 +308,6 @@ export function PartnerPage() {
       </p>
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-bold">Bạn đang duyệt cho {clients.length} người</h1>
-        <Link
-          to="/partner/sleep"
-          className="ml-auto flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
-        >
-          <Moon className="size-3.5" /> Duyệt giấc ngủ
-        </Link>
       </div>
       <p className="mt-1 text-sm text-slate-300">
         {selected
@@ -408,9 +402,6 @@ export function PartnerPage() {
                         {c.nickname && (
                           <span className="block truncate text-[11px] text-slate-400">{c.fullName}</span>
                         )}
-                        <span className="mt-1 block text-xs text-slate-500">
-                          {c.totalDrankMl} / {c.targetMl} ml · {pct}%
-                        </span>
                       </span>
                       <ChevronRight className="size-5 shrink-0 text-slate-300" />
                     </button>
