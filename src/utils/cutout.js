@@ -402,33 +402,19 @@ function trimRowProtrusions(px, w, h) {
     }
   }
 
-  const radius = Math.max(12, Math.round(h * 0.1));
-  // Đường bao "lý tưởng" của vật: trung bình trượt của mép trái/phải. Phần thò ra cục bộ
-  // (ngón tay) lệch khỏi đường bao này nên bị cắt, còn thân/nắp cốc bám sát nên giữ nguyên.
-  const smoothL = new Float32Array(h);
-  const smoothR = new Float32Array(h);
-  for (let y = 0; y < h; y++) {
+  // Bắt "gai" thò ra (ngón tay): mép đột ngột nhô ra rồi thụt lại ngay sau đó.
+  // Chỉ cắt khi phần thò rất nhỏ (<8% chiều rộng) → không bao giờ ăn vào nắp/thân cốc.
+  const reach = Math.max(3, Math.round(h * 0.03));
+  const maxSpike = Math.max(3, w * 0.08);
+  for (let y = reach; y < h - reach; y++) {
     if (left[y] < 0) continue;
-    let sumL = 0;
-    let sumR = 0;
-    let n = 0;
-    for (let k = y - radius; k <= y + radius; k++) {
-      if (k < 0 || k >= h || left[k] < 0) continue;
-      sumL += left[k];
-      sumR += right[k];
-      n++;
-    }
-    smoothL[y] = sumL / n;
-    smoothR[y] = sumR / n;
-  }
-
-  for (let y = 0; y < h; y++) {
-    if (left[y] < 0) continue;
-    const span = Math.max(8, smoothR[y] - smoothL[y]);
-    const tol = Math.max(4, span * 0.09);
-    const from = Math.round(smoothL[y] + tol);
-    const to = Math.round(smoothR[y] - tol);
-    if (to - from < span * 0.45) continue; // đường bao bất thường → bỏ qua hàng này
+    const refL = Math.min(left[y - reach], left[y + reach]);
+    const refR = Math.max(right[y - reach], right[y + reach]);
+    const spikeL = refL > 0 && left[y] < refL - 2 && refL - left[y] < maxSpike;
+    const spikeR = refR < w - 1 && right[y] > refR + 2 && right[y] - refR < maxSpike;
+    if (!spikeL && !spikeR) continue;
+    const from = spikeL ? refL : 0;
+    const to = spikeR ? refR : w - 1;
     for (let x = 0; x < w; x++) {
       if (x < from || x > to) px[(y * w + x) * 4 + 3] = 0;
     }
