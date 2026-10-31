@@ -39,6 +39,7 @@ export function ChatPanel({ compact = false }) {
   const [draft, setDraft] = useState('');
   const [voiceBusy, setVoiceBusy] = useState(false);
   const scrollRef = useRef(null);
+  const endRef = useRef(null);
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['chat-conversations'],
@@ -74,17 +75,32 @@ export function ChatPanel({ compact = false }) {
     };
   }, [activeId, messages.length]);
 
-  // Bàn phím mở/đóng làm khung chat đổi chiều cao → cuộn lại xuống đáy.
+  // Bàn phím mở/đóng (iOS co giãn visualViewport) + input được focus → luôn bám tin cuối.
+  // Cuộn nhiều mốc vì iOS chỉ cập nhật chiều cao sau vài khung hình.
+  const stickToBottom = () => {
+    const box = scrollRef.current;
+    if (!box) return;
+    box.scrollTop = box.scrollHeight;
+    endRef.current?.scrollIntoView({ block: 'end' });
+  };
+
   useEffect(() => {
     if (!activeId) return undefined;
     const v = window.visualViewport;
-    if (!v) return undefined;
-    const onResize = () => {
-      const box = scrollRef.current;
-      if (box) box.scrollTop = box.scrollHeight;
+    const timers = [];
+    const onViewport = () => {
+      stickToBottom();
+      [50, 150, 320, 600].forEach((ms) => timers.push(window.setTimeout(stickToBottom, ms)));
     };
-    v.addEventListener('resize', onResize);
-    return () => v.removeEventListener('resize', onResize);
+    v?.addEventListener('resize', onViewport);
+    v?.addEventListener('scroll', onViewport);
+    window.addEventListener('focusin', onViewport);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      v?.removeEventListener('resize', onViewport);
+      v?.removeEventListener('scroll', onViewport);
+      window.removeEventListener('focusin', onViewport);
+    };
   }, [activeId]);
 
   useEffect(() => {
@@ -245,6 +261,7 @@ export function ChatPanel({ compact = false }) {
             </div>
           </div>
         ))}
+        <div ref={endRef} />
       </div>
       <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-slate-100 p-1.5">
         {!voiceBusy && (
@@ -283,13 +300,14 @@ export function ChatPanel({ compact = false }) {
   }
 
   // Trang /chat: điện thoại hiện danh sách → hội thoại; máy tính 2 cột.
+  // Giới hạn chiều cao theo viewport để ô nhập luôn nằm trong màn hình (không bị BottomNav che).
   return (
     <div className="grid gap-3 md:grid-cols-[18rem_1fr]">
-      <div className={`flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 ${activeId ? 'hidden md:flex' : ''}`}>
+      <div className={`flex max-h-[calc(100dvh-13rem)] min-h-[24rem] flex-col rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 ${activeId ? 'hidden md:flex' : ''}`}>
         {list}
       </div>
       <section
-        className={`flex min-h-[60vh] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 ${
+        className={`flex max-h-[calc(100dvh-13rem)] min-h-[24rem] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 ${
           activeId ? '' : 'hidden md:flex'
         }`}
       >
