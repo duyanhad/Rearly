@@ -13,6 +13,13 @@ const MEAL_SLOTS = [
   { id: 'extra', label: 'Ăn vặt', emoji: '🍪', counts: false },
 ];
 
+// Thuốc giống bữa ăn: 3 ca sáng/trưa/tối, mỗi ca được duyệt cộng 1/3 %.
+const MEDICINE_SLOTS = [
+  { id: 'morning', label: 'Thuốc sáng', emoji: '🌅', counts: true },
+  { id: 'noon', label: 'Thuốc trưa', emoji: '☀️', counts: true },
+  { id: 'night', label: 'Thuốc tối', emoji: '🌙', counts: true },
+];
+
 const nowText = () => {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -23,7 +30,7 @@ export function HabitLogModal({ kind, onClose }) {
   const cfg = HABIT_KINDS[kind];
   const qc = useQueryClient();
   const fileRef = useRef(null);
-  const [mealSlot, setMealSlot] = useState('lunch');
+  const [mealSlot, setMealSlot] = useState(kind === 'medicine' ? 'morning' : 'lunch');
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState('');
@@ -34,7 +41,7 @@ export function HabitLogModal({ kind, onClose }) {
       const form = new FormData();
       // Không cho chỉnh giờ: luôn ghi nhận đúng lúc bấm lưu.
       form.append('time', nowText());
-      if (kind === 'meal') form.append('mealSlot', mealSlot);
+      if (kind === 'meal' || kind === 'medicine') form.append('mealSlot', mealSlot);
       if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
       return habitLogService.add(kind, form);
@@ -80,12 +87,14 @@ export function HabitLogModal({ kind, onClose }) {
           <span className="text-sm font-bold tabular-nums text-slate-800">{nowText()}</span>
         </label>
 
-        {/* Chọn bữa: 3 bữa chính cộng %, bữa phụ / ăn vặt chỉ ghi nhận. */}
-        {kind === 'meal' && (
+        {/* Chọn bữa / ca thuốc: 3 mục chính cộng %, bữa phụ / ăn vặt chỉ ghi nhận. */}
+        {(kind === 'meal' || kind === 'medicine') && (
           <div className="mt-2">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Bữa nào?</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              {kind === 'meal' ? 'Bữa nào?' : 'Ca nào?'}
+            </p>
             <div className="grid grid-cols-3 gap-1.5">
-              {MEAL_SLOTS.map((slot) => {
+              {(kind === 'meal' ? MEAL_SLOTS : MEDICINE_SLOTS).map((slot) => {
                 const active = mealSlot === slot.id;
                 return (
                   <button

@@ -45,13 +45,24 @@ export function HabitTodayPanel({ kind }) {
   const logs = data?.logs ?? [];
   const pending = logs.filter((l) => l.status === 'pending').length;
   const percent = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
-  // Bữa ăn: báo cáo là sáng trước (kể cả chờ duyệt), partner từ chối mới trừ sáng.
-  const MAIN_MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
-  const reportedMain =
-    kind === 'meal'
-      ? MAIN_MEAL_SLOTS.filter((s) => logs.some((l) => l.mealSlot === s && l.status !== 'rejected')).length
-      : 0;
-  const litPercent = kind === 'meal' ? Math.round((reportedMain / MAIN_MEAL_SLOTS.length) * 100) : percent;
+  // Bữa ăn / thuốc: báo cáo là sáng trước (kể cả chờ duyệt), partner từ chối mới trừ sáng.
+  const SLOT_ROWS = {
+    meal: [
+      { id: 'breakfast', label: 'Sáng', emoji: '🌅' },
+      { id: 'lunch', label: 'Trưa', emoji: '🍚' },
+      { id: 'dinner', label: 'Tối', emoji: '🌙' },
+    ],
+    medicine: [
+      { id: 'morning', label: 'Sáng', emoji: '🌅' },
+      { id: 'noon', label: 'Trưa', emoji: '💊' },
+      { id: 'night', label: 'Tối', emoji: '🌙' },
+    ],
+  };
+  const slots = SLOT_ROWS[kind];
+  const reportedMain = slots
+    ? slots.filter((s) => logs.some((l) => l.mealSlot === s.id && l.status !== 'rejected')).length
+    : 0;
+  const litPercent = slots ? Math.round((reportedMain / slots.length) * 100) : percent;
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
   const { pour, approve, spill } = useHabitEvents(logs);
   const Icon = cfg.icon;
@@ -91,14 +102,10 @@ export function HabitTodayPanel({ kind }) {
             <div className="h-1.5 w-full max-w-[230px] overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883]" style={{ width: `${percent}%` }} />
             </div>
-            {/* Bữa ăn: 3 bữa chính, mỗi bữa duyệt xong là cộng 1 phần ba (= 33%). */}
-            {kind === 'meal' && (
+            {/* Bữa ăn / thuốc: 3 mục chính, mỗi mục duyệt xong là cộng 1 phần ba (= 33%). */}
+            {slots && (
               <div className="mt-1 flex items-center gap-1.5">
-                {[
-                  { id: 'breakfast', label: 'Sáng', emoji: '🌅' },
-                  { id: 'lunch', label: 'Trưa', emoji: '🍚' },
-                  { id: 'dinner', label: 'Tối', emoji: '🌙' },
-                ].map((slot) => {
+                {slots.map((slot) => {
                   const approved = logs.some((l) => l.mealSlot === slot.id && l.status === 'approved');
                   const waiting = logs.some((l) => l.mealSlot === slot.id && l.status === 'pending');
                   const rejected = logs.some((l) => l.mealSlot === slot.id && l.status === 'rejected');
