@@ -40,14 +40,22 @@ function highlight(text, query) {
 /** Một tin nhắn: chữ / ảnh / thoại + cảm xúc thả vào + thanh reaction (hover hoặc giữ lâu). */
 function MessageRow({ m, query, onReact, onZoom }) {
   const [barOpen, setBarOpen] = useState(false);
+  const barRef = useRef(null);
+  // Bấm ra ngoài thanh cảm xúc thì đóng (không dùng lớp phủ chặn click cả trang).
+  useEffect(() => {
+    if (!barOpen) return undefined;
+    const onDown = (e) => {
+      if (barRef.current && !barRef.current.contains(e.target)) setBarOpen(false);
+    };
+    window.addEventListener('pointerdown', onDown);
+    return () => window.removeEventListener('pointerdown', onDown);
+  }, [barOpen]);
   return (
     <div className={`flex flex-col ${m.mine ? 'items-end' : 'items-start'}`}>
       <div className="group relative">
         {barOpen && (
-          <button className="fixed inset-0 z-10 cursor-default" aria-label="Đóng thanh cảm xúc" onClick={() => setBarOpen(false)} />
-        )}
-        {barOpen && (
           <div
+            ref={barRef}
             className={`absolute -top-9 z-20 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-1 shadow-lg ring-1 ring-slate-200 ${
               m.mine ? 'right-0' : 'left-0'
             }`}
