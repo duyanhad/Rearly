@@ -45,6 +45,13 @@ export function HabitTodayPanel({ kind }) {
   const logs = data?.logs ?? [];
   const pending = logs.filter((l) => l.status === 'pending').length;
   const percent = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
+  // Bữa ăn: báo cáo là sáng trước (kể cả chờ duyệt), partner từ chối mới trừ sáng.
+  const MAIN_MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
+  const reportedMain =
+    kind === 'meal'
+      ? MAIN_MEAL_SLOTS.filter((s) => logs.some((l) => l.mealSlot === s && l.status !== 'rejected')).length
+      : 0;
+  const litPercent = kind === 'meal' ? Math.round((reportedMain / MAIN_MEAL_SLOTS.length) * 100) : percent;
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
   const { pour, spill } = useHabitEvents(logs);
   const Icon = cfg.icon;
@@ -59,7 +66,7 @@ export function HabitTodayPanel({ kind }) {
               imageUrl={setting?.imageUrl}
               cutoutUrl={setting?.cutoutUrl}
               hit={done >= target && target > 0}
-              percent={percent}
+              percent={litPercent}
               signal={pour + done}
               spill={spill}
               kind={kind}
