@@ -9,6 +9,8 @@ export const sleepService = {
   stop: (id, form) => api.post(`/api/sleep/${id}/stop`, form),
   /** Chốt ngày: % và quỹ giấc ngủ bắt đầu lại từ 0 cho ngày mới. */
   closeDay: () => api.post('/api/sleep/close-day'),
+  /** Partner chốt ngày giúp người mình theo dõi. */
+  closeDayFor: (userId) => api.post(`/api/sleep/close-day/${userId}`),
   // FormData: bedTime, wakeTime, note, date?, photo?
   submit: (form) => api.post('/api/sleep', form),
   inbox: () => api.get('/api/sleep/inbox'),

@@ -30,6 +30,7 @@ export function SleepTodayPanel() {
   const [logOpen, setLogOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   // Cập nhật mỗi 10 s để % sáng của ảnh và nút "Ghi/Bắt đầu/Kết thúc" bám theo đồng hồ.
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -208,13 +209,16 @@ export function SleepTodayPanel() {
                 : 'Nhập giờ ngủ → giờ thức → ảnh minh chứng → bộ đếm chạy'}
             </p>
             <button
-              onClick={() => closeDay.mutate()}
+              onClick={() => setConfirmClose(true)}
               disabled={closeDay.isPending || inProgress}
               className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-600 transition hover:border-water-300 hover:text-water-700 disabled:opacity-50"
               title={inProgress ? 'Hãy kết thúc giấc ngủ trước khi chốt ngày' : 'Bắt đầu ngày mới: % và quỹ giấc ngủ về 0'}
             >
               <RotateCcw className="size-3.5" /> {closeDay.isPending ? 'Đang chốt…' : 'Chốt ngày · bắt đầu ngày mới'}
             </button>
+            <p className="mt-1.5 text-center text-[10px] text-slate-400">
+              Tự động làm mới khi sang ngày mới · hoặc bấm để chốt ngay
+            </p>
           </div>
 
           <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -308,6 +312,40 @@ export function SleepTodayPanel() {
         />
       )}
       {settingsOpen && <SleepSettingsModal onClose={() => setSettingsOpen(false)} />}
+
+      {confirmClose && (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl">
+            <div className="flex items-center gap-2">
+              <span className="flex size-9 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                <RotateCcw className="size-4" />
+              </span>
+              <h2 className="text-sm font-bold text-slate-900">Chốt ngày giấc ngủ?</h2>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-600">
+              Bạn sẽ bắt đầu một <b>ngày ngủ mới</b>: % và quỹ giấc ngủ về 0. Các giấc đã ghi vẫn còn trong nhật ký
+              và partner vẫn xem được.
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={() => setConfirmClose(false)}
+                className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmClose(false);
+                  closeDay.mutate();
+                }}
+                className="flex-1 rounded-xl bg-water-600 py-2.5 text-sm font-semibold text-white hover:bg-water-700"
+              >
+                Chốt ngày
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

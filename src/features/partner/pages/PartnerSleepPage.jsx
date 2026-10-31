@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronLeft, Moon, X } from 'lucide-react';
+import { Check, ChevronLeft, Moon, RotateCcw, X } from 'lucide-react';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
 import { habitLogService } from '../../../services/habitLogService';
+import { socialService } from '../../../services/socialService';
+import { Avatar } from '../../../components/Avatar';
 import { HABIT_KINDS } from '../../habits/config';
 
 const toHours = (minutes) => `${Math.floor((minutes || 0) / 60)}h${String((minutes || 0) % 60).padStart(2, '0')}`;
@@ -25,6 +27,23 @@ export function PartnerSleepPage() {
   const { data: habitInbox = [] } = useQuery({
     queryKey: ['habit-inbox'],
     queryFn: async () => (await habitLogService.inbox()).data,
+  });
+
+  // Danh sách người mình theo dõi — để chốt ngày giấc ngủ giúp họ.
+  const { data: clients = [] } = useQuery({
+    queryKey: ['partner-clients'],
+    queryFn: async () => (await socialService.getPartnerClients()).data,
+  });
+
+  const [confirmFor, setConfirmFor] = useState(null);
+
+  const closeDayFor = useMutation({
+    mutationFn: (userId) => sleepService.closeDayFor(userId),
+    onSuccess: async () => {
+      setConfirmFor(null);
+      setError(null);
+    },
+    onError: (err) => setError(errorMessage(err)),
   });
 
   const review = useMutation({
@@ -73,6 +92,34 @@ export function PartnerSleepPage() {
       )}
 
       <div className="space-y-2">
+        {clients.length > 0 && (
+          <section className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100">
+            <h2 className="mb-1 flex items-center gap-1.5 text-sm font-bold text-slate-900">
+              <RotateCcw className="size-4 text-water-600" /> Chốt ngày giấc ngủ giúp họ
+            </h2>
+            <p className="mb-2 text-[11px] text-slate-500">
+              Bắt đầu ngày ngủ mới cho người bạn theo dõi: % và quỹ giấc ngủ của họ về 0.
+            </p>
+            <ul className="space-y-1.5">
+              {clients.map((c) => (
+                <li key={c.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+                  <Avatar url={c.avatarUrl} name={c.name ?? c.fullName ?? '?'} size="sm" />
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800">
+                    {c.name ?? c.fullName}
+                  </span>
+                  <button
+                    onClick={() => setConfirmFor(c)}
+                    disabled={closeDayFor.isPending}
+                    className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-water-300 hover:text-water-700 disabled:opacity-50"
+                  >
+                    Chốt ngày
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {inbox.map((p) => (
           <div key={p.id} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100">
             <div className="flex items-center gap-3">
@@ -150,6 +197,31 @@ export function PartnerSleepPage() {
       </div>
 
       {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      {confirmFor && (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl">
+            <h2 className="text-sm font-bold text-slate-900">Chốt ngày giấc ngủ cho {confirmFor.name ?? confirmFor.fullName}?</h2>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              % và quỹ giấc ngủ của họ sẽ về 0 để bắt đầu ngày mới. Họ sẽ nhận thông báo.
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={() => setConfirmFor(null)}
+                className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={() => closeDayFor.mutate(confirmFor.id)}
+                disabled={closeDayFor.isPending}
+                className="flex-1 rounded-xl bg-water-600 py-2.5 text-sm font-semibold text-white hover:bg-water-700 disabled:opacity-60"
+              >
+                {closeDayFor.isPending ? 'Đang chốt…' : 'Chốt ngày'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
