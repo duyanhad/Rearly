@@ -53,15 +53,8 @@ export function HabitAvatar3D({
   // Có `percent` (0–100) thì sáng dần theo đúng % đã làm được — dùng cho giấc ngủ.
   const tone = typeof percent === 'number' ? 'habit-tone' : plain ? (hit ? 'habit-lit' : 'habit-dim') : '';
   const pct = typeof percent === 'number' ? Math.min(100, Math.max(0, percent)) / 100 : 0;
-  const litStyle =
-    typeof percent === 'number'
-      ? {
-          // Sáng dần theo % đã ngủ: 0% hơi tối, 100% rực sáng + quầng ấm.
-          filter: `brightness(${(0.82 + 0.38 * pct).toFixed(3)}) saturate(${(0.85 + 0.35 * pct).toFixed(3)}) drop-shadow(0 0 ${(
-            6 + 22 * pct
-          ).toFixed(0)}px rgba(255, 214, 150, ${(0.25 + 0.6 * pct).toFixed(2)}))`,
-        }
-      : undefined;
+  // Ảnh gốc giữ nguyên độ sáng; phần "đã ngủ" được phủ sáng dần từ chân lên (xem lớp clip bên dưới).
+  const litStyle = undefined;
   if (!src) {
     return (
       <span className={`relative flex items-center justify-center overflow-hidden ${frame} ${className}`}>
@@ -82,18 +75,41 @@ export function HabitAvatar3D({
       {(hit || sleeping) && (
         <span
           className="habit-sleep-glow pointer-events-none absolute inset-0"
-          style={{ opacity: hit ? 1 : 0.35 + 0.65 * pct }}
+          style={{ opacity: hit ? 0.9 : 0.18 + 0.42 * pct }}
         />
       )}
       {/* Bóng tiếp xúc dưới vật thể, như cốc nước đặt trên mặt bàn */}
-      {cut && plain && <span className="habit-object-shadow" />}
+      {cut && plain && !sleeping && <span className="habit-object-shadow" />}
       <span className={`flex size-full items-center justify-center ${react === 'pop' ? 'habit-object-pop' : react === 'hit' ? 'habit-object-hit' : ''}`}>
-      <img
-        src={mediaUrl(src)}
-        alt=""
-        style={litStyle}
-        className={`habit-float3d relative size-full object-contain drop-shadow-md ${tone}`}
-      />
+        <span className="relative block size-full">
+          <img
+            src={mediaUrl(src)}
+            alt=""
+            style={litStyle}
+            className={`habit-float3d relative size-full object-contain drop-shadow-md ${tone}`}
+          />
+          {/* Sáng "dâng" từ chân vật thể lên theo % — giống nước dâng trong cốc bên tab Nước.
+              Dùng mask gradient (không phải clip-path) để mép sáng mềm, không thành dải cứng. */}
+          {typeof percent === 'number' && percent > 0 && (
+            <img
+              src={mediaUrl(src)}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 size-full object-contain transition-[mask-image,opacity] duration-700 ease-out"
+              style={{
+                maskImage: `linear-gradient(to top, #000 ${(pct * 100).toFixed(1)}%, transparent ${Math.min(
+                  100,
+                  pct * 100 + 14,
+                ).toFixed(1)}%)`,
+                WebkitMaskImage: `linear-gradient(to top, #000 ${(pct * 100).toFixed(1)}%, transparent ${Math.min(
+                  100,
+                  pct * 100 + 14,
+                ).toFixed(1)}%)`,
+                filter: `brightness(${(1.1 + 0.3 * pct).toFixed(2)}) saturate(${(1.05 + 0.2 * pct).toFixed(2)})`,
+              }}
+            />
+          )}
+        </span>
       </span>
       <HabitFx kind={kind} signal={signal} hit={hit} spill={spill} sleeping={sleeping} />
     </span>
