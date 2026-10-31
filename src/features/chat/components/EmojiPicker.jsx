@@ -60,7 +60,7 @@ export function EmojiPicker({ onPick, onClose }) {
           placeholder="Tìm emoji…"
           className="min-w-0 flex-1 bg-transparent text-sm outline-none"
         />
-        <button onClick={onClose} className="rounded px-1 text-xs text-slate-400 hover:text-slate-600" aria-label="Đóng bảng emoji">
+        <button type="button" onClick={onClose} className="rounded px-1 text-xs text-slate-400 hover:text-slate-600" aria-label="Đóng bảng emoji">
           ✕
         </button>
       </div>
@@ -70,7 +70,7 @@ export function EmojiPicker({ onPick, onClose }) {
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Đã dùng gần đây</p>
             <div className="mb-2 grid grid-cols-8 gap-0.5">
               {recent.map((e) => (
-                <button key={e} onClick={() => pick(e)} className="rounded p-0.5 text-lg leading-none hover:bg-slate-100" aria-label={`Emoji ${e}`}>
+                <button type="button" key={e} onClick={() => pick(e)} className="rounded p-0.5 text-lg leading-none hover:bg-slate-100" aria-label={`Emoji ${e}`}>
                   {e}
                 </button>
               ))}
@@ -82,7 +82,7 @@ export function EmojiPicker({ onPick, onClose }) {
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{g.label}</p>
             <div className="grid grid-cols-8 gap-0.5">
               {g.items.map((e) => (
-                <button key={e} onClick={() => pick(e)} className="rounded p-0.5 text-lg leading-none hover:bg-slate-100" aria-label={`Emoji ${e}`}>
+                <button type="button" key={e} onClick={() => pick(e)} className="rounded p-0.5 text-lg leading-none hover:bg-slate-100" aria-label={`Emoji ${e}`}>
                   {e}
                 </button>
               ))}
