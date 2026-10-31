@@ -53,8 +53,14 @@ export function HabitAvatar3D({
   // Có `percent` (0–100) thì sáng dần theo đúng % đã làm được — dùng cho giấc ngủ.
   const tone = typeof percent === 'number' ? 'habit-tone' : plain ? (hit ? 'habit-lit' : 'habit-dim') : '';
   const pct = typeof percent === 'number' ? Math.min(100, Math.max(0, percent)) / 100 : 0;
-  // Ảnh gốc giữ nguyên độ sáng; phần "đã ngủ" được phủ sáng dần từ chân lên (xem lớp clip bên dưới).
-  const litStyle = undefined;
+  // Ảnh gốc tối theo mức đã làm được: 0% = tối, mỗi bữa/% tăng thì sáng dần lên.
+  // (Trước đây ảnh gốc luôn sáng nên 0 bữa vẫn trông như "sáng full".)
+  const litStyle =
+    typeof percent === 'number'
+      ? {
+          filter: `brightness(${(0.55 + 0.55 * pct).toFixed(2)}) saturate(${(0.6 + 0.45 * pct).toFixed(2)})`,
+        }
+      : undefined;
   if (!src) {
     return (
       <span className={`relative flex items-center justify-center overflow-hidden ${frame} ${className}`}>
