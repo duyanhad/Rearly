@@ -5,6 +5,14 @@ import { errorMessage } from '../../../services/apiClient';
 import { habitLogService } from '../../../services/habitLogService';
 import { HABIT_KINDS } from '../config';
 
+const MEAL_SLOTS = [
+  { id: 'breakfast', label: 'Bữa sáng', emoji: '🌅', counts: true },
+  { id: 'lunch', label: 'Bữa trưa', emoji: '🍚', counts: true },
+  { id: 'dinner', label: 'Bữa tối', emoji: '🌙', counts: true },
+  { id: 'snack', label: 'Bữa phụ', emoji: '🥤', counts: false },
+  { id: 'extra', label: 'Ăn vặt', emoji: '🍪', counts: false },
+];
+
 const nowText = () => {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -16,6 +24,7 @@ export function HabitLogModal({ kind, onClose }) {
   const qc = useQueryClient();
   const fileRef = useRef(null);
   const [time, setTime] = useState(nowText());
+  const [mealSlot, setMealSlot] = useState('lunch');
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState('');
@@ -24,7 +33,8 @@ export function HabitLogModal({ kind, onClose }) {
   const submit = useMutation({
     mutationFn: () => {
       const form = new FormData();
-      form.append('time', time);
+      form.append('time', kind === 'meal' ? nowText() : time);
+      if (kind === 'meal') form.append('mealSlot', mealSlot);
       if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
       return habitLogService.add(kind, form);
@@ -63,17 +73,50 @@ export function HabitLogModal({ kind, onClose }) {
           </button>
         </div>
 
+        {/* Bữa ăn: không cho chỉnh giờ — lấy đúng lúc báo cáo. */}
         <label className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
           <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-            <Clock className="size-3.5" /> Lúc
+            <Clock className="size-3.5" /> {kind === 'meal' ? 'Báo cáo lúc' : 'Lúc'}
           </span>
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-bold tabular-nums text-slate-800"
-          />
+          {kind === 'meal' ? (
+            <span className="text-sm font-bold tabular-nums text-slate-800">{nowText()}</span>
+          ) : (
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-bold tabular-nums text-slate-800"
+            />
+          )}
         </label>
+
+        {/* Chọn bữa: 3 bữa chính cộng %, bữa phụ / ăn vặt chỉ ghi nhận. */}
+        {kind === 'meal' && (
+          <div className="mt-2">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Bữa nào?</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {MEAL_SLOTS.map((slot) => {
+                const active = mealSlot === slot.id;
+                return (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    onClick={() => setMealSlot(slot.id)}
+                    className={`rounded-xl border px-1 py-2 text-center transition ${
+                      active ? 'border-water-500 bg-water-50 ring-1 ring-water-200' : 'border-slate-200 hover:border-water-300'
+                    }`}
+                  >
+                    <span className="block text-base leading-none">{slot.emoji}</span>
+                    <span className="mt-1 block text-[11px] font-semibold text-slate-700">{slot.label}</span>
+                    <span className={`block text-[9px] ${slot.counts ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {slot.counts ? 'tính %' : 'không tính %'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {preview ? (
           <div className="relative mt-2 overflow-hidden rounded-xl ring-1 ring-slate-200">

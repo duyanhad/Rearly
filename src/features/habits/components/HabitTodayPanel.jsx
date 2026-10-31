@@ -84,6 +84,37 @@ export function HabitTodayPanel({ kind }) {
             <div className="h-1.5 w-full max-w-[230px] overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883]" style={{ width: `${percent}%` }} />
             </div>
+            {/* Bữa ăn: 3 bữa chính, mỗi bữa duyệt xong là cộng 1 phần ba (= 33%). */}
+            {kind === 'meal' && (
+              <div className="mt-1 flex items-center gap-1.5">
+                {[
+                  { id: 'breakfast', label: 'Sáng', emoji: '🌅' },
+                  { id: 'lunch', label: 'Trưa', emoji: '🍚' },
+                  { id: 'dinner', label: 'Tối', emoji: '🌙' },
+                ].map((slot) => {
+                  const approved = logs.some((l) => l.mealSlot === slot.id && l.status === 'approved');
+                  const waiting = logs.some((l) => l.mealSlot === slot.id && l.status === 'pending');
+                  const rejected = logs.some((l) => l.mealSlot === slot.id && l.status === 'rejected');
+                  return (
+                    <span
+                      key={slot.id}
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                        approved
+                          ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                          : waiting
+                            ? 'bg-amber-50 text-amber-700 ring-amber-200'
+                            : rejected
+                              ? 'bg-rose-50 text-rose-600 ring-rose-200'
+                              : 'bg-slate-50 text-slate-400 ring-slate-200'
+                      }`}
+                    >
+                      <span>{slot.emoji}</span> {slot.label}
+                      {approved ? ' ✓' : waiting ? ' …' : rejected ? ' ✕' : ''}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             <div className="mt-0.5 flex flex-wrap items-center justify-center gap-1.5">
               {done >= target && target > 0 ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
