@@ -44,6 +44,7 @@ export function SleepHomePage() {
   const stopSession = useMutation({
     mutationFn: async ({ file }) => {
       const form = new FormData();
+      form.append('wakeTime', new Date().toTimeString().slice(0, 5));
       if (file) form.append('photo', file);
       return sleepService.stop(running.id, form);
     },

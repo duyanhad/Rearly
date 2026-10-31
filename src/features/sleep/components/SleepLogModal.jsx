@@ -56,6 +56,7 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
       const form = new FormData();
       // Đang ngủ: chốt bằng endpoint stop (server tự tính số phút từ mốc bắt đầu).
       if (running?.id) {
+        form.append('wakeTime', new Date().toTimeString().slice(0, 5));
         if (note.trim()) form.append('note', note.trim());
         if (photo) form.append('photo', photo);
         return sleepService.stop(running.id, form);
