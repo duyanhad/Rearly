@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Lock, Sparkles, Trophy } from 'lucide-react';
@@ -146,7 +147,7 @@ export function MascotLabPage() {
         </div>
       </div>
 
-      {isLoading && <p className="rounded-2xl bg-white p-4 text-sm text-slate-500">Đang tải kỷ nguyên…</p>}
+      {isLoading && <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader label="Đang tải kỷ nguyên…" /></div>}
       {isError && (
         <p className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">
           Không tải được dữ liệu kỷ nguyên. Kiểm tra API rồi thử lại.

@@ -27,7 +27,7 @@ export function FeedPage() {
         <p className="text-sm text-slate-500">Tiến trình hôm nay và ảnh minh chứng mới nhất của bạn bè.</p>
       </header>
 
-      {isLoading && <p className="text-sm text-slate-500">Đang tải...</p>}
+      {isLoading && <DearlySkeleton rows={3} />}
 
       {!isLoading && feed.length === 0 && <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-8 text-center shadow-sm">
           <Users className="size-10 text-slate-300" />

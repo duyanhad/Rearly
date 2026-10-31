@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Flame, Plus, TrendingDown } from 'lucide-react';
@@ -190,7 +191,7 @@ export function DashboardPage() {
   }, [today?.isCompleted, today?.date]);
 
   if (isLoading || !today) {
-    return <p className="text-slate-500">Đang tải...</p>;
+    return <DearlyLoader full />;
   }
   return <div className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">

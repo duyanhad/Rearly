@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -141,7 +142,7 @@ export function NotificationBell() {
                 </button>
               </div>
 
-              {isLoading && <p className="px-4 py-6 text-xs text-slate-500">Đang tải...</p>}
+              {isLoading && <div className="px-4 py-6"><DearlyLoader size="sm" /></div>}
 
               {!isLoading && items.length === 0 && (
                 <div className="px-4 py-10 text-center">

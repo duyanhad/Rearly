@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Check,
@@ -268,7 +269,7 @@ export function AdminEras() {
             ))}
           </div>
 
-          {isLoading && <p className="text-sm text-slate-500">Đang tải…</p>}
+          {isLoading && <DearlyLoader size="sm" />}
 
           <div className="space-y-1">
             {shown.map((e) => (

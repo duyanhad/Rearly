@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { DearlyLoader } from './components/DearlyLoader';
 import { useAuth } from './context/AuthProvider';
 import { AppLayout } from './layouts/AppLayout';
 import { RealtimeBridge } from './components/RealtimeBridge';
@@ -26,7 +27,7 @@ import { AdminBroadcast } from './features/admin/pages/AdminBroadcast';
 import { AdminLogs } from './features/admin/pages/AdminLogs';
 import { AdminEras } from './features/admin/pages/AdminEras';
 function Loading() {
-  return <p className="p-6 text-slate-500">Đang tải...</p>;
+  return <DearlyLoader full />;
 }
 function RequireAuth({
   children

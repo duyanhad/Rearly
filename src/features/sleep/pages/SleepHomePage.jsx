@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Clock, ImageIcon, Moon, Plus, Settings, Target } from 'lucide-react';
@@ -128,7 +129,7 @@ export function SleepHomePage() {
           </span>
         </div>
 
-        {isLoading && <p className="text-sm text-slate-500">Đang tải…</p>}
+        {isLoading && <DearlyLoader size="sm" />}
         {!isLoading && logs.length === 0 && (
           <p className="text-sm text-slate-500">Chưa có đêm nào. Bấm “Ghi giấc ngủ” để bắt đầu.</p>
         )}

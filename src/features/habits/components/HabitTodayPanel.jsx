@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Image as ImageIcon, Plus, Settings, Trash2 } from 'lucide-react';
 import { PhotoThumb } from '../../water/components/AddWaterModal';
@@ -146,7 +147,7 @@ export function HabitTodayPanel({ kind }) {
       <section className="rounded-2xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 font-semibold">Hôm nay đã ghi</h2>
 
-        {isLoading && <p className="text-sm text-slate-500">Đang tải…</p>}
+        {isLoading && <DearlyLoader size="sm" />}
         {!isLoading && logs.length === 0 && (
           <p className="text-sm text-slate-500">Chưa có lần nào. Bấm nút phía trên để ghi.</p>
         )}

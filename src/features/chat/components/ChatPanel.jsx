@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, BellRing, MessageCircle, Send, Trash2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -158,7 +159,7 @@ export function ChatPanel({ compact = false }) {
     onError: (err) => toast.show('Không xoá được', errorMessage(err)),
   });
 
-  if (isLoading) return <p className="p-4 text-sm text-slate-500">Đang tải...</p>;
+  if (isLoading) return <DearlyLoader full />;
 
   if (conversations.length === 0) {
     return (

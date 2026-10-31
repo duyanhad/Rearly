@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronLeft, Moon, X } from 'lucide-react';
@@ -63,7 +64,7 @@ export function PartnerSleepPage() {
         </div>
       </div>
 
-      {isLoading && <p className="rounded-2xl bg-white p-4 text-sm text-slate-500">Đang tải…</p>}
+      {isLoading && <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader size="sm" /></div>}
       {!isLoading && inbox.length === 0 && (
         <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-100">
           <Moon className="mx-auto size-8 text-slate-300" />

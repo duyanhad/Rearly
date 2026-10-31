@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import { waterService } from '../../../services/waterService';
@@ -202,7 +203,7 @@ export function CalendarPage() {
               ))}
             </p>
           )}
-          {!day ? <p className="text-sm text-slate-500">Đang tải...</p> : day.logs.length === 0 ? <p className="text-sm text-slate-500">Không có dữ liệu ngày này.</p> : <>
+          {!day ? <DearlyLoader size="sm" /> : day.logs.length === 0 ? <p className="text-sm text-slate-500">Không có dữ liệu ngày này.</p> : <>
               <p className="mb-3 text-sm text-slate-600">
                 Tổng {day.totalDrankMl} / {day.targetMl} ml{' '}
                 {day.isCompleted && <span className="font-medium text-emerald-600">· Đạt mục tiêu</span>}

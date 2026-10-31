@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellRing, BookOpen, Clock, Pill, Plus, Soup, Target, Trash2 } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
@@ -106,7 +107,7 @@ export function HabitSettingsPage({ kind }) {
       <SettingsTabs active={kind} />
 
       {isLoading ? (
-        <p className="rounded-2xl bg-white p-4 text-sm text-slate-500 ring-1 ring-slate-100">Đang tải…</p>
+        <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader /></div>
       ) : (
         <div className="grid items-start gap-4 md:grid-cols-2">
           <section className="order-3 min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 md:col-span-2">

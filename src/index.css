@@ -694,3 +694,39 @@ body {
     display: none;
   }
 }
+
+/* ---- Loader theo logo Dearly ---- */
+@keyframes logo-beat {
+  0%, 100% { transform: scale(1); }
+  18% { transform: scale(1.14); }
+  36% { transform: scale(0.97); }
+  54% { transform: scale(1.08); }
+}
+@keyframes loader-ring {
+  0% { transform: scale(0.7); opacity: 0.55; }
+  70% { opacity: 0; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes loader-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-logo-beat {
+  animation: logo-beat 1.25s ease-in-out infinite;
+  transform-origin: center;
+}
+.animate-loader-ring {
+  animation: loader-ring 1.4s ease-out infinite;
+}
+.animate-shimmer {
+  animation: loader-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-logo-beat,
+  .animate-loader-ring,
+  .animate-shimmer {
+    animation: none;
+  }
+}

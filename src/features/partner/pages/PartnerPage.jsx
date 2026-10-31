@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DearlyLoader, DearlySkeleton } from '../../../components/DearlyLoader';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -611,7 +612,7 @@ export function PartnerPage() {
                   <WaterBar percent={p.percent} height="h-1.5" color={liquidColor} />
                 </div>
               ))}
-              {!clientToday && <p className="text-sm text-slate-500">Đang tải...</p>}
+              {!clientToday && <DearlyLoader size="sm" />}
             </div>
           </section>
           </>
@@ -680,7 +681,7 @@ export function PartnerPage() {
                     <span className="text-[11px] text-slate-400">Không có phiếu nào chờ duyệt</span>
                   )}
                 </div>
-                {needsLoading && <p className="mt-2 text-sm text-slate-500">Đang tải...</p>}
+                {needsLoading && <DearlySkeleton rows={2} className="mt-2" />}
               </div>
             </section>
           )}
@@ -743,7 +744,7 @@ export function PartnerPage() {
             </div>
           )}
 
-          {proofsLoading && <p className="mt-3 text-sm text-slate-500">Đang tải...</p>}
+          {proofsLoading && <DearlySkeleton rows={2} className="mt-3" />}
 
           {!proofsLoading && filteredProofs.length === 0 && (
             <div className="mt-3 flex flex-col items-center gap-1 rounded-2xl bg-slate-50 py-6 text-center">
