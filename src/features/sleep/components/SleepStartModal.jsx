@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Camera, Loader2, Moon, Play, X } from 'lucide-react';
+import { Camera, Loader2, Moon, Play, Sunrise, X } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
 
@@ -8,13 +8,24 @@ import { sleepService } from '../../../services/sleepService';
  * Bước 1 của giấc ngủ: chốt giờ đi ngủ + chụp ảnh minh chứng (ảnh này chỉ chụp lúc bắt đầu).
  * Phiếu được lưu ở trạng thái "đang ngủ"; lúc dậy sẽ chốt giờ thức + minh chứng dậy.
  */
-export function SleepStartModal({ onClose, defaultBed = '23:00' }) {
+export function SleepStartModal({ onClose, defaultBed = '23:00', defaultWake = '07:00' }) {
   const qc = useQueryClient();
   const fileRef = useRef(null);
   const [bed, setBed] = useState(defaultBed);
+  const [wake, setWake] = useState(defaultWake);
+  const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState('');
   const [error, setError] = useState(null);
+
+  // Số phút dự định ngủ = giờ thức - giờ đi ngủ (ngủ qua nửa đêm thì cộng 24h).
+  const plannedMinutes = (() => {
+    const [bh, bm] = bed.split(':').map(Number);
+    const [wh, wm] = wake.split(':').map(Number);
+    let m = wh * 60 + wm - (bh * 60 + bm);
+    if (m <= 0) m += 1440;
+    return Math.min(1080, Math.max(15, m));
+  })();
 
   useEffect(
     () => () => {
@@ -36,6 +47,8 @@ export function SleepStartModal({ onClose, defaultBed = '23:00' }) {
     mutationFn: () => {
       const form = new FormData();
       form.append('bedTime', bed);
+      form.append('plannedMinutes', String(plannedMinutes));
+      if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
       return sleepService.start(form);
     },
@@ -62,17 +75,37 @@ export function SleepStartModal({ onClose, defaultBed = '23:00' }) {
           </button>
         </div>
 
-        <label className="block">
-          <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <Moon className="size-3.5" /> Đi ngủ
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <Moon className="size-3.5" /> Đi ngủ
+            </span>
+            <input
+              type="time"
+              value={bed}
+              onChange={(e) => setBed(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <Sunrise className="size-3.5" /> Thức dậy
+            </span>
+            <input
+              type="time"
+              value={wake}
+              onChange={(e) => setWake(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
+            />
+          </label>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between rounded-xl bg-water-50 px-3 py-2">
+          <span className="text-xs font-medium text-water-700">Sẽ ngủ được</span>
+          <span className="text-lg font-bold tabular-nums text-water-700">
+            {Math.floor(plannedMinutes / 60)}h{String(plannedMinutes % 60).padStart(2, '0')}
           </span>
-          <input
-            type="time"
-            value={bed}
-            onChange={(e) => setBed(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-          />
-        </label>
+        </div>
 
         {preview ? (
           <div className="relative mt-3 overflow-hidden rounded-xl ring-1 ring-slate-200">
@@ -106,6 +139,17 @@ export function SleepStartModal({ onClose, defaultBed = '23:00' }) {
           className="hidden"
           onChange={(e) => pickPhoto(e.target.files?.[0])}
         />
+
+        <label className="mt-3 block">
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ghi chú giấc mơ</span>
+          <textarea
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ví dụ: mơ thấy biển, dậy đúng giờ"
+            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
+          />
+        </label>
 
         {error && <p className="mt-2 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{error}</p>}
 

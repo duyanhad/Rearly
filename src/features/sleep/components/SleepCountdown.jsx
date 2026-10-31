@@ -15,31 +15,29 @@ const toHours = (m) => `${Math.floor((m || 0) / 60)}h${String(Math.round((m || 0
 
 /**
  * Đồng hồ "quỹ giấc ngủ": tổng thời gian còn phải ngủ để đạt mục tiêu trong ngày.
- * - Đang ngủ (`started`): đếm ngược theo thời gian đã ngủ (mỗi giây).
+ * - Đang ngủ (`started`): đếm thật từ mốc bấm bắt đầu (`startedAtUtc`) → quỹ giảm, % tăng mỗi giây.
  * - Không ngủ: đồng hồ **dừng** ở phần còn lại.
  * - Về 0 = 100 % mục tiêu → ảnh sáng hoàn toàn.
  */
 export function SleepCountdown({
-  bed = '23:00',
   wake = '07:00',
   alarmEnabled = false,
   started = false,
+  startedAtUtc = null,
   goalMinutes = 480,
   approvedMinutes = 0,
 }) {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    if (!started) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [started]);
 
-  const secOfDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-  // Thời gian của phiên đang ngủ (từ giờ đi ngủ tới hiện tại), có thể vắt qua nửa đêm.
-  let sessionSec = 0;
-  if (started) {
-    sessionSec = secOfDay - toSec(bed);
-    if (sessionSec < 0) sessionSec += 86400;
-  }
+  // Thời gian của phiên đang ngủ: tính từ lúc bấm "Bắt đầu ngủ" (mốc server giữ).
+  const sessionSec = started && startedAtUtc
+    ? Math.max(0, Math.floor((now - new Date(startedAtUtc).getTime()) / 1000))
+    : 0;
 
   const goalSec = Math.max(60, goalMinutes * 60);
   const sleptSec = approvedMinutes * 60 + sessionSec;
@@ -70,12 +68,12 @@ export function SleepCountdown({
 
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883] transition-[width] duration-500"
-          style={{ width: `${percent}%` }}
+          className="h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883] transition-[width] duration-1000"
+          style={{ width: `${Math.min(100, (sleptSec / goalSec) * 100)}%` }}
         />
       </div>
       <p className="mt-2 flex flex-wrap items-center justify-center gap-1 text-xs text-slate-500">
-        Đã ngủ <b className="text-slate-800">{toHours(Math.floor(sleptSec / 60))}</b>
+        Đã ngủ <b className="text-slate-800">{started ? hhmmss(Math.floor(sleptSec)) : toHours(Math.floor(sleptSec / 60))}</b>
         <span className="text-slate-300">/</span> mục tiêu {toHours(goalMinutes)}
         <span
           className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${

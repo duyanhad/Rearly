@@ -66,11 +66,16 @@ export function SleepTodayPanel() {
   // Phiếu "đang ngủ" (đã bấm bắt đầu) → lúc này chỉ còn chốt giờ thức + minh chứng dậy.
   const inProgress = last?.status === 'sleeping';
   // Trong khung ngủ thì luôn cho bắt đầu (ghi đè phiếu hôm nay), kể cả hôm nay đã ghi xong.
-  const mode = inProgress ? 'end' : sleepingNow ? 'start' : 'manual';
+  // Chưa bắt đầu → luôn là "Bắt đầu ngủ"; đang ngủ → "Kết thúc giấc ngủ".
+  const mode = inProgress ? 'end' : 'start';
 
   // Đang ngủ: hiện luôn thời gian đã ngủ trong phiên (cập nhật mỗi 30 s).
   const elapsedMin = (() => {
     if (!inProgress || !last) return 0;
+    // Ưu tiên mốc server ghi lúc bấm "Bắt đầu ngủ" (chính xác, không phụ thuộc giờ hẹn).
+    if (last.startedAtUtc) {
+      return Math.max(0, Math.floor((Date.now() - new Date(last.startedAtUtc).getTime()) / 60000));
+    }
     const [bh, bm] = last.bedTime.split(':').map(Number);
     const d = new Date();
     let m = d.getHours() * 60 + d.getMinutes() - (bh * 60 + bm);
@@ -82,7 +87,9 @@ export function SleepTodayPanel() {
     .filter((l) => l.status === 'approved' && l.date === todayIso)
     .reduce((sum, l) => sum + (l.minutes || 0), 0);
   const shownMinutes = approvedTodayMin + elapsedMin;
-  const shownPercent = goal > 0 ? Math.min(100, Math.round((shownMinutes / goal) * 100)) : 0;
+  // Giữ phần trăm lẻ để thanh/ảnh nhích dần mỗi phút thay vì nhảy từng 1%.
+  const shownPercentExact = goal > 0 ? Math.min(100, (shownMinutes / goal) * 100) : 0;
+  const shownPercent = Math.round(shownPercentExact);
   const hit = shownPercent >= 100;
   // Nhật ký: các đêm đã ghi (bỏ phiếu đang ngủ), mới nhất trước.
   const history = logs
@@ -132,7 +139,7 @@ export function SleepTodayPanel() {
             <div className="h-1.5 w-full max-w-[230px] overflow-hidden rounded-full bg-slate-100">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883]"
-                style={{ width: `${shownPercent}%` }}
+                style={{ width: `${shownPercentExact}%` }}
               />
             </div>
             <div className="mt-0.5 flex flex-wrap items-center justify-center gap-1.5">
@@ -171,10 +178,10 @@ export function SleepTodayPanel() {
 
         <section className="min-w-0 space-y-3">
           <SleepCountdown
-            bed={last?.bedTime ?? bedTime}
             wake={wakeTime}
             alarmEnabled={Boolean(setting?.alarmEnabled)}
             started={inProgress}
+            startedAtUtc={last?.startedAtUtc ?? null}
             goalMinutes={goal}
             approvedMinutes={approvedTodayMin}
           />
@@ -189,10 +196,8 @@ export function SleepTodayPanel() {
             </button>
             <p className="mt-2 text-center text-xs text-slate-500">
               {mode === 'end'
-                ? `Đang ngủ từ ${last?.bedTime} — chốt giờ thức và minh chứng dậy`
-                : mode === 'start'
-                  ? `Đã tới giờ ngủ ${bedTime} — chụp ảnh minh chứng để bắt đầu`
-                  : 'Nhập giờ ngủ → giờ thức → ghi chú giấc mơ'}
+                ? 'Đang ngủ — bấm để dừng và chụp ảnh minh chứng lúc thức'
+                : 'Nhập giờ ngủ → giờ thức → ảnh minh chứng → bộ đếm chạy'}
             </p>
           </div>
 
@@ -277,7 +282,7 @@ export function SleepTodayPanel() {
         )}
       </section>
 
-      {startOpen && <SleepStartModal defaultBed={bedTime} onClose={() => setStartOpen(false)} />}
+      {startOpen && <SleepStartModal defaultBed={bedTime} defaultWake={wakeTime} onClose={() => setStartOpen(false)} />}
       {logOpen && (
         <SleepLogModal
           bed={mode === 'end' ? last?.bedTime ?? bedTime : bedTime}
