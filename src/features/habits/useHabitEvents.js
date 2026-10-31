@@ -38,7 +38,10 @@ export function useHabitEvents(logs) {
         else if (action === 'approve') setApprove((n) => n + 1);
         else setPour((n) => n + 1);
       }, 600);
-      return () => clearTimeout(id);
+      // Không clear khi effect chạy lại (mảng logs đổi tham chiếu mỗi lần refetch) — nếu clear
+      // thì hiệu ứng phát lại sẽ bị huỷ trước khi kịp chạy.
+      void id;
+      return;
     }
 
     const before = new Map(prev.current.map((l) => [l.id, l.status]));
