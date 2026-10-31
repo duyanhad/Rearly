@@ -14,23 +14,19 @@ const toHours = (m) => `${Math.floor((m || 0) / 60)}h${String((m || 0) % 60).pad
 export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = true, defaultWake = '07:00' }) {
   const qc = useQueryClient();
   const fileRef = useRef(null);
-  const wakeFileRef = useRef(null);
   const [bed, setBed] = useState(bedProp);
   const [wake, setWake] = useState(defaultWake);
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState('');
-  const [wakePhoto, setWakePhoto] = useState(null);
-  const [wakePreview, setWakePreview] = useState('');
   const [error, setError] = useState(null);
 
   // Dọn URL xem trước khi đóng popup.
   useEffect(
     () => () => {
       if (preview) URL.revokeObjectURL(preview);
-      if (wakePreview) URL.revokeObjectURL(wakePreview);
     },
-    [preview, wakePreview],
+    [preview],
   );
 
   const minutes = (() => {
@@ -50,15 +46,6 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
     });
   };
 
-  const pickWakePhoto = (file) => {
-    if (!file) return;
-    setWakePhoto(file);
-    setWakePreview((old) => {
-      if (old) URL.revokeObjectURL(old);
-      return URL.createObjectURL(file);
-    });
-  };
-
   const submit = useMutation({
     mutationFn: () => {
       const form = new FormData();
@@ -66,7 +53,6 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
       form.append('wakeTime', wake);
       if (note.trim()) form.append('note', note.trim());
       if (photo) form.append('photo', photo);
-      if (wakePhoto) form.append('wakePhoto', wakePhoto);
       return sleepService.submit(form);
     },
     onSuccess: async () => {
@@ -164,43 +150,6 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
           />
         )}
 
-        {/* Minh chứng dậy đúng giờ */}
-        <div className="mt-3 rounded-xl border border-slate-200 p-2">
-          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <Sunrise className="size-3.5 text-amber-500" /> Minh chứng dậy đúng giờ
-          </p>
-          {wakePreview ? (
-            <div className="relative overflow-hidden rounded-lg ring-1 ring-slate-200">
-              <img src={wakePreview} alt="Ảnh dậy đúng giờ" className="h-28 w-full object-cover" />
-              <button
-                onClick={() => {
-                  setWakePhoto(null);
-                  setWakePreview('');
-                }}
-                className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-slate-600 shadow"
-                aria-label="Bỏ ảnh dậy đúng giờ"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => wakeFileRef.current?.click()}
-              className="flex h-16 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-xs font-medium text-slate-500 hover:border-water-300 hover:text-water-700"
-            >
-              <Camera className="size-4" /> Chụp ảnh lúc vừa thức (tuỳ chọn)
-            </button>
-          )}
-          <input
-            ref={wakeFileRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            className="hidden"
-            onChange={(e) => pickWakePhoto(e.target.files?.[0])}
-          />
-        </div>
-
         <label className="mt-3 block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Ghi chú giấc mơ
@@ -229,10 +178,10 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-water-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {submit.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-            {photo || wakePhoto ? 'Gửi partner duyệt' : bedEditable ? 'Lưu giấc ngủ' : 'Kết thúc giấc ngủ'}
+            {photo ? 'Gửi partner duyệt' : bedEditable ? 'Lưu giấc ngủ' : 'Kết thúc giấc ngủ'}
           </button>
         </div>
-        {!photo && !wakePhoto && (
+        {!photo && (
           <p className="mt-2 flex items-center justify-center gap-1 text-[10px] text-slate-400">
             <ImageIcon className="size-3" /> Không có ảnh thì phiếu được ghi nhận luôn.
           </p>

@@ -149,7 +149,7 @@ export function SleepHomePage() {
           onClick={() => setLogOpen(true)}
           className="flex items-center justify-center gap-2 rounded-xl bg-water-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-water-700"
         >
-          <Plus className="size-4" /> Ghi giấc ngủ
+          <Plus className="size-4" /> {running ? 'Kết thúc giấc ngủ' : 'Ghi bù giấc ngủ'}
         </button>
         <button
           onClick={() => setSettingsOpen(true)}
