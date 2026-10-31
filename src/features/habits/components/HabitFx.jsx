@@ -28,7 +28,8 @@ const HIT_STYLE = {
 export function HabitFx({ kind, signal = 0, hit = false, spill = 0, sleeping = false }) {
   const [drops, setDrops] = useState([]);
   const [healKey, setHealKey] = useState(0);
-  const [spillKey, setSpillKey] = useState(0);
+  // Khởi tạo theo `spill` để mở lại trang sau khi bị từ chối là thấy ngay cảnh "ói ra".
+  const [spillKey, setSpillKey] = useState(spill > 0 ? 1 : 0);
   const lastSignal = useRef(signal);
   // Mở lại trang/thẻ khi đã đủ mục tiêu thì vẫn chạy lại hiệu ứng (Zz, hồi máu) một lần.
   const lastHit = useRef(false);
