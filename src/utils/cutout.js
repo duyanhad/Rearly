@@ -386,6 +386,56 @@ function keepLargeBlobs(px, w, h) {
 }
 
 /**
+ * Cắt các "phần thò ra" bất thường ở hai bên (ngón tay nắm cốc, cành lá lọt vào)
+ * bằng cách so chiều rộng từng hàng với trung vị các hàng lân cận.
+ * Vật thể thật (thân cốc, nắp, ống hút) rộng đều theo chiều dọc nên không bị ảnh hưởng.
+ */
+function trimRowProtrusions(px, w, h) {
+  const left = new Int32Array(h).fill(-1);
+  const right = new Int32Array(h).fill(-1);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (px[(y * w + x) * 4 + 3] > 24) {
+        if (left[y] < 0) left[y] = x;
+        right[y] = x;
+      }
+    }
+  }
+
+  const radius = Math.max(12, Math.round(h * 0.1));
+  // Đường bao "lý tưởng" của vật: trung bình trượt của mép trái/phải. Phần thò ra cục bộ
+  // (ngón tay) lệch khỏi đường bao này nên bị cắt, còn thân/nắp cốc bám sát nên giữ nguyên.
+  const smoothL = new Float32Array(h);
+  const smoothR = new Float32Array(h);
+  for (let y = 0; y < h; y++) {
+    if (left[y] < 0) continue;
+    let sumL = 0;
+    let sumR = 0;
+    let n = 0;
+    for (let k = y - radius; k <= y + radius; k++) {
+      if (k < 0 || k >= h || left[k] < 0) continue;
+      sumL += left[k];
+      sumR += right[k];
+      n++;
+    }
+    smoothL[y] = sumL / n;
+    smoothR[y] = sumR / n;
+  }
+
+  for (let y = 0; y < h; y++) {
+    if (left[y] < 0) continue;
+    const span = Math.max(8, smoothR[y] - smoothL[y]);
+    const tol = Math.max(4, span * 0.09);
+    const from = Math.round(smoothL[y] + tol);
+    const to = Math.round(smoothR[y] - tol);
+    if (to - from < span * 0.45) continue; // đường bao bất thường → bỏ qua hàng này
+    for (let x = 0; x < w; x++) {
+      if (x < from || x > to) px[(y * w + x) * 4 + 3] = 0;
+    }
+  }
+}
+
+/**
  * Tự tìm chỗ nước sẽ tràn ra: dò từ trên xuống, lấy hàng đầu tiên đủ rộng (đã qua phần
  * nắp/cổ chai) rồi lấy mép phải của hàng đó → dùng cho mọi loại chai/cốc.
  * Trả về toạ độ chuẩn hoá 0..1 theo khung ảnh.
@@ -872,9 +922,10 @@ async function computeCutout(url) {
     : false;
 
   if (usedAi) {
-    // Model đã cho alpha: chỉ vá lỗ nhỏ bên trong cốc và bỏ đảo rác rời rạc.
+    // Model đã cho alpha: vá lỗ nhỏ bên trong cốc, bỏ đảo rác rời rạc, rồi cắt phần thò ra (tay).
     fillSmallHoles(px, w, h);
     keepLargeBlobs(px, w, h);
+    trimRowProtrusions(px, w, h);
   } else {
     // ---- 2) Không có model (offline/chặn CDN) → thuật toán heuristic tại chỗ ----
     const palette = buildBorderPalette(px, w, h);
