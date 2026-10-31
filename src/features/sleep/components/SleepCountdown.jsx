@@ -55,7 +55,7 @@ export function SleepCountdown({
             started ? 'bg-indigo-50 text-indigo-600' : done ? 'bg-emerald-50 text-emerald-700' : 'bg-water-50 text-water-700'
           }`}
         >
-          <Icon className="size-3.5" /> {started ? 'Đang đếm' : done ? 'Đã đủ' : 'Đang dừng'}
+          <Icon className="size-3.5" /> {started ? 'Đang đếm' : done ? 'Đã đủ' : 'Đã dừng'}
         </span>
       </div>
 
