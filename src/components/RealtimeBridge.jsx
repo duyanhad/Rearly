@@ -120,6 +120,12 @@ export function RealtimeBridge() {
       void queryClient.invalidateQueries({ queryKey: ['chat-thread'] });
     };
 
+    // Tin bị sửa / thu hồi từ máy kia: làm mới hội thoại đang mở.
+    const onMessageUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: ['chat-thread'] });
+      void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    };
+
     connection.on('ReceiveNudge', onNudge);
     connection.on('ReceiveBroadcast', onBroadcast);
     connection.on('ReceiveProof', onProof);
@@ -127,6 +133,7 @@ export function RealtimeBridge() {
     connection.on('ReceiveReminder', onReminder);
     connection.on('ReceiveMessage', onMessage);
     connection.on('ReceiveReaction', onReaction);
+    connection.on('ReceiveMessageUpdate', onMessageUpdate);
     return () => {
       window.clearTimeout(syncTimer.current);
       connection.off('ReceiveNudge', onNudge);
@@ -136,6 +143,7 @@ export function RealtimeBridge() {
       connection.off('ReceiveReminder', onReminder);
       connection.off('ReceiveMessage', onMessage);
       connection.off('ReceiveReaction', onReaction);
+      connection.off('ReceiveMessageUpdate', onMessageUpdate);
     };
   }, [user, toast, queryClient, syncThen]);
 

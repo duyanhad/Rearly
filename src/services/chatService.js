@@ -21,6 +21,10 @@ export const chatService = {
   },
   /** Thả / đổi / bỏ cảm xúc trên một tin nhắn. */
   react: (messageId, emoji) => api.post(`/api/chat/messages/${messageId}/react`, { emoji }),
+  /** Sửa nội dung tin chữ của mình. */
+  editMessage: (messageId, body) => api.put(`/api/chat/messages/${messageId}`, { body }),
+  /** Thu hồi tin của mình (xoá nội dung, giữ dòng thông báo). */
+  recallMessage: (messageId) => api.delete(`/api/chat/messages/${messageId}`),
 };
 
 export default chatService;

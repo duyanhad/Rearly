@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, BellRing, ImageIcon, MessageCircle, Search, Send, Smile, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, BellRing, ImageIcon, MessageCircle, Pencil, Search, Send, Smile, Trash2, Undo2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { chatService } from '../../../services/chatService';
@@ -37,9 +37,11 @@ function highlight(text, query) {
   );
 }
 
-/** Một tin nhắn: chữ / ảnh / thoại + cảm xúc thả vào + thanh reaction (hover hoặc giữ lâu). */
-function MessageRow({ m, query, onReact, onZoom }) {
+/** Một tin nhắn: chữ / ảnh / thoại + cảm xúc + sửa / thu hồi (tin của mình). */
+function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
   const [barOpen, setBarOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(m.body);
   const barRef = useRef(null);
   // Bấm ra ngoài thanh cảm xúc thì đóng (không dùng lớp phủ chặn click cả trang).
   useEffect(() => {
@@ -50,6 +52,10 @@ function MessageRow({ m, query, onReact, onZoom }) {
     window.addEventListener('pointerdown', onDown);
     return () => window.removeEventListener('pointerdown', onDown);
   }, [barOpen]);
+
+  const canEdit = m.mine && !m.recalledAt && !m.audioUrl && !m.imageUrl;
+  const canRecall = m.mine && !m.recalledAt;
+
   return (
     <div className={`flex flex-col ${m.mine ? 'items-end' : 'items-start'}`}>
       <div className="group relative">
@@ -62,6 +68,7 @@ function MessageRow({ m, query, onReact, onZoom }) {
           >
             {REACTIONS.map((e) => (
               <button
+                type="button"
                 key={e}
                 onClick={() => {
                   onReact(e);
@@ -73,53 +80,148 @@ function MessageRow({ m, query, onReact, onZoom }) {
                 {e}
               </button>
             ))}
+            {canEdit && (
+              <>
+                <span className="mx-0.5 h-4 w-px bg-slate-200" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditText(m.body);
+                    setEditing(true);
+                    setBarOpen(false);
+                  }}
+                  className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                  aria-label="Sửa tin nhắn"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+              </>
+            )}
+            {canRecall && (
+              <button
+                type="button"
+                onClick={() => {
+                  onRecall(m.id);
+                  setBarOpen(false);
+                }}
+                className="rounded-full p-1 text-rose-500 hover:bg-rose-50"
+                aria-label="Thu hồi tin nhắn"
+              >
+                <Undo2 className="size-3.5" />
+              </button>
+            )}
           </div>
         )}
-        <div
-          onContextMenu={(e) => {
-            e.preventDefault();
-            setBarOpen(true);
-          }}
-          className={`relative max-w-[82vw] rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
-            m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
-          } ${m.pending ? 'opacity-60' : ''}`}
-        >
-          {m.imageUrl ? (
-            <button onClick={() => onZoom(m.imageUrl)} className="block" aria-label="Phóng to ảnh">
-              <img
-                src={mediaUrl(m.imageUrl)}
-                alt="Ảnh trong chat"
-                loading="lazy"
-                decoding="async"
-                className="max-h-56 rounded-xl object-cover"
-              />
+        {editing ? (
+          <div className="w-60 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200">
+            <textarea
+              autoFocus
+              rows={2}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              maxLength={500}
+              className="w-full resize-none rounded-lg border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-water-400 focus:outline-none"
+            />
+            <div className="mt-1 flex justify-end gap-1">
+              <button type="button" onClick={() => setEditing(false)} className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100">
+                Huỷ
             </button>
-          ) : m.audioUrl ? (
-            <div className={m.mine ? 'text-white' : 'text-slate-700'}>
-              <AudioBubble src={mediaUrl(m.audioUrl)} durationMs={m.audioDurationMs} tone={m.mine ? 'dark' : 'light'} />
+              <button
+                type="button"
+                onClick={() => {
+                  onEdit(m.id, editText.trim());
+                  setEditing(false);
+                }}
+                disabled={!editText.trim()}
+                className="rounded-lg bg-water-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                Lưu
+              </button>
             </div>
-          ) : (
-            <p className="whitespace-pre-wrap break-words">{highlight(m.body, query)}</p>
-          )}
-          <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>{timeLabel(m.createdAt)}</p>
-          {!barOpen && !m.pending && (
-            <button
-              onClick={() => setBarOpen(true)}
-              className={`absolute -top-3 hidden size-6 items-center justify-center rounded-full bg-white text-slate-500 shadow ring-1 ring-slate-200 group-hover:flex ${
-                m.mine ? '-left-3' : '-right-3'
-              }`}
-              aria-label="Thả cảm xúc"
-              title="Thả cảm xúc"
-            >
-              <Smile className="size-3.5" />
-            </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setBarOpen(true);
+            }}
+            className={`relative max-w-[82vw] rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
+              m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
+            } ${m.pending ? 'opacity-60' : ''}`}
+          >
+            {m.recalledAt ? (
+              <p className="italic opacity-70">🙈 Tin nhắn đã được thu hồi</p>
+            ) : m.imageUrl ? (
+              <button type="button" onClick={() => onZoom(m.imageUrl)} className="block" aria-label="Phóng to ảnh">
+                <img
+                  src={mediaUrl(m.imageUrl)}
+                  alt="Ảnh trong chat"
+                  loading="lazy"
+                  decoding="async"
+                  className="max-h-56 rounded-xl object-cover"
+                />
+              </button>
+            ) : m.audioUrl ? (
+              <div className={m.mine ? 'text-white' : 'text-slate-700'}>
+                <AudioBubble src={mediaUrl(m.audioUrl)} durationMs={m.audioDurationMs} tone={m.mine ? 'dark' : 'light'} />
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap break-words">{highlight(m.body, query)}</p>
+            )}
+            <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
+              {timeLabel(m.createdAt)}
+              {m.editedAt ? ' · đã sửa' : ''}
+            </p>
+            {!barOpen && !m.pending && !m.recalledAt && (
+              <span
+                className={`absolute -top-4 hidden items-center gap-0.5 rounded-full bg-white px-1 py-0.5 shadow ring-1 ring-slate-200 group-hover:flex ${
+                  m.mine ? 'right-0' : 'left-0'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setBarOpen(true)}
+                  className="rounded-full p-0.5 text-slate-500 hover:bg-slate-100"
+                  aria-label="Thả cảm xúc"
+                  title="Thả cảm xúc"
+                >
+                  <Smile className="size-3.5" />
+                </button>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditText(m.body);
+                      setEditing(true);
+                    }}
+                    className="rounded-full p-0.5 text-slate-500 hover:bg-slate-100"
+                    aria-label="Sửa tin nhắn"
+                    title="Sửa tin nhắn"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                )}
+                {canRecall && (
+                  <button
+                    type="button"
+                    onClick={() => onRecall(m.id)}
+                    className="rounded-full p-0.5 text-rose-500 hover:bg-rose-50"
+                    aria-label="Thu hồi tin nhắn"
+                    title="Thu hồi tin nhắn"
+                  >
+                    <Undo2 className="size-3.5" />
+                  </button>
+                )}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-      {!!m.reactions?.length && (
+      {!!m.reactions?.length && !m.recalledAt && (
         <span className="z-10 -mt-1.5 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[12px] leading-none shadow ring-1 ring-slate-200">
           {m.reactions.map((r) => (
             <button
+              type="button"
               key={r.emoji}
               onClick={() => onReact(r.emoji)}
               className={`rounded-full px-0.5 ${r.mine ? 'ring-1 ring-water-400' : ''}`}
@@ -135,6 +237,7 @@ function MessageRow({ m, query, onReact, onZoom }) {
     </div>
   );
 }
+
 
 /** Tổng số tin chưa đọc — dùng cho badge ở bong bóng chat. */
 export function useChatUnread() {
@@ -264,6 +367,30 @@ export function ChatPanel({ compact = false }) {
       void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
     },
     onError: (err) => toast.show('Không gửi được ảnh', errorMessage(err)),
+  });
+
+  const editMessage = useMutation({
+    mutationFn: async ({ id, body }) => (await chatService.editMessage(id, body)).data,
+    onSuccess: (dto) => {
+      queryClient.setQueryData(['chat-thread', activeId], (old = []) =>
+        old.map((m) => (m.id === dto.id ? { ...m, body: dto.body, editedAt: dto.editedAt } : m)),
+      );
+      toast.show('Đã sửa tin nhắn');
+    },
+    onError: (err) => toast.show('Không sửa được', errorMessage(err)),
+  });
+
+  const recallMessage = useMutation({
+    mutationFn: async (id) => (await chatService.recallMessage(id)).data,
+    onSuccess: (dto) => {
+      queryClient.setQueryData(['chat-thread', activeId], (old = []) =>
+        old.map((m) =>
+          m.id === dto.id ? { ...m, body: '', imageUrl: null, audioUrl: null, reactions: [], recalledAt: dto.recalledAt } : m,
+        ),
+      );
+      toast.show('Đã thu hồi tin nhắn');
+    },
+    onError: (err) => toast.show('Không thu hồi được', errorMessage(err)),
   });
 
   // Thả cảm xúc: cập nhật thẳng vào cache để chip hiện ngay, không chờ refetch.
@@ -427,6 +554,8 @@ export function ChatPanel({ compact = false }) {
             query={q}
             onReact={(emoji) => typeof m.id === 'number' && react.mutate({ id: m.id, emoji })}
             onZoom={setZoom}
+            onEdit={(id, body) => editMessage.mutate({ id, body })}
+            onRecall={(id) => recallMessage.mutate(id)}
           />
         ))}
         <div ref={endRef} />
