@@ -145,7 +145,9 @@ function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
               e.preventDefault();
               setBarOpen(true);
             }}
-            className={`relative max-w-[82vw] rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
+            onDoubleClick={() => setBarOpen(true)}
+            style={{ WebkitTouchCallout: 'none' }}
+            className={`relative max-w-[82vw] select-none rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
               m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
             } ${m.pending ? 'opacity-60' : ''}`}
           >
@@ -571,7 +573,9 @@ export function ChatPanel({ compact = false }) {
             onReact={(emoji) => typeof m.id === 'number' && react.mutate({ id: m.id, emoji })}
             onZoom={setZoom}
             onEdit={(id, body) => editMessage.mutate({ id, body })}
-            onRecall={(id) => recallMessage.mutate(id)}
+            onRecall={(id) => {
+              if (window.confirm('Thu hồi tin nhắn này? Cả hai sẽ thấy dòng "đã thu hồi".')) recallMessage.mutate(id);
+            }}
           />
         ))}
         <div ref={endRef} />
