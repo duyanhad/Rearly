@@ -120,6 +120,7 @@ export function SleepTodayPanel() {
               signal={pour + approvedNights}
               spill={spill}
               kind="sleep"
+              sleeping={inProgress}
               fallback={Moon}
               plain
               className={setting?.imageUrl || last?.photoUrl ? 'size-full' : 'size-28'}

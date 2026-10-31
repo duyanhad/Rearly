@@ -18,6 +18,7 @@ export function HabitAvatar3D({
   fallback: Fallback,
   plain = false,
   percent,
+  sleeping = false,
   className = 'size-16',
 }) {
   // Vật thể phản ứng: được tác động (nhận đồ) thì nảy lên, bị partner từ chối thì lắc/nghiêng.
@@ -70,7 +71,7 @@ export function HabitAvatar3D({
         >
           {Fallback ? <Fallback className="size-1/2 text-water-600" /> : null}
         </span>
-        <HabitFx kind={kind} signal={signal} hit={hit} spill={spill} />
+        <HabitFx kind={kind} signal={signal} hit={hit} spill={spill} sleeping={sleeping} />
       </span>
     );
   }
@@ -88,7 +89,7 @@ export function HabitAvatar3D({
         className={`habit-float3d relative size-full object-contain drop-shadow-md ${tone}`}
       />
       </span>
-      <HabitFx kind={kind} signal={signal} hit={hit} spill={spill} />
+      <HabitFx kind={kind} signal={signal} hit={hit} spill={spill} sleeping={sleeping} />
     </span>
   );
 }

@@ -639,6 +639,7 @@ export function PartnerPage() {
                   signal={needFx.pour + (activeNeed?.done ?? 0)}
                   spill={needFx.spill}
                   kind={kindFilter}
+                  sleeping={Boolean(activeNeed?.sleeping)}
                   fallback={ActiveIcon}
                   plain
                   className={activeNeed?.imageUrl ? 'size-full' : 'size-24'}

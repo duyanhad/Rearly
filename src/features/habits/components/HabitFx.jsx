@@ -25,7 +25,7 @@ const HIT_STYLE = {
  * Lớp hiệu ứng đặt trong khung ảnh: mỗi lần `signal` (số lần đã ghi) tăng thì thả vài hạt
  * vào vật thể; khi `hit` (đủ chỉ tiêu) vừa bật thì chạy hiệu ứng hồi máu.
  */
-export function HabitFx({ kind, signal = 0, hit = false, spill = 0 }) {
+export function HabitFx({ kind, signal = 0, hit = false, spill = 0, sleeping = false }) {
   const [drops, setDrops] = useState([]);
   const [healKey, setHealKey] = useState(0);
   const [spillKey, setSpillKey] = useState(0);
@@ -65,12 +65,31 @@ export function HabitFx({ kind, signal = 0, hit = false, spill = 0 }) {
     lastSpill.current = spill;
   }, [spill]);
 
-  if (!hit && !drops.length && !spillKey) return null;
+  if (!hit && !drops.length && !spillKey && !sleeping) return null;
 
-  // Giấc ngủ: đủ mục tiêu thì Zz bay vào gối (quầng sáng do HabitAvatar3D vẽ phía sau ảnh).
+  // Giấc ngủ: đang ngủ → Zzz bay lên liên tục (gấu sáng dần nhờ HabitAvatar3D bên dưới);
+  // đủ mục tiêu → thêm tia sáng + nhãn Zz.
   if (kind === 'sleep') {
     return (
       <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+        {sleeping && (
+          <span aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={`zz-${i}`}
+                className="habit-zz-loop absolute font-extrabold text-indigo-400"
+                style={{
+                  right: `${18 + i * 9}%`,
+                  bottom: `${30 + i * 3}%`,
+                  fontSize: `${12 + i * 5}px`,
+                  animationDelay: `${i * 1.05}s`,
+                }}
+              >
+                Z
+              </span>
+            ))}
+          </span>
+        )}
         {hit && (
           <span className="absolute right-3 top-2 text-[11px] font-extrabold tracking-tight text-indigo-400/80">Z z</span>
         )}
