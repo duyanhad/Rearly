@@ -320,8 +320,9 @@ function fillSmallHoles(px, w, h) {
 }
 
 /**
- * Giữ khối cốc lớn nhất + các khối lớn đi kèm (phụ kiện rời như móc khoá, nơ);
- * chỉ xoá các mảng nền lọt lại thành đảo nhỏ.
+ * Giữ vật thể chính + phụ kiện đi kèm; loại nền lọt lại và mảng dính viền ảnh.
+ * Quy tắc: bỏ khối chạm viền ảnh nhiều (lá cây, tường, nền), rồi giữ khối lớn nhất
+ * cùng các khối đủ lớn (phụ kiện rời như nắp, ống hút, móc).
  */
 function keepLargeBlobs(px, w, h) {
   const seen = new Uint8Array(w * h);
@@ -335,26 +336,30 @@ function keepLargeBlobs(px, w, h) {
     queue[tail++] = start;
     seen[start] = 1;
     let count = 0;
+    let edge = 0;
     while (head < tail) {
       const p = queue[head++];
       count++;
       const x = p % w;
       const y = (p - x) / w;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) edge++;
       for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) {
         if (q < 0 || seen[q] || px[q * 4 + 3] <= 24) continue;
         seen[q] = 1;
         queue[tail++] = q;
       }
     }
-    blobs.push({ start, count });
+    blobs.push({ start, count, edge });
   }
   if (blobs.length === 0) return;
 
   const largest = Math.max(...blobs.map((b) => b.count));
-  const minArea = Math.max(400, largest * 0.12);
+  const minArea = Math.max(300, largest * 0.25);
   const keep = new Uint8Array(w * h);
   for (const blob of blobs) {
     if (blob.count < minArea) continue;
+    // Mảng vừa lớn vừa bám viền ảnh = nền (lá cây, tường) chứ không phải vật thể.
+    if (blob.edge > blob.count * 0.35) continue;
     let head = 0;
     let tail = 0;
     queue[tail++] = blob.start;
@@ -370,6 +375,11 @@ function keepLargeBlobs(px, w, h) {
       }
     }
   }
+  // Không còn khối nào hợp lệ (vật chiếm gần hết khung) → giữ nguyên, đừng xoá sạch.
+  let kept = 0;
+  for (let p = 0; p < w * h; p++) if (keep[p]) kept++;
+  if (kept < largest * 0.5) return;
+
   for (let p = 0; p < w * h; p++) {
     if (!keep[p]) px[p * 4 + 3] = 0;
   }
@@ -549,8 +559,8 @@ async function applyAiMask(url, px, w, h) {
   let run;
   try {
     run = remove(input, {
-      // quint8: model nhỏ nhất (~22 MB) — điện thoại tải & chạy WASM nhanh hơn isnet_fp16 nhiều.
-      model: 'isnet_quint8',
+      // fp16: chất lượng gần bản fp32 (giữ đúng vật + phụ kiện, bỏ tay/nền) — quint8 hay lẫn nền.
+      model: 'isnet_fp16',
       output: { format: 'image/png' },
       progress: () => {},
     });
