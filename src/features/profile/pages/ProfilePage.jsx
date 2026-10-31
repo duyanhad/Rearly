@@ -22,6 +22,7 @@ import { userService } from '../../../services/userService';
 import { socialService } from '../../../services/socialService';
 import { useAuth } from '../../../context/AuthProvider';
 import { Avatar } from '../../../components/Avatar';
+import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
 import { eraService } from '../../../services/eraService';
 
@@ -45,6 +46,7 @@ export function ProfilePage() {
   const [coverPicker, setCoverPicker] = useState(false);
   const [uploading, setUploading] = useState(null);
   const [error, setError] = useState(null);
+  const [zoomAvatar, setZoomAvatar] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ['user-stats'],
@@ -148,7 +150,14 @@ export function ProfilePage() {
         <div className="-mt-14 px-5 pb-5">
           <div className="flex items-end justify-between gap-3">
             <div className="relative">
-              <Avatar url={user.avatarUrl} name={user.fullName} size="xl" className="shadow-lg ring-4 ring-white" />
+              <button
+                onClick={() => setZoomAvatar(true)}
+                className="block rounded-full transition hover:scale-[1.03]"
+                aria-label="Phóng to ảnh đại diện"
+                title="Bấm để phóng to ảnh"
+              >
+                <Avatar url={user.avatarUrl} name={user.fullName} size="xl" className="shadow-lg ring-4 ring-white" />
+              </button>
               <button
                 onClick={() => avatarRef.current?.click()}
                 className="absolute -bottom-1 -right-1 rounded-full bg-water-600 p-2 text-white shadow ring-2 ring-white transition hover:bg-water-700"
@@ -332,6 +341,13 @@ export function ProfilePage() {
             />
           </div>
         </div>
+      )}
+    {zoomAvatar && user?.avatarUrl && (
+        <ImageLightbox
+          src={mediaUrl(user.avatarUrl)}
+          alt={user.fullName}
+          onClose={() => setZoomAvatar(false)}
+        />
       )}
     </div>
   );

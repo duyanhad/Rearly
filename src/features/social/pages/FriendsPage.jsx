@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BellRing, Check, Pencil, Search, ShieldCheck, UserMinus, UserPlus, X } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { socialService } from '../../../services/socialService';
@@ -16,6 +17,7 @@ export function FriendsPage() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
+  const nav = useNavigate();
   const toast = useToast();
   const { user, refreshProfile } = useAuth();
   const {
@@ -185,7 +187,14 @@ export function FriendsPage() {
           </p> : <ul className="divide-y divide-slate-100">
             {friends.map(f => <li key={f.id} className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <Avatar url={f.avatarUrl} name={f.fullName} size="md" />
+                  <button
+                    onClick={() => nav(`/friends/${f.id}`)}
+                    className="shrink-0 rounded-full transition hover:scale-105"
+                    aria-label={`Xem trang cá nhân của ${f.fullName}`}
+                    title="Xem trang cá nhân"
+                  >
+                    <Avatar url={f.avatarUrl} name={f.fullName} size="md" />
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {f.nickname || f.fullName}

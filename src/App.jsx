@@ -15,6 +15,7 @@ import { SleepHomePage } from './features/sleep/pages/SleepHomePage';
 import { PartnerSleepPage } from './features/partner/pages/PartnerSleepPage';
 import { CalendarPage } from './features/water/pages/CalendarPage';
 import { FriendsPage } from './features/social/pages/FriendsPage';
+import { FriendProfilePage } from './features/social/pages/FriendProfilePage';
 import { FeedPage } from './features/social/pages/FeedPage';
 import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { ChatPage } from './features/chat/pages/ChatPage';
@@ -92,6 +93,7 @@ export default function App() {
           <Route path="/partner/sleep" element={<PartnerSleepPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/friends" element={<FriendsPage />} />
+          <Route path="/friends/:id" element={<FriendProfilePage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/chat" element={<ChatPage />} />
