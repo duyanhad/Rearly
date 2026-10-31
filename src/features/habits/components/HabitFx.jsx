@@ -32,7 +32,8 @@ export function HabitFx({ kind, signal = 0, hit = false, spill = 0, sleeping = f
   const lastSignal = useRef(signal);
   // Mở lại trang/thẻ khi đã đủ mục tiêu thì vẫn chạy lại hiệu ứng (Zz, hồi máu) một lần.
   const lastHit = useRef(false);
-  const lastSpill = useRef(spill);
+  // Khởi tạo 0: mở lại trang khi hành động gần nhất là bị từ chối thì vẫn diễn lại cảnh "ói ra".
+  const lastSpill = useRef(0);
   const seq = useRef(0);
 
   useEffect(() => {
