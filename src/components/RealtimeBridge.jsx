@@ -115,12 +115,18 @@ export function RealtimeBridge() {
       void showSystemNotification(payload.title ?? 'Uống nước đi 💧', payload.message, style);
     };
 
+    // Cảm xúc mới trên tin nhắn: chỉ cần làm mới hội thoại đang mở.
+    const onReaction = () => {
+      void queryClient.invalidateQueries({ queryKey: ['chat-thread'] });
+    };
+
     connection.on('ReceiveNudge', onNudge);
     connection.on('ReceiveBroadcast', onBroadcast);
     connection.on('ReceiveProof', onProof);
     connection.on('ReceiveDeduct', onDeduct);
     connection.on('ReceiveReminder', onReminder);
     connection.on('ReceiveMessage', onMessage);
+    connection.on('ReceiveReaction', onReaction);
     return () => {
       window.clearTimeout(syncTimer.current);
       connection.off('ReceiveNudge', onNudge);
@@ -129,6 +135,7 @@ export function RealtimeBridge() {
       connection.off('ReceiveDeduct', onDeduct);
       connection.off('ReceiveReminder', onReminder);
       connection.off('ReceiveMessage', onMessage);
+      connection.off('ReceiveReaction', onReaction);
     };
   }, [user, toast, queryClient, syncThen]);
 

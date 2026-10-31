@@ -13,6 +13,14 @@ export const chatService = {
   },
   markRead: (userId) => api.post(`/api/chat/${userId}/read`),
   deleteThread: (userId) => api.delete(`/api/chat/${userId}`),
+  /** Gửi ảnh trong chat (File từ ô chọn ảnh). */
+  sendImage: (userId, file) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api.post(`/api/chat/${userId}/image`, form);
+  },
+  /** Thả / đổi / bỏ cảm xúc trên một tin nhắn. */
+  react: (messageId, emoji) => api.post(`/api/chat/messages/${messageId}/react`, { emoji }),
 };
 
 export default chatService;

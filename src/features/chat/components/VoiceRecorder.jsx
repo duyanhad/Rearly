@@ -379,6 +379,12 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
       startPointRef.current = null;
       if (!start || lockedRef.current) return; // đã khoá → thả tay không dừng
       const dx = event.clientX - start.x;
+      // Bấm một lần (chạm nhanh, không vuốt) = ghi rảnh tay luôn, không cần giữ.
+      if (Date.now() - (start.t ?? 0) < 350 && Math.abs(dx) < 20 && !cancellingRef.current) {
+        lockedRef.current = true;
+        setState('LOCKED_RECORDING');
+        return;
+      }
       finish(cancellingRef.current || dx < CANCEL_DX);
     };
 
@@ -394,7 +400,7 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
 
   const onPointerDown = (event) => {
     if (disabled || state !== 'IDLE') return;
-    startPointRef.current = { x: event.clientX, y: event.clientY };
+    startPointRef.current = { x: event.clientX, y: event.clientY, t: Date.now() };
     setState('RECORDING');
     void begin();
   };
@@ -442,10 +448,10 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
             }`}
           >
             {state === 'LOCKED_RECORDING'
-              ? 'Đang ghi · thả tay vẫn tiếp tục'
+              ? 'Đang ghi âm · bấm dừng khi xong'
               : cancelling
                 ? 'Buông ra để huỷ'
-                : 'Vuốt sang trái để huỷ · vuốt lên để khoá'}
+                : 'Thả tay = ghi rảnh tay · vuốt trái để huỷ'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -509,8 +515,8 @@ export function VoiceRecorder({ onSend, disabled, onBusyChange }) {
         onContextMenu={(event) => event.preventDefault()}
         disabled={disabled}
         className="touch-none select-none rounded-xl border border-slate-200 p-2 text-water-700 transition hover:bg-water-50 active:bg-water-100 disabled:opacity-50"
-        aria-label="Giữ để ghi tin nhắn thoại"
-        title="Giữ để ghi tin nhắn thoại"
+        aria-label="Bấm để ghi tin nhắn thoại"
+        title="Bấm 1 lần để ghi · giữ rồi vuốt trái để huỷ"
       >
         <Mic className="size-4" />
       </button>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, BellRing, MessageCircle, Send, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, BellRing, ImageIcon, MessageCircle, Search, Send, Smile, Trash2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { chatService } from '../../../services/chatService';
@@ -10,6 +10,8 @@ import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
 import { VoiceRecorder, AudioBubble } from './VoiceRecorder';
 import { NudgeSheet } from '../../social/components/NudgeSheet';
+import { EmojiPicker } from './EmojiPicker';
+import { ImageLightbox } from '../../../components/ImageLightbox';
 
 const timeLabel = (iso) => {
   if (!iso) return '';
@@ -19,6 +21,112 @@ const timeLabel = (iso) => {
     ? date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     : date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 };
+
+const REACTIONS = ['❤️', '😆', '😮', '😢', '😡', '👍'];
+
+function highlight(text, query) {
+  if (!query || !text) return text;
+  const i = text.toLowerCase().indexOf(query.toLowerCase());
+  if (i < 0) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="rounded bg-amber-200 px-0.5 text-slate-900">{text.slice(i, i + query.length)}</mark>
+      {text.slice(i + query.length)}
+    </>
+  );
+}
+
+/** Một tin nhắn: chữ / ảnh / thoại + cảm xúc thả vào + thanh reaction (hover hoặc giữ lâu). */
+function MessageRow({ m, query, onReact, onZoom }) {
+  const [barOpen, setBarOpen] = useState(false);
+  return (
+    <div className={`flex flex-col ${m.mine ? 'items-end' : 'items-start'}`}>
+      <div className="group relative">
+        {barOpen && (
+          <button className="fixed inset-0 z-10 cursor-default" aria-label="Đóng thanh cảm xúc" onClick={() => setBarOpen(false)} />
+        )}
+        {barOpen && (
+          <div
+            className={`absolute -top-9 z-20 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-1 shadow-lg ring-1 ring-slate-200 ${
+              m.mine ? 'right-0' : 'left-0'
+            }`}
+          >
+            {REACTIONS.map((e) => (
+              <button
+                key={e}
+                onClick={() => {
+                  onReact(e);
+                  setBarOpen(false);
+                }}
+                className="rounded-full p-0.5 text-base leading-none transition hover:scale-125"
+                aria-label={`Thả ${e}`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        )}
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setBarOpen(true);
+          }}
+          className={`relative max-w-[82vw] rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
+            m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
+          } ${m.pending ? 'opacity-60' : ''}`}
+        >
+          {m.imageUrl ? (
+            <button onClick={() => onZoom(m.imageUrl)} className="block" aria-label="Phóng to ảnh">
+              <img
+                src={mediaUrl(m.imageUrl)}
+                alt="Ảnh trong chat"
+                loading="lazy"
+                decoding="async"
+                className="max-h-56 rounded-xl object-cover"
+              />
+            </button>
+          ) : m.audioUrl ? (
+            <div className={m.mine ? 'text-white' : 'text-slate-700'}>
+              <AudioBubble src={mediaUrl(m.audioUrl)} durationMs={m.audioDurationMs} tone={m.mine ? 'dark' : 'light'} />
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap break-words">{highlight(m.body, query)}</p>
+          )}
+          <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>{timeLabel(m.createdAt)}</p>
+          {!barOpen && !m.pending && (
+            <button
+              onClick={() => setBarOpen(true)}
+              className={`absolute -top-3 hidden size-6 items-center justify-center rounded-full bg-white text-slate-500 shadow ring-1 ring-slate-200 group-hover:flex ${
+                m.mine ? '-left-3' : '-right-3'
+              }`}
+              aria-label="Thả cảm xúc"
+              title="Thả cảm xúc"
+            >
+              <Smile className="size-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+      {!!m.reactions?.length && (
+        <span className="z-10 -mt-1.5 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[12px] leading-none shadow ring-1 ring-slate-200">
+          {m.reactions.map((r) => (
+            <button
+              key={r.emoji}
+              onClick={() => onReact(r.emoji)}
+              className={`rounded-full px-0.5 ${r.mine ? 'ring-1 ring-water-400' : ''}`}
+              aria-label={`${r.emoji} ×${r.count}`}
+              title={`${r.emoji} ×${r.count}`}
+            >
+              {r.emoji}
+              {r.count > 1 ? <span className="ml-0.5 text-[10px] font-semibold text-slate-500">{r.count}</span> : null}
+            </button>
+          ))}
+        </span>
+      )}
+    </div>
+  );
+}
 
 /** Tổng số tin chưa đọc — dùng cho badge ở bong bóng chat. */
 export function useChatUnread() {
@@ -40,6 +148,12 @@ export function ChatPanel({ compact = false }) {
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState('');
   const [voiceBusy, setVoiceBusy] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [zoom, setZoom] = useState(null);
+  const [pending, setPending] = useState([]);
+  const imageRef = useRef(null);
   const scrollRef = useRef(null);
   const endRef = useRef(null);
 
@@ -135,11 +249,35 @@ export function ChatPanel({ compact = false }) {
     onError: (err) => toast.show('Không gửi được ghi âm', errorMessage(err)),
   });
 
+  const sendImage = useMutation({
+    mutationFn: async (file) => chatService.sendImage(activeId, file),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['chat-thread', activeId] });
+      void queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    },
+    onError: (err) => toast.show('Không gửi được ảnh', errorMessage(err)),
+  });
+
+  // Thả cảm xúc: cập nhật thẳng vào cache để chip hiện ngay, không chờ refetch.
+  const react = useMutation({
+    mutationFn: async ({ id, emoji }) => chatService.react(id, emoji),
+    onSuccess: (reactions, vars) => {
+      queryClient.setQueryData(['chat-thread', activeId], (old = []) =>
+        old.map((m) => (m.id === vars.id ? { ...m, reactions } : m)),
+      );
+    },
+    onError: (err) => toast.show('Không thả được cảm xúc', errorMessage(err)),
+  });
+
   const submit = (event) => {
     event.preventDefault();
     const body = draft.trim();
     if (!body || !activeId || send.isPending) return;
-    send.mutate(body);
+    // Optimistic: tin hiện ngay lập tức, server xác nhận sau (gửi cảm giác tức thì).
+    const tempId = `tmp-${Date.now()}`;
+    setPending((p) => [...p, { id: tempId, mine: true, body, createdAt: new Date().toISOString(), pending: true }]);
+    setDraft('');
+    send.mutate(body, { onSettled: () => setPending((p) => p.filter((x) => x.id !== tempId)) });
   };
 
   // Chuông trong hội thoại: chọn loại nhắc (nước/bữa ăn/thuốc…) + lời nhắn, gửi realtime/push.
@@ -208,6 +346,10 @@ export function ChatPanel({ compact = false }) {
     </ul>
   );
 
+  const q = search.trim().toLowerCase();
+  const all = [...messages, ...pending];
+  const shown = q ? all.filter((m) => (m.body || '').toLowerCase().includes(q)) : all;
+
   const thread = (
     <>
       <header className="flex items-center gap-2 border-b border-slate-100 px-2 py-1.5">
@@ -220,6 +362,17 @@ export function ChatPanel({ compact = false }) {
         </button>
         <Avatar url={active?.avatarUrl} name={active?.name ?? '?'} size="sm" />
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{active?.name}</span>
+        <button
+          onClick={() => {
+            setSearchOpen((v) => !v);
+            setSearch('');
+          }}
+          className={`rounded-lg p-1.5 transition hover:bg-slate-100 ${searchOpen ? 'text-water-700' : 'text-slate-400'}`}
+          aria-label="Tìm tin nhắn"
+          title="Tìm tin nhắn"
+        >
+          <Search className="size-4" />
+        </button>
         <button
           onClick={() => setNudgeOpen(true)}
           disabled={!active}
@@ -239,33 +392,34 @@ export function ChatPanel({ compact = false }) {
           <Trash2 className="size-4" />
         </button>
       </header>
+      {searchOpen && (
+        <div className="flex items-center gap-1.5 border-b border-slate-100 px-2 py-1.5">
+          <Search className="size-3.5 shrink-0 text-slate-400" />
+          <input
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm trong cuộc trò chuyện…"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+          />
+          <span className="shrink-0 text-[10px] tabular-nums text-slate-400">{q ? `${shown.length} kết quả` : ''}</span>
+        </div>
+      )}
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-slate-50/60 p-2.5">
-        {messages.length === 0 && (
+        {all.length === 0 && (
           <p className="py-6 text-center text-xs text-slate-400">Chưa có tin nhắn. Chào một câu nhé!</p>
         )}
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[82%] rounded-2xl px-3 py-1.5 text-sm shadow-sm ${
-                m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
-              }`}
-            >
-              {m.audioUrl ? (
-                <div className={m.mine ? 'text-white' : 'text-slate-700'}>
-                  <AudioBubble
-                    src={mediaUrl(m.audioUrl)}
-                    durationMs={m.audioDurationMs}
-                    tone={m.mine ? 'dark' : 'light'}
-                  />
-                </div>
-              ) : (
-                <p className="whitespace-pre-wrap break-words">{m.body}</p>
-              )}
-              <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
-                {timeLabel(m.createdAt)}
-              </p>
-            </div>
-          </div>
+        {q && shown.length === 0 && all.length > 0 && (
+          <p className="py-6 text-center text-xs text-slate-400">Không có tin nào khớp “{search}”.</p>
+        )}
+        {shown.map((m) => (
+          <MessageRow
+            key={m.id}
+            m={m}
+            query={q}
+            onReact={(emoji) => typeof m.id === 'number' && react.mutate({ id: m.id, emoji })}
+            onZoom={setZoom}
+          />
         ))}
         <div ref={endRef} />
       </div>
@@ -278,6 +432,45 @@ export function ChatPanel({ compact = false }) {
             placeholder={`Nhắn cho ${active?.name}...`}
             className="min-w-0 flex-1 rounded-xl border border-slate-200 px-2.5 py-2 text-base focus:border-water-400 focus:outline-none sm:text-sm"
           />
+        )}
+        {!voiceBusy && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setEmojiOpen((v) => !v)}
+              className={`rounded-xl border p-2 transition ${emojiOpen ? 'border-water-400 bg-water-50 text-water-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+              aria-label="Chèn emoji"
+              title="Emoji"
+            >
+              <Smile className="size-4" />
+            </button>
+            {emojiOpen && <EmojiPicker onPick={(e) => setDraft((d) => d + e)} onClose={() => setEmojiOpen(false)} />}
+          </div>
+        )}
+        {!voiceBusy && (
+          <>
+            <input
+              ref={imageRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) sendImage.mutate(file);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => imageRef.current?.click()}
+              disabled={sendImage.isPending}
+              className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 disabled:opacity-50"
+              aria-label="Gửi ảnh"
+              title="Gửi ảnh"
+            >
+              <ImageIcon className="size-4" />
+            </button>
+          </>
         )}
         <span className={voiceBusy ? 'flex-1' : ''}>
           <VoiceRecorder
@@ -305,6 +498,7 @@ export function ChatPanel({ compact = false }) {
           onSend={({ kind, message }) => nudge.mutate({ userId: active.userId, kind, message })}
         />
       )}
+      {zoom && <ImageLightbox src={mediaUrl(zoom)} alt="Ảnh trong chat" onClose={() => setZoom(null)} />}
     </>
   );
 
