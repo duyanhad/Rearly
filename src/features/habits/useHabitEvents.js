@@ -23,8 +23,10 @@ export function useHabitEvents(logs) {
   useEffect(() => {
     const list = logs ?? [];
 
-    // Lần đầu mở trang: dựng lại hiệu ứng của hành động gần nhất (sau khi layout xong).
-    if (prev.current === null) {
+    // Lần đầu mở trang (kể cả lúc danh sách còn rỗng): dựng lại hiệu ứng của hành động
+    // gần nhất sau khi layout xong, để avatar kịp mount rồi mới tác động.
+    const firstWithData = prev.current === null || (prev.current.length === 0 && list.length > 0);
+    if (firstWithData) {
       prev.current = list;
       if (replayed.current || list.length === 0) return;
       replayed.current = true;
