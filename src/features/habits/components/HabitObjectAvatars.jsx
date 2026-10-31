@@ -30,6 +30,7 @@ export function HabitObjectAvatars({ pour = 0, approve = 0, spill = 0, color = '
         name={leftAvatar.name}
         side="left"
         signal={pour}
+        runOnMount
         color={color}
       />
       {rightAvatar && (
@@ -40,6 +41,7 @@ export function HabitObjectAvatars({ pour = 0, approve = 0, spill = 0, color = '
           name={rightAvatar.name}
           side="right"
           signal={approve > spill ? approve : spill}
+          runOnMount
           color={approve > spill ? '#16a34a' : '#f43f5e'}
         />
       )}

@@ -19,11 +19,13 @@ export function CupAvatarFx({
   amount = 0,
   color = '#38bdf8',
   anchorRef,
+  runOnMount = false,
 }) {
   const [phase, setPhase] = useState('idle');
   // Khởi tạo bằng chính signal hiện tại: mount lại sau khi chuyển trang KHÔNG chạy hiệu ứng,
   // chỉ khi signal thực sự tăng mới rót (tránh avatar bị "treo" ở trạng thái nghiêng).
-  const lastSignal = useRef(signal);
+  // runOnMount: chạy ngay khi mount nếu đã có hành động (dùng để phát lại hiệu ứng khi vào lại trang).
+  const lastSignal = useRef(runOnMount ? 0 : signal);
   // Thời gian rót dài/ngắn theo số ml vừa uống, khớp với dòng nước trong cốc 3D.
   const pourMs = pourSeconds(amount) * 1000;
   const durationMs = action === 'pour' ? pourMs : HIT_MS;

@@ -114,7 +114,7 @@ export function SleepTodayPanel() {
     <div className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <section className="relative min-w-0 rounded-2xl bg-white p-4 shadow-sm">
-          <HabitObjectAvatars pour={pour + approvedNights} approve={approve} spill={spill} color="#6366f1" />
+          <HabitObjectAvatars pour={pour} approve={approve} spill={spill} color="#6366f1" />
           <div className="flex h-56 items-center justify-center">
             <HabitAvatar3D
               imageUrl={setting?.imageUrl ?? last?.photoUrl}

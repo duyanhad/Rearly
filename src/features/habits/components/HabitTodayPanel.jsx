@@ -60,7 +60,7 @@ export function HabitTodayPanel({ kind }) {
     <div className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <section className="relative min-w-0 rounded-2xl bg-white p-4 shadow-sm">
-          <HabitObjectAvatars pour={pour + done} approve={approve} spill={spill} />
+          <HabitObjectAvatars pour={pour} approve={approve} spill={spill} />
           <div className="flex h-56 items-center justify-center">
             <HabitAvatar3D
               imageUrl={setting?.imageUrl}
