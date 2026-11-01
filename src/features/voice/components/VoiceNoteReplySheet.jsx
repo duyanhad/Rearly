@@ -24,6 +24,8 @@ export function VoiceNoteReplySheet({ note, onClose }) {
       form.append('scheduledAtUtc', new Date().toISOString());
       form.append('durationMs', String(take.durationMs));
       form.append('audio', take.blob, 'voice-reply.webm');
+      // Gắn vào chuỗi để server đếm vòng (tối đa 2 vòng mỗi bên).
+      if (note.id) form.append('replyToId', String(note.id));
       return voiceNoteService.create(form);
     },
     onSuccess: () => {

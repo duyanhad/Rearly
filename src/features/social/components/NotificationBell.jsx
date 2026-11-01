@@ -192,8 +192,12 @@ export function NotificationBell() {
                             type="button"
                             onClick={() => {
                               if (!n.isRead) markRead.mutate(n.id);
-                              if (n.type === 'GoalAchieved' && n.senderId) {
-                                // "Ảnh đã được duyệt" / "Ảnh bị từ chối" → mở popup trả lời partner.
+                              const canReply =
+                                (n.type === 'GoalAchieved' || n.type === 'Reply') &&
+                                n.senderId &&
+                                (n.replyRound ?? 0) < 2;
+                              if (canReply) {
+                                // Kết quả duyệt ảnh / phản hồi (tối đa 2 vòng) → mở popup trả lời.
                                 openReply(n);
                               } else if (n.type === 'Proof') {
                                 setOpen(false);
@@ -224,9 +228,13 @@ export function NotificationBell() {
                               <span className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400">
                                 {timeAgo(n.createdAt)}
                                 {image && <span className="text-water-600">· ảnh</span>}
-                                {(n.type === 'Proof' || n.type === 'Reply' || (n.type === 'GoalAchieved' && n.senderId)) && n.senderId && (
-                                  <span className="text-water-700">· Trả lời</span>
-                                )}
+                                {(n.type === 'GoalAchieved' || n.type === 'Reply') &&
+                                  n.senderId &&
+                                  ((n.replyRound ?? 0) < 2 ? (
+                                    <span className="text-water-700">· Trả lời</span>
+                                  ) : (
+                                    <span className="text-slate-400">· hết lượt trả lời</span>
+                                  ))}
                               </span>
                             </span>
                           </button>

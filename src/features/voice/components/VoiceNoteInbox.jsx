@@ -42,7 +42,7 @@ export function VoiceNoteInbox() {
                       {v.listenedAtUtc ? ' · đã nghe' : v.ringCount > 0 ? ' · chưa nghe' : ' · chưa tới giờ'}
                     </p>
                   </div>
-                  {v.ringCount > 0 && !v.listenedAtUtc && (
+                {v.ringCount > 0 && !v.listenedAtUtc && (
                     <BellRing className="size-3.5 shrink-0 text-amber-500" aria-label="Chưa nghe" />
                   )}
                   <button
@@ -58,9 +58,10 @@ export function VoiceNoteInbox() {
                   <button
                     type="button"
                     onClick={() => setReplying(v)}
+                    disabled={(v.round ?? 0) >= 2}
                     aria-label={`Trả lời ${v.senderName} bằng voice`}
-                    title="Trả lời bằng voice"
-                    className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-water-700"
+                    title={(v.round ?? 0) >= 2 ? 'Đã hết 2 vòng trả lời' : 'Trả lời bằng voice'}
+                    className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-water-700 disabled:opacity-40"
                   >
                     <Reply className="size-4" />
                   </button>
