@@ -3,6 +3,7 @@ import { VoiceNoteComposer } from './VoiceNoteComposer';
 
 /**
  * Popup hẹn lời nhắn thoại — mở từ menu nhanh (nút +) để không phải rời trang đang xem.
+ * Sau khi hẹn xong, popup ở lại và tự về bước 1 (trống) để có thể hẹn tiếp.
  */
 export function VoiceNoteSheet({ onClose }) {
   return (
@@ -37,10 +38,8 @@ export function VoiceNoteSheet({ onClose }) {
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
           <VoiceNoteComposer
-            showList={false}
             onScheduled={() => {
-              // Đóng popup sau khi hẹn xong để thấy thông báo thành công.
-              setTimeout(onClose, 700);
+              // Không tự đóng nữa: người dùng thấy xác nhận "Đã hẹn gửi" + nút huỷ ngay trong popup.
             }}
           />
         </div>

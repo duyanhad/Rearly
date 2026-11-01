@@ -3,7 +3,7 @@ import { DearlyLoader } from '../../../components/DearlyLoader';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BellRing, CheckCheck, Megaphone, MessageCircle, MinusCircle, Send, ShieldCheck, Trophy, UserPlus, X } from 'lucide-react';
+import { Bell, BellRing, CheckCheck, Megaphone, MessageCircle, Mic, MinusCircle, Send, ShieldCheck, Trophy, UserPlus, X } from 'lucide-react';
 
 // Icon + màu theo loại thông báo để panel nhìn gọn và dễ phân biệt.
 const TYPE_META = {
@@ -14,7 +14,8 @@ const TYPE_META = {
   Deduct: { icon: MinusCircle, tone: 'bg-rose-50 text-rose-600' },
   Broadcast: { icon: Megaphone, tone: 'bg-slate-100 text-slate-600' },
   Proof: { icon: CheckCheck, tone: 'bg-amber-50 text-amber-600' },
-  Reply: { icon: MessageCircle, tone: 'bg-water-50 text-water-700' }
+  Reply: { icon: MessageCircle, tone: 'bg-water-50 text-water-700' },
+  VoiceNote: { icon: Mic, tone: 'bg-amber-50 text-amber-600' }
 };
 
 /** Số thông báo tải mỗi lần (bấm "xem thêm" để tải tiếp). */
