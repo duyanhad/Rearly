@@ -20,6 +20,7 @@ import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { ChatPage } from './features/chat/pages/ChatPage';
 import { PartnerPage } from './features/partner/pages/PartnerPage';
 import { MascotLabPage } from './features/mascot/pages/MascotLabPage';
+import { VoiceNotePage } from './features/voice/pages/VoiceNotePage';
 import { AdminLayout } from './features/admin/layouts/AdminLayout';
 import { AdminOverview } from './features/admin/pages/AdminOverview';
 import { AdminUsers } from './features/admin/pages/AdminUsers';
@@ -99,6 +100,7 @@ export default function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/partner" element={<PartnerPage />} />
           <Route path="/mascot" element={<MascotLabPage />} />
+          <Route path="/voice-notes" element={<VoiceNotePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

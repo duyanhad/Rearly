@@ -17,6 +17,7 @@ import {
   Sparkles,
   Trophy,
   MessageCircle,
+  Mic,
 } from 'lucide-react';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { userService } from '../../../services/userService';
@@ -272,6 +273,16 @@ export function ProfilePage() {
             <MessageCircle className="size-4" />
           </span>
           <span className="flex-1 font-medium text-slate-800">Chat với bạn bè</span>
+          <ChevronRight className="size-4 shrink-0 text-slate-300" />
+        </Link>
+        <Link to="/voice-notes" className="flex items-center gap-3 border-t border-slate-100 px-4 py-3.5 text-sm transition hover:bg-slate-50">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <Mic className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-slate-800">Hẹn lời nhắn thoại</span>
+            <span className="block truncate text-xs text-slate-500">Ghi âm, hẹn giờ gửi cho bạn bè / partner</span>
+          </span>
           <ChevronRight className="size-4 shrink-0 text-slate-300" />
         </Link>
         <Link to="/mascot" className="flex items-center gap-3 border-t border-slate-100 px-4 py-3.5 text-sm transition hover:bg-slate-50">

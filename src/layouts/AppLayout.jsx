@@ -13,6 +13,7 @@ import { PushPermissionPrompt } from '../components/PushPermissionPrompt';
 import { DearlyMark } from '../components/DearlyLogo';
 import { HabitAlarmOverlay } from '../features/settings/components/HabitAlarmOverlay';
 import { SleepAlarmOverlay } from '../features/settings/components/SleepAlarmOverlay';
+import { VoiceNoteOverlay } from '../features/voice/components/VoiceNoteOverlay';
 const links = [{
   to: '/',
   label: 'Hôm nay',
@@ -122,5 +123,6 @@ export function AppLayout() {
       <InstallHint />
       <SleepAlarmOverlay />
       <HabitAlarmOverlay />
+      <VoiceNoteOverlay />
     </div>;
 }
