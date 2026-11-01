@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BellRing, ChevronLeft, Droplets, MessageCircle, ShieldCheck, UserMinus } from 'lucide-react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
@@ -15,6 +15,7 @@ import { timeLabel } from '../../../utils/format';
 export function FriendProfilePage() {
   const { id } = useParams();
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [zoom, setZoom] = useState(null);
 
   const { data: friends = [] } = useQuery({
@@ -30,7 +31,10 @@ export function FriendProfilePage() {
   const unfriend = useMutation({
     mutationFn: async (id) => socialService.unfollow(id),
     onSuccess: () => {
-      toast.show('Đã xoá bạn bè', 'Người này không còn trong danh sách bạn bè.');
+      toast.show('Đã xoá bạn bè', 'Người này không còn trong danh sách bạn bè hay Partner.');
+      for (const key of ['friends', 'feed', 'partner-clients', 'followers', 'following', 'my-partner', 'partner-pending', 'partner-requests', 'partner-reviewed', 'today']) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
       nav('/friends');
     },
     onError: (err) => toast.show('Không xoá được', errorMessage(err)),

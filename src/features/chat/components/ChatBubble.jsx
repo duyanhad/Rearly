@@ -88,37 +88,68 @@ export function ChatBubble() {
     panelDragRef.current = null;
   }, []);
 
-  // Kéo bong bóng: di chuyển > 6px thì coi là kéo, không mở cửa sổ.
+  // Kéo bong bóng: di chuyển > 4px thì coi là kéo, không mở cửa sổ.
+  // Trên điện thoại phải bắt pointer ở window (setPointerCapture hay bị mất khi ngón tay đi nhanh)
+  // và bám mép gần nhất sau khi thả để lần sau bấm/kéo lại dễ.
+  const BUBBLE_SIZE = 56;
+  const EDGE = 12;
+
   const onPointerDown = useCallback((event) => {
-    const start = { x: event.clientX, y: event.clientY, right: pos.right, bottom: pos.bottom };
-    dragRef.current = { start, moved: false };
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    dragRef.current = {
+      start: { x: event.clientX, y: event.clientY, right: pos.right, bottom: pos.bottom },
+      moved: false,
+      last: pos,
+      id: event.pointerId,
+    };
     event.currentTarget.setPointerCapture?.(event.pointerId);
   }, [pos]);
 
-  const onPointerMove = useCallback((event) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    const dx = event.clientX - drag.start.x;
-    const dy = event.clientY - drag.start.y;
-    if (!drag.moved && Math.hypot(dx, dy) < 6) return;
-    drag.moved = true;
-    const next = {
-      right: Math.min(Math.max(8, drag.start.right - dx), window.innerWidth - 72),
-      bottom: Math.min(Math.max(8, drag.start.bottom - dy), window.innerHeight - 72),
+  useEffect(() => {
+    const move = (event) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const dx = event.clientX - drag.start.x;
+      const dy = event.clientY - drag.start.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+      drag.moved = true;
+      const next = {
+        right: Math.min(Math.max(EDGE, drag.start.right - dx), window.innerWidth - BUBBLE_SIZE - EDGE),
+        bottom: Math.min(Math.max(EDGE, drag.start.bottom - dy), window.innerHeight - BUBBLE_SIZE - EDGE),
+      };
+      drag.last = next;
+      setPos(next);
     };
-    setPos(next);
+    const up = () => {
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (!drag) return;
+      if (!drag.moved) {
+        setOpen((value) => !value);
+        return;
+      }
+      // Bám mép trái/phải gần nhất (giữ nguyên độ cao) cho gọn và dễ bấm lại.
+      const centerFromRight = drag.last.right + BUBBLE_SIZE / 2;
+      const snapped = {
+        right: centerFromRight < window.innerWidth / 2 ? EDGE : window.innerWidth - BUBBLE_SIZE - EDGE,
+        bottom: drag.last.bottom,
+      };
+      setPos(snapped);
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(snapped));
+      } catch {
+        /* bộ nhớ bị chặn thì thôi */
+      }
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
   }, []);
-
-  const onPointerUp = useCallback(() => {
-    const drag = dragRef.current;
-    dragRef.current = null;
-    if (!drag) return;
-    if (drag.moved) {
-      localStorage.setItem(POS_KEY, JSON.stringify(pos));
-      return;
-    }
-    setOpen((value) => !value);
-  }, [pos]);
 
   useEffect(() => {
     if (!open) return;
@@ -194,10 +225,8 @@ export function ChatBubble() {
       {!open && (
         <button
           onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
           style={{ right: pos.right, bottom: pos.bottom }}
-          aria-label="Mở chat"
+          aria-label="Mở chat (kéo để di chuyển)"
           className="fixed z-40 flex size-14 touch-none items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-water-700 text-white shadow-lg shadow-water-600/40 transition active:scale-95"
         >
           <MessageCircle className="size-6" />

@@ -26,7 +26,7 @@ export function FriendsPage() {
     mutationFn: async (id) => socialService.unfollow(id),
     onSuccess: async () => {
       toast.show('Đã xoá bạn bè', 'Cả hai không còn trong danh sách bạn bè.');
-      for (const key of ['friends', 'feed', 'partner-clients', 'followers', 'following']) {
+      for (const key of ['friends', 'feed', 'partner-clients', 'followers', 'following', 'my-partner', 'partner-pending', 'partner-requests', 'partner-reviewed', 'today', 'notifications']) {
         void queryClient.invalidateQueries({ queryKey: [key] });
       }
     },
