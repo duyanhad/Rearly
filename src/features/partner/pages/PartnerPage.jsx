@@ -126,14 +126,6 @@ export function PartnerPage() {
     refetchInterval: 30_000,
   });
 
-  // Phiếu đã duyệt / từ chối của người đang xem — để xem lại ảnh và giờ duyệt.
-  const { data: reviewed = [], isLoading: reviewedLoading } = useQuery({
-    queryKey: ['partner-reviewed', selectedId, kindFilter],
-    queryFn: async () => (await socialService.getReviewedProofs(selectedId, kindFilter, 20)).data,
-    enabled: !!selectedId,
-    staleTime: 20_000,
-  });
-
   // Người đang duyệt ảnh cho tôi — hiện ngay trên trang để thấy rõ quan hệ 2 chiều.
   const { data: myPartner } = useQuery({
     queryKey: ['my-partner'],
@@ -239,6 +231,15 @@ export function PartnerPage() {
 
   // Thanh danh mục như trang Hôm nay: chọn nhu cầu để xem tiến độ + duyệt phiếu của nhu cầu đó.
   const [kindFilter, setKindFilter] = useState('water');
+
+  // Phiếu đã duyệt / từ chối của người đang xem — xem lại ảnh + giờ duyệt.
+  const { data: reviewed = [], isLoading: reviewedLoading } = useQuery({
+    queryKey: ['partner-reviewed', selectedId, kindFilter],
+    queryFn: async () => (await socialService.getReviewedProofs(selectedId, kindFilter, 20)).data,
+    enabled: !!selectedId && !!kindFilter,
+    staleTime: 20_000,
+  });
+
   const needStrip = useRef(null);
   const {
     data: needs = [],
