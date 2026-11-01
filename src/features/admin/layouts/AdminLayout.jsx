@@ -22,6 +22,10 @@ const nav = [{
 }, {
   to: '/admin/eras',
   label: 'Kỷ nguyên',
+},
+{
+  to: '/admin/cups',
+  label: 'Loại cốc',
   icon: GalleryVerticalEnd
 }];
 

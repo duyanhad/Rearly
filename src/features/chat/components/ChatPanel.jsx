@@ -55,6 +55,13 @@ function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
 
   const canEdit = m.mine && !m.recalledAt && !m.audioUrl && !m.imageUrl;
   const canRecall = m.mine && !m.recalledAt;
+  // Giữ ngón tay ~450ms trên bong bóng (mobile không có hover/contextmenu ổn định).
+  const pressTimer = useRef(0);
+  const startPress = () => {
+    window.clearTimeout(pressTimer.current);
+    pressTimer.current = window.setTimeout(() => setBarOpen(true), 450);
+  };
+  const cancelPress = () => window.clearTimeout(pressTimer.current);
 
   return (
     <div className={`flex flex-col ${m.mine ? 'items-end' : 'items-start'}`}>
@@ -146,6 +153,10 @@ function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
               setBarOpen(true);
             }}
             onDoubleClick={() => setBarOpen(true)}
+            onTouchStart={startPress}
+            onTouchMove={cancelPress}
+            onTouchEnd={cancelPress}
+            onTouchCancel={cancelPress}
             style={{ WebkitTouchCallout: 'none' }}
             className={`relative max-w-[82vw] select-none rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
               m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'

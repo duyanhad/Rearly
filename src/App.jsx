@@ -26,6 +26,7 @@ import { AdminUsers } from './features/admin/pages/AdminUsers';
 import { AdminBroadcast } from './features/admin/pages/AdminBroadcast';
 import { AdminLogs } from './features/admin/pages/AdminLogs';
 import { AdminEras } from './features/admin/pages/AdminEras';
+import { AdminCups } from './features/admin/pages/AdminCups';
 function Loading() {
   return <DearlyLoader full />;
 }
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="broadcast" element={<AdminBroadcast />} />
           <Route path="logs" element={<AdminLogs />} />
           <Route path="eras" element={<AdminEras />} />
+          <Route path="cups" element={<AdminCups />} />
         </Route>
 
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>

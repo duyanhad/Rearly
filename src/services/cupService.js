@@ -9,6 +9,8 @@ export const cupService = {
     api.put(`/api/cups/${id}/image`, form, onUploadProgress ? { onUploadProgress } : undefined),
   removeImage: (id) => api.delete(`/api/cups/${id}/image`),
   setDefault: (id) => api.put(`/api/cups/${id}/default`),
+  // Nhận cốc mẫu từ catalog admin thành cốc của mình (kèm đặt mặc định).
+  adopt: (id) => api.post(`/api/cups/${id}/adopt`),
 };
 
 export default cupService;

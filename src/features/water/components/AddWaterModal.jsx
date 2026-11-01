@@ -167,9 +167,17 @@ export function AddWaterModal({
         )}
       </div>
 
-      {pickerOpen && <CupPicker cups={cups} selected={selectedCup} onClose={() => setPickerOpen(false)} onSelect={cup => {
-      setSelectedCup(cup);
-      setAmountMl(cup.volumeMl);
+      {pickerOpen && <CupPicker cups={cups} selected={selectedCup} onClose={() => setPickerOpen(false)} onSelect={async cup => {
+      if (cup.isCatalog) {
+        // Cốc mẫu của admin: nhận về thành cốc của mình rồi mới chọn.
+        const adopted = (await cupService.adopt(cup.id)).data;
+        void queryClient.invalidateQueries({ queryKey: ['cups'] });
+        setSelectedCup(adopted);
+        setAmountMl(adopted.volumeMl);
+      } else {
+        setSelectedCup(cup);
+        setAmountMl(cup.volumeMl);
+      }
       setPickerOpen(false);
     }} />}
     </div>;
@@ -220,11 +228,22 @@ function CupPicker({
           const active = selected?.id === cup.id;
           return <li key={cup.id}>
                 <button onClick={() => onSelect(cup)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${active ? 'bg-water-50' : 'hover:bg-slate-50'}`}>
-                  <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${active ? 'bg-water-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                    <CupSoda className="size-5" />
+                  <span className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl ${active ? 'bg-water-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    {cup.cutoutUrl || cup.imageUrl ? (
+                      <img src={mediaUrl(cup.cutoutUrl || cup.imageUrl)} alt={cup.name} className="size-full object-contain" loading="lazy" decoding="async" />
+                    ) : (
+                      <CupSoda className="size-5" />
+                    )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-slate-800">{cup.name}</span>
+                    <span className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-800">
+                      {cup.name}
+                      {cup.isCatalog && (
+                        <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[9px] font-semibold text-violet-600 ring-1 ring-violet-100">
+                          Mẫu
+                        </span>
+                      )}
+                    </span>
                     <span className="block text-xs text-slate-500">{cup.volumeMl} ml</span>
                   </span>
                   {active && <Check className="size-5 shrink-0 text-water-600" />}

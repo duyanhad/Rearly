@@ -750,3 +750,11 @@ body {
     opacity: 0.7;
   }
 }
+
+/* Chạm nhanh hai lần trên nút/ảnh không phóng to trang (lỗi hay gặp trên iOS). */
+button,
+a,
+img,
+[role='button'] {
+  touch-action: manipulation;
+}
