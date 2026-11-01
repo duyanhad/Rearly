@@ -331,7 +331,7 @@ function fillSmallHoles(px, w, h) {
  * Quy tắc: bỏ khối chạm viền ảnh nhiều (lá cây, tường, nền), rồi giữ khối lớn nhất
  * cùng các khối đủ lớn (phụ kiện rời như nắp, ống hút, móc).
  */
-function keepLargeBlobs(px, w, h) {
+function keepLargeBlobs(px, w, h, minRatio = 0.25) {
   const seen = new Uint8Array(w * h);
   const queue = new Int32Array(w * h);
   const blobs = [];
@@ -361,7 +361,7 @@ function keepLargeBlobs(px, w, h) {
   if (blobs.length === 0) return;
 
   const largest = Math.max(...blobs.map((b) => b.count));
-  const minArea = Math.max(300, largest * 0.25);
+  const minArea = Math.max(120, largest * minRatio);
   const keep = new Uint8Array(w * h);
   for (const blob of blobs) {
     if (blob.count < minArea) continue;
@@ -393,39 +393,69 @@ function keepLargeBlobs(px, w, h) {
 }
 
 /**
- * Cắt các "phần thò ra" bất thường ở hai bên (ngón tay nắm cốc, cành lá lọt vào)
- * bằng cách so chiều rộng từng hàng với trung vị các hàng lân cận.
- * Vật thể thật (thân cốc, nắp, ống hút) rộng đều theo chiều dọc nên không bị ảnh hưởng.
+ * Dọn mask sau khi tách nền:
+ * 1. Ép alpha về 0/255 (bỏ quầng mờ lửng lơ — nguồn chính của "nhiễu" quanh vật).
+ * 2. Phép "mở" hình thái (xói 2 → phình 2): sợi/vệt nền mảnh biến mất, khối dày và
+ *    phụ kiện (dây, quai, lá) vẫn còn — khác cách cắt theo hàng trước đây hay ăn mất phụ kiện.
+ * 3. Làm mượt mép 1px để không bị răng cưa.
  */
-function trimRowProtrusions(px, w, h) {
-  const left = new Int32Array(h).fill(-1);
-  const right = new Int32Array(h).fill(-1);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (px[(y * w + x) * 4 + 3] > 24) {
-        if (left[y] < 0) left[y] = x;
-        right[y] = x;
-      }
-    }
+function cleanMask(px, w, h) {
+  const n = w * h;
+  const solid = new Uint8Array(n);
+  for (let p = 0; p < n; p++) {
+    const a = px[p * 4 + 3];
+    px[p * 4 + 3] = a <= 70 ? 0 : a >= 190 ? 255 : Math.round(((a - 70) * 255) / 120);
+    solid[p] = px[p * 4 + 3] > 127 ? 1 : 0;
   }
 
-  // Bắt "gai" thò ra (ngón tay): mép đột ngột nhô ra rồi thụt lại ngay sau đó.
-  // Chỉ cắt khi phần thò rất nhỏ (<8% chiều rộng) → không bao giờ ăn vào nắp/thân cốc.
-  const reach = Math.max(3, Math.round(h * 0.03));
-  const maxSpike = Math.max(3, w * 0.08);
-  for (let y = reach; y < h - reach; y++) {
-    if (left[y] < 0) continue;
-    const refL = Math.min(left[y - reach], left[y + reach]);
-    const refR = Math.max(right[y - reach], right[y + reach]);
-    const spikeL = refL > 0 && left[y] < refL - 2 && refL - left[y] < maxSpike;
-    const spikeR = refR < w - 1 && right[y] > refR + 2 && right[y] - refR < maxSpike;
-    if (!spikeL && !spikeR) continue;
-    const from = spikeL ? refL : 0;
-    const to = spikeR ? refR : w - 1;
+  const opened = maskMorph(maskMorph(solid, w, h, 2, false), w, h, 2, true);
+  const bin = new Uint8Array(n);
+  for (let p = 0; p < n; p++) bin[p] = opened[p] ? 255 : 0;
+
+  for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (x < from || x > to) px[(y * w + x) * 4 + 3] = 0;
+      const p = y * w + x;
+      if (!opened[p]) {
+        px[p * 4 + 3] = 0;
+        continue;
+      }
+      let sum = 0;
+      let count = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= h) continue;
+        for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= w) continue;
+          sum += bin[yy * w + xx];
+          count++;
+        }
+      }
+      px[p * 4 + 3] = Math.round(sum / count);
     }
   }
+}
+
+/** Xói (grow=false) hoặc phình (grow=true) mask nhị phân, lặp `iterations` lần. */
+function maskMorph(src, w, h, iterations, grow) {
+  let cur = src;
+  for (let it = 0; it < iterations; it++) {
+    const next = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        const left = x > 0 ? cur[p - 1] : 0;
+        const right = x < w - 1 ? cur[p + 1] : 0;
+        const up = y > 0 ? cur[p - w] : 0;
+        const down = y < h - 1 ? cur[p + w] : 0;
+        next[p] = grow
+          ? (cur[p] || left || right || up || down ? 1 : 0)
+          : cur[p] && left && right && up && down ? 1 : 0;
+      }
+    }
+    cur = next;
+  }
+  return cur;
 }
 
 /**
@@ -915,10 +945,10 @@ async function computeCutout(url) {
     : false;
 
   if (usedAi) {
-    // Model đã cho alpha: vá lỗ nhỏ bên trong cốc, bỏ đảo rác rời rạc, rồi cắt phần thò ra (tay).
+    // Model đã cho alpha: vá lỗ nhỏ bên trong vật, dọn quầng mờ + sợi rác, bỏ đảo rác rời rạc.
     fillSmallHoles(px, w, h);
-    keepLargeBlobs(px, w, h);
-    trimRowProtrusions(px, w, h);
+    cleanMask(px, w, h);
+    keepLargeBlobs(px, w, h, 0.03);
   } else {
     // ---- 2) Không có model (offline/chặn CDN) → thuật toán heuristic tại chỗ ----
     const palette = buildBorderPalette(px, w, h);
@@ -936,6 +966,7 @@ async function computeCutout(url) {
     closeNicks(px, alphaBackup, w, h);
     keepLargeBlobs(px, w, h);
     trimBackgroundBleed(px, w, h, lut, PALETTE_TOLERANCE);
+    cleanMask(px, w, h);
   }
 
   // Khử quầng sáng ở mép: kéo màu pixel viền về màu của pixel đục gần nhất.
