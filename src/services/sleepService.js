@@ -15,6 +15,8 @@ export const sleepService = {
   submit: (form) => api.post('/api/sleep', form),
   inbox: () => api.get('/api/sleep/inbox'),
   review: (id, { approve, reason }) => api.post(`/api/sleep/${id}/review`, { approve, reason }),
+  /** Tắt nhắc "sắp tới giờ đi ngủ" cho hôm nay. */
+  dismissReminder: () => api.post('/api/sleep/reminder/dismiss'),
 };
 
 export default sleepService;

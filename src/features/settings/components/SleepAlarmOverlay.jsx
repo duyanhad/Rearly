@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlarmClock, Lock, Moon, Settings } from 'lucide-react';
 import { habitService } from '../../../services/habitService';
+import { sleepService } from '../../../services/sleepService';
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
 
-import { isSleepAlarmStoppedToday, stopSleepAlarmToday } from '../sleepAlarmStorage';
+import { isSleepAlarmStoppedToday, isSleepReminderStoppedToday, stopSleepAlarmToday, stopSleepReminderToday } from '../sleepAlarmStorage';
 
 /**
  * Màn hình báo thức ngủ: kêu theo "số lần mỗi vòng × số vòng" của chế độ đã chọn.
@@ -33,6 +34,66 @@ export function SleepAlarmOverlay() {
     setRinging(false);
     stopSleepAlarmToday('dismissed');
   }, []);
+
+  // ---- Nhắc TRƯỚC giờ đi ngủ (vd. trước 10 phút) ----
+  const [prebed, setPrebed] = useState(null); // { minutesLeft, bed }
+  const bed = row?.times?.[0] ?? '23:00';
+  const remindBefore = row?.remindBeforeMin ?? 10;
+
+  const dismissPrebed = useCallback(async () => {
+    setPrebed(null);
+    stopSleepReminderToday('dismissed');
+    try {
+      await sleepService.dismissReminder();
+    } catch {
+      /* mất mạng thì thôi, mai nhắc lại */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!row?.alarmEnabled || row?.enabled === false) {
+      setPrebed(null);
+      return undefined;
+    }
+    const tick = () => {
+      // Đã tắt nhắc hôm nay thì thôi (cờ riêng, không ảnh hưởng báo thức dậy).
+      if (isSleepReminderStoppedToday()) {
+        setPrebed(null);
+        return;
+      }
+      const [bh, bm] = bed.split(':').map(Number);
+      if (Number.isNaN(bh) || Number.isNaN(bm)) return;
+      const now = new Date();
+      const at = new Date(now);
+      at.setHours(bh, bm, 0, 0);
+      const diffMin = (at - now) / 60000;
+      // Từ lúc (giờ ngủ - số phút nhắc) tới 15 phút sau giờ ngủ.
+      if (diffMin <= remindBefore && diffMin > -15) {
+        setPrebed({ minutesLeft: Math.max(0, Math.ceil(diffMin)), bed: bed });
+      } else {
+        setPrebed(null);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 15_000);
+    return () => clearInterval(id);
+  }, [row?.alarmEnabled, row?.enabled, bed, remindBefore]);
+
+  // Rung + thông báo hệ thống lặp lại mỗi 30 giây cho tới khi người dùng tắt.
+  useEffect(() => {
+    if (!prebed) return undefined;
+    const buzz = async () => {
+      if (navigator.vibrate) navigator.vibrate([600, 250, 600, 250, 600]);
+      await askNotificationPermission();
+      showSystemNotification(
+        prebed.minutesLeft > 0 ? `⏰ Còn ${prebed.minutesLeft} phút là tới giờ đi ngủ` : '⏰ Đã tới giờ đi ngủ',
+        'Vào Dearly bấm "Tắt nhắc" để thôi nhắc hôm nay.',
+      );
+    };
+    void buzz();
+    const id = setInterval(buzz, 30_000);
+    return () => clearInterval(id);
+  }, [prebed?.bed, prebed?.minutesLeft]);
 
   // Kiểm tra mỗi 10 giây xem đã tới giờ báo thức chưa.
   useEffect(() => {
@@ -95,7 +156,44 @@ export function SleepAlarmOverlay() {
     return () => window.removeEventListener('dearly:sleep-alarm-stop', handler);
   }, []);
 
-  if (!ringing) return null;
+  if (!ringing && !prebed) return null;
+
+  // Màn hình nhắc trước giờ ngủ (ưu tiên hiện khi chưa tới giờ báo thức dậy).
+  if (!ringing && prebed) {
+    return (
+      <div className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-[#3a1f4d]/96 to-[#1f2437]/96 p-6 text-center text-cream-50 backdrop-blur">
+        <span className="flex size-20 items-center justify-center rounded-full bg-white/10 ring-4 ring-white/20">
+          <Moon className="size-10 animate-pulse" />
+        </span>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cream-200/80">Sắp tới giờ đi ngủ</p>
+        <p className="text-2xl font-bold">
+          {prebed.minutesLeft > 0 ? `Còn ${prebed.minutesLeft} phút` : 'Đã tới giờ'}
+        </p>
+        <p className="max-w-xs text-sm text-cream-200/80">
+          Giờ ngủ đặt lúc <b>{prebed.bed}</b> — chuẩn bị lên giường để ngủ đủ giấc nhé.
+        </p>
+
+        <div className="mt-2 w-full max-w-xs space-y-2">
+          <Link
+            to="/?view=sleep"
+            onClick={() => setPrebed(null)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-cream-200 py-3 text-sm font-bold text-water-800"
+          >
+            <Moon className="size-4" /> Vào trang Giấc ngủ
+          </Link>
+          <button
+            onClick={dismissPrebed}
+            className="w-full rounded-xl bg-white/15 py-2.5 text-sm font-semibold text-cream-50"
+          >
+            Tắt nhắc hôm nay
+          </button>
+          <p className="flex items-center justify-center gap-1 text-[11px] text-cream-200/60">
+            <AlarmClock className="size-3" /> Sẽ nhắc lại mỗi 30 giây cho tới khi bạn tắt
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const roundIndex = Math.floor((call - 1) / perRound) + 1;
   const perRoundIndex = ((call - 1) % perRound) + 1;

@@ -18,3 +18,22 @@ export function isSleepAlarmStoppedToday() {
     return false;
   }
 }
+
+/* ---- Nhắc TRƯỚC giờ đi ngủ: cờ riêng để tắt nhắc ngủ không làm mất báo thức dậy ---- */
+const reminderKey = (iso) => `dearly.sleepReminderStop.${iso}`;
+
+export function stopSleepReminderToday(reason = 'dismissed') {
+  try {
+    localStorage.setItem(reminderKey(todayIso()), reason);
+  } catch {
+    /* bỏ qua */
+  }
+}
+
+export function isSleepReminderStoppedToday() {
+  try {
+    return Boolean(localStorage.getItem(reminderKey(todayIso())));
+  } catch {
+    return false;
+  }
+}
