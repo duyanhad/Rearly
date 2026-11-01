@@ -9,6 +9,7 @@ import { BottomNav } from './BottomNav';
 import { InstallHint } from '../components/InstallHint';
 import { ChatBubble } from '../features/chat/components/ChatBubble';
 import { AppBadge } from '../components/AppBadge';
+import { PushPermissionPrompt } from '../components/PushPermissionPrompt';
 import { DearlyMark } from '../components/DearlyLogo';
 import { SleepAlarmOverlay } from '../features/settings/components/SleepAlarmOverlay';
 const links = [{
@@ -120,6 +121,7 @@ export function AppLayout() {
       <BottomNav />
       <ChatBubble />
       <AppBadge />
+      <PushPermissionPrompt />
       <InstallHint />
       <SleepAlarmOverlay />
     </div>;
