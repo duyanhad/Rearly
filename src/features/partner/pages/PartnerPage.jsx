@@ -12,6 +12,7 @@ import {
   Clock,
   Droplet,
   Flame,
+  History,
   Image as ImageIcon,
   Inbox,
   Moon,
@@ -58,6 +59,23 @@ const proofText = (p) => {
   if (p.kind === 'sleep') return `Giấc ngủ ${p.bedTime} → ${p.wakeTime}`;
   if (p.kind === 'weight') return `Cân nặng ${(p.value / 1000).toFixed(1)} kg`;
   return `${HABIT_KINDS[p.kind]?.label ?? p.kind} · ${timeLabel(p.logTime)}`;
+};
+
+/** Nhãn cho phiếu đã duyệt (không có giờ ngủ dự kiến như phiếu chờ). */
+const reviewedText = (r) => {
+  if (r.kind === 'water') return `${r.amountMl} ml · ${periodLabel(r.period)}`;
+  if (r.kind === 'sleep') return `Giấc ngủ · ${Math.floor((r.value ?? 0) / 60)}h${String((r.value ?? 0) % 60).padStart(2, '0')}`;
+  if (r.kind === 'weight') return `Cân nặng ${((r.value ?? 0) / 1000).toFixed(1)} kg`;
+  return `${HABIT_KINDS[r.kind]?.label ?? r.kind} · ${timeLabel(r.logTime)}`;
+};
+
+/** Giờ duyệt: hôm nay chỉ in HH:mm, khác ngày thì thêm dd/MM. */
+const reviewedAtLabel = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay ? timeLabel(iso) : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${timeLabel(iso)}`;
 };
 
 const PROOF_PAGE_SIZE = 4;
@@ -108,6 +126,14 @@ export function PartnerPage() {
     refetchInterval: 30_000,
   });
 
+  // Phiếu đã duyệt / từ chối của người đang xem — để xem lại ảnh và giờ duyệt.
+  const { data: reviewed = [], isLoading: reviewedLoading } = useQuery({
+    queryKey: ['partner-reviewed', selectedId, kindFilter],
+    queryFn: async () => (await socialService.getReviewedProofs(selectedId, kindFilter, 20)).data,
+    enabled: !!selectedId,
+    staleTime: 20_000,
+  });
+
   // Người đang duyệt ảnh cho tôi — hiện ngay trên trang để thấy rõ quan hệ 2 chiều.
   const { data: myPartner } = useQuery({
     queryKey: ['my-partner'],
@@ -136,8 +162,7 @@ export function PartnerPage() {
     onError: (err) => toast.show('Không thực hiện được', errorMessage(err)),
   });
 
-  const { data: proofs = [], isLoading: proofsLoading } = useQuery({
-    queryKey: ['pending-proofs'],
+  const { data: proofs = [], isLoading: proofsLoading } = useQuery({    queryKey: ['pending-proofs'],
     queryFn: async () => (await socialService.getPendingProofs()).data,
     refetchOnWindowFocus: true,
   });
@@ -283,7 +308,7 @@ export function PartnerPage() {
   });
 
   const invalidate = () => {
-    for (const key of ['partner-clients', 'pending-proofs', 'feed', 'notifications', 'partner-needs']) {
+    for (const key of ['partner-clients', 'pending-proofs', 'feed', 'notifications', 'partner-needs', 'partner-reviewed']) {
       void queryClient.invalidateQueries({ queryKey: [key] });
     }
     if (selectedId) void queryClient.invalidateQueries({ queryKey: ['partner-today', selectedId] });
@@ -922,6 +947,70 @@ export function PartnerPage() {
 
         </section>
       </div>
+
+      {/* Xem lại các phiếu đã duyệt/từ chối: ảnh + giờ duyệt */}
+      <section className="min-w-0 rounded-2xl bg-white p-4 shadow-sm">
+        <div className="flex items-start gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <History className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-semibold text-slate-800">Đã duyệt · {activeTab.label}</h2>
+            <p className="truncate text-[11px] text-slate-500">Ảnh đã duyệt và thời điểm bạn duyệt</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+            {reviewed.length}
+          </span>
+        </div>
+
+        {reviewedLoading && <DearlySkeleton rows={2} className="mt-3" />}
+
+        {!reviewedLoading && reviewed.length === 0 && (
+          <p className="mt-3 rounded-xl bg-slate-50 py-4 text-center text-xs text-slate-500">
+            Chưa duyệt phiếu nào của nhu cầu này.
+          </p>
+        )}
+
+        <ul className="mt-3 space-y-2">
+          {reviewed.map((r) => {
+            const photo = mediaUrl(r.imageUrl);
+            return (
+              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2.5">
+                {photo ? (
+                  <a href={photo} target="_blank" rel="noreferrer" className="shrink-0">
+                    <img
+                      src={photo}
+                      alt={r.note ?? 'Ảnh minh chứng'}
+                      loading="lazy"
+                      className="size-12 rounded-lg object-cover ring-1 ring-slate-200"
+                    />
+                  </a>
+                ) : (
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                    <ImageIcon className="size-4" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-slate-800">{reviewedText(r)}</p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    Duyệt {reviewedAtLabel(r.reviewedAt)}
+                    {r.rejectReason ? ` · ${r.rejectReason}` : ''}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
+                    r.approved
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : 'bg-rose-50 text-rose-600 ring-rose-100'
+                  }`}
+                >
+                  {r.approved ? 'Đã duyệt' : 'Từ chối'}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       {/* Dialog đặt biệt hiệu */}
       {nudgeOpen && selected && (

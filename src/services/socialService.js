@@ -22,6 +22,8 @@ export const socialService = {
   deduct: (userId, amountMl) =>
     api.post(`/api/social/partner/clients/${userId}/deduct`, { amountMl }),
   getClientToday: (userId) => api.get(`/api/social/partner/clients/${userId}/today`),
+  getReviewedProofs: (userId, kind, take = 20) =>
+    api.get(`/api/social/partner/clients/${userId}/reviewed`, { params: { kind, take } }),
   getClientNeeds: (userId) => api.get(`/api/social/partner/clients/${userId}/needs`),
   getPendingProofs: () => api.get('/api/social/verify/pending'),
   reviewProof: (logId, approve, message) => api.post(`/api/social/verify/${logId}`, { approve, message }),
