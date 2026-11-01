@@ -15,6 +15,10 @@ export const socialService = {
   nudge: (id, payload) => api.post(`/api/social/nudge/${id}`, payload ?? {}),
   getPartnerClients: () => api.get('/api/social/partner/clients'),
   getMyPartner: () => api.get('/api/social/partner/me'),
+  getPendingPartner: () => api.get('/api/social/partner/pending'),
+  getPartnerRequests: () => api.get('/api/social/partner/requests'),
+  respondPartnerRequest: (id, accept) =>
+    api.post(`/api/social/partner/requests/${id}/${accept ? 'accept' : 'reject'}`),
   deduct: (userId, amountMl) =>
     api.post(`/api/social/partner/clients/${userId}/deduct`, { amountMl }),
   getClientToday: (userId) => api.get(`/api/social/partner/clients/${userId}/today`),

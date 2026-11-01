@@ -72,10 +72,10 @@ export function FriendsPage() {
     mutationFn: async partnerId => userService.setPartner(partnerId),
     onSuccess: async () => {
       await refreshProfile?.();
-      for (const key of ['friends', 'today', 'my-partner', 'partner-clients']) void queryClient.invalidateQueries({
+      for (const key of ['friends', 'today', 'my-partner', 'partner-clients', 'partner-pending', 'partner-requests']) void queryClient.invalidateQueries({
         queryKey: [key]
       });
-      toast.show('Đã cập nhật partner', 'Ảnh minh chứng sẽ chờ người này duyệt.');
+      toast.show('Đã gửi lời mời', 'Người bạn chọn cần đồng ý ở trang Partner thì mới thành người duyệt ảnh.');
     },
     onError: err => setError(errorMessage(err))
   });
@@ -209,7 +209,7 @@ export function FriendsPage() {
                       {f.nickname && <span className="ml-1 text-xs font-normal text-slate-400">({f.fullName})</span>}
                     </p>
                     <p className="truncate text-xs text-slate-500">
-                      {f.isMyPartner ? 'Partner duyệt ảnh & nhắc uống nước' : f.theyFollow && f.iFollow ? 'Bạn bè' : f.theyFollow ? 'Đang theo dõi bạn' : 'Bạn đang theo dõi'}
+                      {f.isMyPartner ? 'Partner duyệt ảnh & nhắc uống nước' : f.isPendingPartner ? 'Đang chờ họ đồng ý làm người duyệt' : f.theyFollow && f.iFollow ? 'Bạn bè' : f.theyFollow ? 'Đang theo dõi bạn' : 'Bạn đang theo dõi'}
                       {f.theirNickname && ` · họ gọi bạn là “${f.theirNickname}”`}
                     </p>
                   </div>
@@ -219,12 +219,12 @@ export function FriendsPage() {
                         if (Date.now() - lastPartnerToggle.current < 800) return;
                         lastPartnerToggle.current = Date.now();
                         if (f.isMyPartner && !window.confirm(`Bỏ ${f.nickname || f.fullName} làm người duyệt? Người này sẽ không còn thấy phiếu của bạn để duyệt.`)) return;
-                        partner.mutate(f.isMyPartner ? null : f.id);
+                        partner.mutate(f.isMyPartner || f.isPendingPartner ? null : f.id);
                       }}
                       disabled={partner.isPending}
-                      title={f.isMyPartner ? 'Bỏ chọn người duyệt' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
-                      className={`rounded-lg p-1.5 disabled:opacity-50 ${f.isMyPartner ? 'bg-water-600 text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
-                      aria-label={f.isMyPartner ? `Bỏ ${f.fullName} khỏi làm người duyệt` : `Chọn ${f.fullName} làm người duyệt`}
+                      title={f.isMyPartner ? 'Bỏ chọn người duyệt' : f.isPendingPartner ? 'Đang chờ người này đồng ý · bấm để huỷ lời mời' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
+                      className={`rounded-lg p-1.5 disabled:opacity-50 ${f.isMyPartner ? 'bg-water-600 text-white' : f.isPendingPartner ? 'bg-amber-100 text-amber-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
+                      aria-label={f.isMyPartner ? `Bỏ ${f.fullName} khỏi làm người duyệt` : f.isPendingPartner ? `Huỷ lời mời ${f.fullName} duyệt ảnh` : `Chọn ${f.fullName} làm người duyệt`}
                       aria-pressed={f.isMyPartner}
                     >
                       <ShieldCheck className="size-3.5" />

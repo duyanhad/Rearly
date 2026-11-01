@@ -114,6 +114,27 @@ export function PartnerPage() {
     queryFn: async () => (await socialService.getMyPartner()).data,
     staleTime: 60_000,
   });
+  // Người tôi đã xin duyệt ảnh (chờ họ đồng ý) + những người xin tôi duyệt.
+  const { data: pendingPartner } = useQuery({
+    queryKey: ['partner-pending'],
+    queryFn: async () => (await socialService.getPendingPartner()).data,
+    staleTime: 30_000,
+  });
+  const { data: partnerRequests = [] } = useQuery({
+    queryKey: ['partner-requests'],
+    queryFn: async () => (await socialService.getPartnerRequests()).data,
+    refetchInterval: 30_000,
+  });
+  const answerPartner = useMutation({
+    mutationFn: async ({ id, accept }) => socialService.respondPartnerRequest(id, accept),
+    onSuccess: async (_, { accept }) => {
+      toast.show(accept ? 'Đã đồng ý duyệt ảnh' : 'Đã từ chối', accept ? 'Người này sẽ thấy bạn là người duyệt.' : '');
+      for (const key of ['partner-requests', 'partner-clients', 'pending-proofs', 'notifications']) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
+    },
+    onError: (err) => toast.show('Không thực hiện được', errorMessage(err)),
+  });
 
   const { data: proofs = [], isLoading: proofsLoading } = useQuery({
     queryKey: ['pending-proofs'],
@@ -368,6 +389,52 @@ export function PartnerPage() {
               <p className="truncate text-sm font-semibold text-slate-800">{myPartner.fullName}</p>
             </div>
             <ShieldCheck className="size-4 shrink-0 text-water-600" />
+          </section>
+        )}
+
+        {!myPartner && pendingPartner && (
+          <section className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-amber-100">
+            <Avatar url={pendingPartner.avatarUrl} name={pendingPartner.fullName} size="md" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Đang chờ đồng ý</p>
+              <p className="truncate text-sm font-semibold text-slate-800">{pendingPartner.nickname || pendingPartner.fullName}</p>
+              <p className="text-xs text-slate-500">Người này cần đồng ý thì mới thành người duyệt ảnh của bạn.</p>
+            </div>
+          </section>
+        )}
+
+        {partnerRequests.length > 0 && (
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-amber-100">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <ShieldCheck className="size-4 text-amber-500" /> Lời mời duyệt ảnh ({partnerRequests.length})
+            </h2>
+            <ul className="space-y-2">
+              {partnerRequests.map((r) => (
+                <li key={r.id} className="flex items-center gap-3 rounded-xl bg-amber-50/60 p-3">
+                  <Avatar url={r.avatarUrl} name={r.fullName} size="md" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-800">{r.nickname || r.fullName}</span>
+                    <span className="block text-xs text-slate-500">Nhờ bạn duyệt ảnh cốc nước</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => answerPartner.mutate({ id: r.id, accept: true })}
+                    disabled={answerPartner.isPending}
+                    className="rounded-lg bg-water-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-water-700 disabled:opacity-50"
+                  >
+                    Đồng ý
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => answerPartner.mutate({ id: r.id, accept: false })}
+                    disabled={answerPartner.isPending}
+                    className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition hover:bg-white disabled:opacity-50"
+                  >
+                    Từ chối
+                  </button>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

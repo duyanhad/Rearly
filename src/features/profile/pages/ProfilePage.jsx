@@ -59,6 +59,8 @@ export function ProfilePage() {
     queryFn: async () => (await socialService.getFriends()).data,
   });
   const partnerName = friends.find((f) => f.id === user?.partnerId)?.fullName ?? null;
+  const pendingPartnerName = friends.find((f) => f.isPendingPartner)?.fullName ?? null;
+  const partnerLabel = partnerName ?? (pendingPartnerName ? `Đang chờ ${pendingPartnerName} đồng ý` : null);
 
 
   const avatar = useMutation({
@@ -254,7 +256,7 @@ export function ProfilePage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-medium text-slate-800">Partner duyệt ảnh</span>
-            <span className="block truncate text-xs text-slate-500">{partnerName ?? 'Chưa chọn người duyệt'}</span>
+            <span className="block truncate text-xs text-slate-500">{partnerLabel ?? 'Chưa chọn người duyệt'}</span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-slate-300" />
         </Link>
