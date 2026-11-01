@@ -50,7 +50,7 @@ export function EmojiPicker({ onPick, onClose }) {
   };
 
   return (
-    <div className="absolute bottom-full right-0 z-30 mb-2 w-72 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
+    <div className="fixed inset-x-0 bottom-24 z-50 mx-auto w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 sm:bottom-28">
       <div className="flex items-center gap-1.5 border-b border-slate-100 px-2 py-1.5">
         <Search className="size-3.5 text-slate-400" />
         <input

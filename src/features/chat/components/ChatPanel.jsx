@@ -37,198 +37,228 @@ function highlight(text, query) {
   );
 }
 
-/** Một tin nhắn: chữ / ảnh / thoại + cảm xúc + sửa / thu hồi (tin của mình). */
+/**
+ * Một tin nhắn + cụm thao tác kiểu Messenger:
+ * - Máy tính: hàng icon NGANG cạnh bong bóng (cảm xúc / sửa / thu hồi), hiện khi hover hoặc focus.
+ * - Cảm ứng: giữ lâu hoặc chạm đúp → tin nổi lên trên nền mờ, thanh cảm xúc + chức năng ngang phía trên.
+ */
 function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
   const [barOpen, setBarOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(m.body);
   const barRef = useRef(null);
-  // Bấm ra ngoài thanh cảm xúc thì đóng (không dùng lớp phủ chặn click cả trang).
+
   useEffect(() => {
     if (!barOpen) return undefined;
     const onDown = (e) => {
       if (barRef.current && !barRef.current.contains(e.target)) setBarOpen(false);
     };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setBarOpen(false);
+    };
     window.addEventListener('pointerdown', onDown);
-    return () => window.removeEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [barOpen]);
 
   const canEdit = m.mine && !m.recalledAt && !m.audioUrl && !m.imageUrl;
   const canRecall = m.mine && !m.recalledAt;
-  // Giữ ngón tay ~450ms trên bong bóng (mobile không có hover/contextmenu ổn định).
-  const pressTimer = useRef(0);
+  const openBar = () => setBarOpen(true);
   const startPress = () => {
-    window.clearTimeout(pressTimer.current);
-    pressTimer.current = window.setTimeout(() => setBarOpen(true), 450);
+    window.clearTimeout(startPress.t);
+    startPress.t = window.setTimeout(() => setBarOpen(true), 450);
   };
-  const cancelPress = () => window.clearTimeout(pressTimer.current);
+  const cancelPress = () => window.clearTimeout(startPress.t);
+
+  // Hàng icon ngang cạnh bong bóng (máy tính): hiện khi hover/focus cả hàng tin.
+  const rail = !m.pending && !m.recalledAt && (
+    <span
+      className={`hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 sm:flex ${
+        barOpen ? 'opacity-100' : ''
+      }`}
+    >
+      <button
+        type="button"
+        onClick={openBar}
+        className="flex size-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:text-water-700 hover:shadow"
+        aria-label="Thả cảm xúc"
+        title="Thả cảm xúc"
+      >
+        <Smile className="size-4" />
+      </button>
+      {canEdit && (
+        <button
+          type="button"
+          onClick={() => {
+            setEditText(m.body);
+            setEditing(true);
+          }}
+          className="flex size-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:text-water-700 hover:shadow"
+          aria-label="Sửa tin nhắn"
+          title="Sửa tin nhắn"
+        >
+          <Pencil className="size-4" />
+        </button>
+      )}
+      {canRecall && (
+        <button
+          type="button"
+          onClick={() => onRecall(m.id)}
+          className="flex size-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:text-rose-600 hover:shadow"
+          aria-label="Thu hồi tin nhắn"
+          title="Thu hồi tin nhắn"
+        >
+          <Undo2 className="size-4" />
+        </button>
+      )}
+    </span>
+  );
 
   return (
     <div className={`flex flex-col ${m.mine ? 'items-end' : 'items-start'}`}>
-      <div className="group relative">
-        {barOpen && (
-          <div
-            ref={barRef}
-            className={`absolute -top-9 z-20 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-1 shadow-lg ring-1 ring-slate-200 ${
-              m.mine ? 'right-0' : 'left-0'
-            }`}
-          >
-            {REACTIONS.map((e) => (
-              <button
-                type="button"
-                key={e}
-                onClick={() => {
-                  onReact(e);
-                  setBarOpen(false);
-                }}
-                className="rounded-full p-0.5 text-base leading-none transition hover:scale-125"
-                aria-label={`Thả ${e}`}
-              >
-                {e}
-              </button>
-            ))}
-            {canEdit && (
-              <>
-                <span className="mx-0.5 h-4 w-px bg-slate-200" />
+      {barOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 cursor-default bg-slate-900/30 backdrop-blur-[2px]"
+          aria-label="Đóng thanh thao tác"
+          onClick={() => setBarOpen(false)}
+        />
+      )}
+      <div
+        className={`group relative flex w-full items-center gap-1.5 ${m.mine ? 'justify-end' : 'justify-start'} ${
+          barOpen ? 'z-40' : ''
+        }`}
+      >
+        {m.mine && rail}
+        <div className={`relative max-w-[82vw] sm:max-w-[420px] ${barOpen ? 'scale-[1.03]' : ''} transition-transform duration-150`}>
+          {barOpen && (
+            <div
+              ref={barRef}
+              role="menu"
+              aria-label="Thao tác với tin nhắn"
+              className="absolute -top-12 left-1/2 z-40 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-white px-2 py-1.5 shadow-xl ring-1 ring-slate-200"
+            >
+              {REACTIONS.map((e) => (
                 <button
                   type="button"
+                  key={e}
+                  role="menuitem"
+                  onClick={() => {
+                    onReact(e);
+                    setBarOpen(false);
+                  }}
+                  className="rounded-full p-1 text-xl leading-none transition hover:scale-125"
+                  aria-label={`Thả ${e}`}
+                >
+                  {e}
+                </button>
+              ))}
+              {(canEdit || canRecall) && <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden="true" />}
+              {canEdit && (
+                <button
+                  type="button"
+                  role="menuitem"
                   onClick={() => {
                     setEditText(m.body);
                     setEditing(true);
                     setBarOpen(false);
                   }}
-                  className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                  className="flex size-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-water-700"
                   aria-label="Sửa tin nhắn"
                 >
-                  <Pencil className="size-3.5" />
+                  <Pencil className="size-4" />
                 </button>
-              </>
-            )}
-            {canRecall && (
-              <button
-                type="button"
-                onClick={() => {
-                  onRecall(m.id);
-                  setBarOpen(false);
-                }}
-                className="rounded-full p-1 text-rose-500 hover:bg-rose-50"
-                aria-label="Thu hồi tin nhắn"
-              >
-                <Undo2 className="size-3.5" />
-              </button>
-            )}
-          </div>
-        )}
-        {editing ? (
-          <div className="w-60 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200">
-            <textarea
-              autoFocus
-              rows={2}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              maxLength={500}
-              className="w-full resize-none rounded-lg border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-water-400 focus:outline-none"
-            />
-            <div className="mt-1 flex justify-end gap-1">
-              <button type="button" onClick={() => setEditing(false)} className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100">
-                Huỷ
-            </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onEdit(m.id, editText.trim());
-                  setEditing(false);
-                }}
-                disabled={!editText.trim()}
-                className="rounded-lg bg-water-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
-              >
-                Lưu
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setBarOpen(true);
-            }}
-            onDoubleClick={() => setBarOpen(true)}
-            onTouchStart={startPress}
-            onTouchMove={cancelPress}
-            onTouchEnd={cancelPress}
-            onTouchCancel={cancelPress}
-            style={{ WebkitTouchCallout: 'none' }}
-            className={`relative max-w-[82vw] select-none rounded-2xl px-3 py-1.5 text-sm shadow-sm sm:max-w-[420px] ${
-              m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
-            } ${m.pending ? 'opacity-60' : ''}`}
-          >
-            {m.recalledAt ? (
-              <p className="italic opacity-70">🙈 Tin nhắn đã được thu hồi</p>
-            ) : m.imageUrl ? (
-              <button type="button" onClick={() => onZoom(m.imageUrl)} className="block" aria-label="Phóng to ảnh">
-                <img
-                  src={mediaUrl(m.imageUrl)}
-                  alt="Ảnh trong chat"
-                  loading="lazy"
-                  decoding="async"
-                  className="max-h-56 rounded-xl object-cover"
-                />
-              </button>
-            ) : m.audioUrl ? (
-              <div className={m.mine ? 'text-white' : 'text-slate-700'}>
-                <AudioBubble src={mediaUrl(m.audioUrl)} durationMs={m.audioDurationMs} tone={m.mine ? 'dark' : 'light'} />
-              </div>
-            ) : (
-              <p className="whitespace-pre-wrap break-words">{highlight(m.body, query)}</p>
-            )}
-            <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
-              {timeLabel(m.createdAt)}
-              {m.editedAt && !m.recalledAt ? ' · đã sửa' : ''}
-            </p>
-            {!barOpen && !m.pending && !m.recalledAt && (
-              <span
-                className={`absolute -top-4 hidden items-center gap-0.5 rounded-full bg-white px-1 py-0.5 shadow ring-1 ring-slate-200 group-hover:flex ${
-                  m.mine ? 'right-0' : 'left-0'
-                }`}
-              >
+              )}
+              {canRecall && (
                 <button
                   type="button"
-                  onClick={() => setBarOpen(true)}
-                  className="rounded-full p-0.5 text-slate-500 hover:bg-slate-100"
-                  aria-label="Thả cảm xúc"
-                  title="Thả cảm xúc"
+                  role="menuitem"
+                  onClick={() => {
+                    onRecall(m.id);
+                    setBarOpen(false);
+                  }}
+                  className="flex size-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                  aria-label="Thu hồi tin nhắn"
                 >
-                  <Smile className="size-3.5" />
+                  <Undo2 className="size-4" />
                 </button>
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditText(m.body);
-                      setEditing(true);
-                    }}
-                    className="rounded-full p-0.5 text-slate-500 hover:bg-slate-100"
-                    aria-label="Sửa tin nhắn"
-                    title="Sửa tin nhắn"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                )}
-                {canRecall && (
-                  <button
-                    type="button"
-                    onClick={() => onRecall(m.id)}
-                    className="rounded-full p-0.5 text-rose-500 hover:bg-rose-50"
-                    aria-label="Thu hồi tin nhắn"
-                    title="Thu hồi tin nhắn"
-                  >
-                    <Undo2 className="size-3.5" />
-                  </button>
-                )}
-              </span>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+          {editing ? (
+            <div className="w-60 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200">
+              <textarea
+                autoFocus
+                rows={2}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                maxLength={500}
+                aria-label="Nội dung sửa"
+                className="w-full resize-none rounded-lg border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-water-400 focus:outline-none"
+              />
+              <div className="mt-1 flex justify-end gap-1">
+                <button type="button" onClick={() => setEditing(false)} className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100">
+                  Huỷ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEdit(m.id, editText.trim());
+                    setEditing(false);
+                  }}
+                  disabled={!editText.trim()}
+                  className="rounded-lg bg-water-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  Lưu
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onContextMenu={(e) => {
+                e.preventDefault();
+                openBar();
+              }}
+              onDoubleClick={openBar}
+              onTouchStart={startPress}
+              onTouchMove={cancelPress}
+              onTouchEnd={cancelPress}
+              onTouchCancel={cancelPress}
+              style={{ WebkitTouchCallout: 'none' }}
+              className={`relative select-none rounded-2xl px-3 py-1.5 text-sm shadow-sm ${
+                m.mine ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-100'
+              } ${m.pending ? 'opacity-60' : ''} ${barOpen ? 'shadow-xl' : ''}`}
+            >
+              {m.recalledAt ? (
+                <p className="italic opacity-70">🙈 Tin nhắn đã được thu hồi</p>
+              ) : m.imageUrl ? (
+                <button type="button" onClick={() => onZoom(m.imageUrl)} className="block" aria-label="Phóng to ảnh">
+                  <img
+                    src={mediaUrl(m.imageUrl)}
+                    alt="Ảnh trong chat"
+                    loading="lazy"
+                    decoding="async"
+                    className="max-h-56 rounded-xl object-cover"
+                  />
+                </button>
+              ) : m.audioUrl ? (
+                <div className={m.mine ? 'text-white' : 'text-slate-700'}>
+                  <AudioBubble src={mediaUrl(m.audioUrl)} durationMs={m.audioDurationMs} tone={m.mine ? 'dark' : 'light'} />
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{highlight(m.body, query)}</p>
+              )}
+              <p className={`mt-0.5 text-[10px] ${m.mine ? 'text-water-100' : 'text-slate-400'}`}>
+                {timeLabel(m.createdAt)}
+                {m.editedAt && !m.recalledAt ? ' · đã sửa' : ''}
+              </p>
+            </div>
+          )}
+        </div>
+        {!m.mine && rail}
       </div>
       {!!m.reactions?.length && !m.recalledAt && (
         <span className="z-10 -mt-1.5 flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[12px] leading-none shadow ring-1 ring-slate-200">
@@ -250,7 +280,6 @@ function MessageRow({ m, query, onReact, onZoom, onEdit, onRecall }) {
     </div>
   );
 }
-
 
 /** Tổng số tin chưa đọc — dùng cho badge ở bong bóng chat. */
 export function useChatUnread() {
