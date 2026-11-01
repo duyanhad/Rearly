@@ -3,7 +3,7 @@ import { DearlyLoader } from '../../../components/DearlyLoader';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BellRing, CheckCheck, Megaphone, MinusCircle, ShieldCheck, Trophy, UserPlus } from 'lucide-react';
+import { Bell, BellRing, CheckCheck, Megaphone, MessageCircle, MinusCircle, Send, ShieldCheck, Trophy, UserPlus, X } from 'lucide-react';
 
 // Icon + màu theo loại thông báo để panel nhìn gọn và dễ phân biệt.
 const TYPE_META = {
@@ -13,13 +13,15 @@ const TYPE_META = {
   GoalAchieved: { icon: Trophy, tone: 'bg-emerald-50 text-emerald-600' },
   Deduct: { icon: MinusCircle, tone: 'bg-rose-50 text-rose-600' },
   Broadcast: { icon: Megaphone, tone: 'bg-slate-100 text-slate-600' },
-  Proof: { icon: CheckCheck, tone: 'bg-amber-50 text-amber-600' }
+  Proof: { icon: CheckCheck, tone: 'bg-amber-50 text-amber-600' },
+  Reply: { icon: MessageCircle, tone: 'bg-water-50 text-water-700' }
 };
 
-/** Chỉ hiện vài thông báo mới nhất cho gọn. */
-const VISIBLE_COUNT = 4;
+/** Số thông báo tải mỗi lần (bấm "xem thêm" để tải tiếp). */
+const PAGE_SIZE = 20;
 import { mediaUrl } from '../../../services/apiClient';
 import { notificationService } from '../../../services/notificationService';
+import { useToast } from '../../../components/Toast';
 
 function timeAgo(iso) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -36,11 +38,17 @@ function timeAgo(iso) {
  */
 export function NotificationBell() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState(undefined);
   const buttonRef = useRef(null);
+  // Số thông báo đang tải; bấm "xem thêm" để lấy tiếp thông báo cũ hơn.
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  // Thông báo đang được trả lời (popup).
+  const [replying, setReplying] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
   // Neo panel ngay dưới chuông để không lệch theo mép màn hình.
   const toggle = () => {
@@ -59,8 +67,8 @@ export function NotificationBell() {
   };
 
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => (await notificationService.list()).data,
+    queryKey: ['notifications', limit],
+    queryFn: async () => (await notificationService.list(limit)).data,
     staleTime: 20_000,
   });
 
@@ -73,6 +81,24 @@ export function NotificationBell() {
     mutationFn: () => notificationService.markAllRead(),
     onSuccess: invalidate,
   });
+  const sendReply = useMutation({
+    mutationFn: ({ id, message }) => notificationService.reply(id, message),
+    onSuccess: () => {
+      toast.show('Đã gửi trả lời', 'Partner sẽ nhận thông báo ngay.');
+      setReplying(null);
+      setReplyText('');
+      invalidate();
+    },
+    onError: () => toast.show('Không gửi được', 'Thử lại giúp mình nhé.'),
+  });
+
+  /** Mở popup trả lời cho thông báo có người gửi (vd. ảnh đã được duyệt). */
+  const openReply = (n) => {
+    if (!n.senderId) return;
+    if (!n.isRead) markRead.mutate(n.id);
+    setReplyText('');
+    setReplying(n);
+  };
 
   const unread = items.filter((n) => !n.isRead).length;
 
@@ -155,7 +181,7 @@ export function NotificationBell() {
               {!isLoading && items.length > 0 && (
                 <>
                   <ul className="max-h-[56vh] divide-y divide-slate-100 overflow-y-auto overscroll-contain sm:max-h-[60vh]">
-                    {items.slice(0, VISIBLE_COUNT).map((n) => {
+                    {items.map((n) => {
                       const meta = TYPE_META[n.type] ?? { icon: Bell, tone: 'bg-slate-100 text-slate-500' };
                       const Icon = meta.icon;
                       const image = mediaUrl(n.imageUrl);
@@ -166,7 +192,11 @@ export function NotificationBell() {
                             onClick={() => {
                               if (!n.isRead) markRead.mutate(n.id);
                               if (n.type === 'Proof') {
-                                navigate('/partner');
+                                // Ảnh đã duyệt / không duyệt → mở popup trả lời ngay tại đây.
+                                openReply(n);
+                              } else if (n.type === 'Reply') {
+                                setOpen(false);
+                                navigate('/chat');
                               } else if (n.type === 'Friend' || n.type === 'Partner') {
                                 setOpen(false);
                                 navigate(n.type === 'Partner' ? '/partner' : '/friends');
@@ -190,6 +220,9 @@ export function NotificationBell() {
                               <span className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400">
                                 {timeAgo(n.createdAt)}
                                 {image && <span className="text-water-600">· ảnh</span>}
+                                {(n.type === 'Proof' || n.type === 'Reply') && n.senderId && (
+                                  <span className="text-water-700">· Trả lời</span>
+                                )}
                               </span>
                             </span>
                           </button>
@@ -197,16 +230,96 @@ export function NotificationBell() {
                       );
                     })}
                   </ul>
-                  {items.length > VISIBLE_COUNT && (
-                    <p className="border-t border-slate-100 px-3.5 py-2 text-center text-[11px] text-slate-400">
-                      Còn {items.length - VISIBLE_COUNT} thông báo cũ hơn
-                    </p>
+                  {items.length >= limit && (
+                    <button
+                      type="button"
+                      onClick={() => setLimit((v) => v + PAGE_SIZE)}
+                      className="w-full border-t border-slate-100 px-3.5 py-2 text-center text-[11px] font-medium text-water-700 transition-colors hover:bg-water-50"
+                    >
+                      Xem thêm thông báo cũ hơn
+                    </button>
                   )}
                 </>
               )}
             </div>          </div>,
           document.body,
         )}
+
+      {/* Popup trả lời thông báo (vd. phản hồi ảnh đã duyệt) */}
+      {replying && createPortal(
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/45 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Trả lời thông báo"
+          onClick={() => setReplying(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-start gap-2">
+              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-water-50 text-water-700">
+                <MessageCircle className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-slate-900">Trả lời partner</p>
+                <p className="line-clamp-2 text-xs text-slate-500">{replying.title}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplying(null)}
+                aria-label="Đóng"
+                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <textarea
+              autoFocus
+              rows={3}
+              maxLength={300}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Ví dụ: cảm ơn bạn đã duyệt, mình uống thêm nhé!"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
+            />
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {['Cảm ơn bạn nhé!', 'Mình uống thêm ngay', 'Bạn duyệt giúp mình với'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setReplyText(t)}
+                  className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-slate-200"
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReplying(null)}
+                className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-100"
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={() => sendReply.mutate({ id: replying.id, message: replyText.trim() })}
+                disabled={!replyText.trim() || sendReply.isPending}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-water-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-water-700 disabled:opacity-50"
+              >
+                <Send className="size-3.5" /> {sendReply.isPending ? 'Đang gửi...' : 'Gửi trả lời'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </>
   );
 }
