@@ -8,7 +8,6 @@ import { habitService } from '../../../services/habitService';
 import { PhotoThumb } from '../../water/components/AddWaterModal';
 import { HabitAvatar3D } from '../../habits/components/HabitAvatar3D';
 import { HabitObjectAvatars } from '../../habits/components/HabitObjectAvatars';
-import { UseFeatureSwitch } from '../../habits/components/UseFeatureSwitch';
 import { useHabitEvents } from '../../habits/useHabitEvents';
 import { isSleepWindow, nowHhmm } from '../sleepWindow';
 import { SleepCountdown } from './SleepCountdown';
@@ -131,7 +130,6 @@ export function SleepTodayPanel() {
               className={setting?.imageUrl || last?.photoUrl ? 'size-full' : 'size-28'}
             />
           </div>
-          <UseFeatureSwitch kind="sleep" label="giấc ngủ" setting={setting} />
 
           <div className="mt-3 flex flex-col items-center gap-2 text-center">
             <div className="flex items-baseline gap-0.5">

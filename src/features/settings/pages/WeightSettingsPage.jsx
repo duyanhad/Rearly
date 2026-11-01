@@ -6,6 +6,7 @@ import { errorMessage } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
 import { habitLogService } from '../../../services/habitLogService';
 import { SettingsTabs } from '../components/SettingsTabs';
+import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
 const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
@@ -130,6 +131,7 @@ export function WeightSettingsPage() {
   return (
     <div>
       <SettingsTabs active="weight" />
+      <FeatureEnableCard kind="weight" label="cân nặng" />
 
       {isLoading ? (
         <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader /></div>
@@ -235,29 +237,6 @@ export function WeightSettingsPage() {
 
           <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 md:col-span-2">
             <SectionHeader icon={BellRing} title="Nhắc cân nặng" />
-            <button
-              type="button"
-              role="switch"
-              aria-checked={form.enabled}
-              onClick={() => setForm({ ...form, enabled: !form.enabled })}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-left transition hover:border-water-300"
-            >
-              <span className="min-w-0">
-                <span className="block text-sm font-medium text-slate-800">Bật nhắc cân nặng</span>
-                <span className={`block text-xs ${form.enabled ? 'text-water-700' : 'text-slate-500'}`}>
-                  {form.enabled ? `Đang bật · nhắc lúc ${form.times?.[0] ?? '07:00'}` : 'Đang tắt · app không nhắc'}
-                </span>
-              </span>
-              <span
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${form.enabled ? 'bg-water-600' : 'bg-slate-300'}`}
-              >
-                <span
-                  className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${
-                    form.enabled ? 'left-[22px]' : 'left-0.5'
-                  }`}
-                />
-              </span>
-            </button>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">

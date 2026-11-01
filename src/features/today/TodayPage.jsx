@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ChevronRight, Droplet, Gift, Moon, Pill, Scale, Soup } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardPage } from '../water/pages/DashboardPage';
 import { SleepTodayPanel } from '../sleep/components/SleepTodayPanel';
 import { habitService } from '../../services/habitService';
@@ -27,24 +27,6 @@ const VIEWS = [
 export function TodayPage() {
   const [params, setParams] = useSearchParams();
   const view = params.get('view');
-  const qc = useQueryClient();
-  const reEnable = useMutation({
-    mutationFn: async (kind) => {
-      const row = habits.find((h) => h.kind === kind);
-      return habitService.save(kind, {
-        enabled: true,
-        times: row?.times ?? [],
-        targetValue: row?.targetValue ?? 0,
-        remindBeforeMin: row?.remindBeforeMin ?? 10,
-        note: row?.note ?? '',
-        alarmEnabled: row?.alarmEnabled ?? false,
-        alarmMode: row?.alarmMode ?? 'gentle',
-      });
-    },
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ['habits'] });
-    },
-  });
 
   const { data: habits = [] } = useQuery({
     queryKey: ['habits'],
@@ -95,16 +77,6 @@ export function TodayPage() {
           }}
           className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto scroll-smooth px-0.5 py-0.5"
         >
-          {VIEWS.filter((v) => v.key !== 'water' && !views.some((x) => x.key === v.key)).map((v) => (
-            <button
-              key={v.key}
-              onClick={() => reEnable.mutate(v.key)}
-              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-slate-100/70 px-3 py-1.5 text-xs font-semibold text-slate-400 line-through transition hover:bg-slate-200/70 hover:text-slate-600"
-              title="Bật lại tính năng này"
-            >
-              {v.label} (ẩn)
-            </button>
-          ))}
           {views.map(({ key, label, icon: Icon, to }) => (
             <Link
               key={key}

@@ -222,6 +222,13 @@ export function PartnerPage() {
   );
   const kindCount = (key) =>
     key === 'all' ? byClient.length : byClient.filter((p) => (p.kind ?? 'water') === key).length;
+  // Nhu cầu nào phía khách đã tắt tính năng thì ẩn tab luôn (vẫn giữ tab nếu còn phiếu chờ duyệt).
+  const visibleTabs = needsLoading
+    ? PROOF_TABS
+    : PROOF_TABS.filter((t) => t.key === 'all' || t.key === 'water' || needs.some((n) => n.kind === t.key) || kindCount(t.key) > 0);
+  useEffect(() => {
+    if (!needsLoading && kindFilter !== 'all' && !visibleTabs.some((t) => t.key === kindFilter)) setKindFilter('water');
+  }, [needsLoading, visibleTabs, kindFilter]);
   const filteredProofs = useMemo(
     () => (kindFilter === 'all' ? byClient : byClient.filter((p) => (p.kind ?? 'water') === kindFilter)),
     [byClient, kindFilter],
@@ -415,7 +422,7 @@ export function PartnerPage() {
     );
   }
 
-  const activeTab = PROOF_TABS.find((x) => x.key === kindFilter) ?? PROOF_TABS[1];
+  const activeTab = visibleTabs.find((x) => x.key === kindFilter) ?? visibleTabs[1];
   const ActiveIcon = activeTab.icon;
   const activeNeed = needOf(kindFilter);
 
@@ -450,7 +457,7 @@ export function PartnerPage() {
           ref={needStrip}
           className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto px-0.5 py-0.5"
         >
-          {PROOF_TABS.slice(1).map(({ key, label, icon: Icon }) => {
+          {visibleTabs.slice(1).map(({ key, label, icon: Icon }) => {
             const n = kindCount(key);
             const active = kindFilter === key;
             return (
@@ -691,7 +698,7 @@ export function PartnerPage() {
               <ImageIcon className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-sm font-semibold text-slate-800">Duyệt phiếu · {PROOF_TABS.find((x) => x.key === kindFilter)?.label ?? ''}</h2>
+              <h2 className="truncate text-sm font-semibold text-slate-800">Duyệt phiếu · {activeTab.label}</h2>
               <p className="truncate text-[11px] text-slate-500">{displayName(selected)} · duyệt để cộng vào chỉ tiêu</p>
             </div>
             <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-100">

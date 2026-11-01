@@ -8,7 +8,6 @@ import { habitService } from '../../../services/habitService';
 import { HABIT_KINDS } from '../config';
 import { HabitAvatar3D } from './HabitAvatar3D';
 import { HabitObjectAvatars } from './HabitObjectAvatars';
-import { UseFeatureSwitch } from './UseFeatureSwitch';
 import { useHabitEvents } from '../useHabitEvents';
 import { HabitLogModal } from './HabitLogModal';
 import { HabitSettingsModal } from './HabitSettingsModal';
@@ -87,7 +86,6 @@ export function HabitTodayPanel({ kind }) {
               className={setting?.imageUrl ? 'size-full' : 'size-28'}
             />
           </div>
-          <UseFeatureSwitch kind={kind} label={{ medicine: 'thuốc', meal: 'bữa ăn', study: 'học tập' }[kind] ?? cfg.label} setting={setting} />
 
           <div className="mt-3 flex flex-col items-center gap-2 text-center">
             <div className="flex items-baseline gap-0.5">

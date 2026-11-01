@@ -5,6 +5,7 @@ import { BellRing, BookOpen, Clock, Flame, Moon, Pill, Plus, Soup, Target, Trash
 import { errorMessage } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
 import { SettingsTabs } from '../components/SettingsTabs';
+import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
 /** Cấu hình hiển thị cho từng nhu cầu — thêm nhu cầu mới chỉ cần thêm một mục ở đây. */
@@ -97,7 +98,7 @@ export function HabitSettingsPage({ kind }) {
   }, [row]);
 
   const save = useMutation({
-    mutationFn: () => habitService.save(kind, { ...form, alarmEnabled: form.enabled }),
+    mutationFn: () => habitService.save(kind, { ...form }),
     onSuccess: async () => {
       setError(null);
       setSaved(true);
@@ -114,6 +115,7 @@ export function HabitSettingsPage({ kind }) {
   return (
     <div>
       <SettingsTabs active={kind} />
+      <FeatureEnableCard kind={kind} label={{ medicine: 'thuốc', meal: 'bữa ăn', study: 'học tập' }[kind] ?? cfg.label} />
 
       {isLoading ? (
         <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader /></div>
@@ -236,30 +238,30 @@ export function HabitSettingsPage({ kind }) {
             <button
               type="button"
               role="switch"
-              aria-checked={form.enabled}
-              onClick={() => setForm({ ...form, enabled: !form.enabled })}
+              aria-checked={form.alarmEnabled}
+              onClick={() => setForm({ ...form, alarmEnabled: !form.alarmEnabled })}
               className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-left transition hover:border-water-300"
             >
               <span className="min-w-0">
                 <span className="block text-sm font-medium text-slate-800">Bật nhắc nhở</span>
-                <span className={`block text-xs ${form.enabled ? 'text-water-700' : 'text-slate-500'}`}>
-                  {form.enabled ? 'Đang bật · app sẽ nhắc đúng các mốc giờ' : 'Đang tắt · app không nhắc gì'}
+                <span className={`block text-xs ${form.alarmEnabled ? 'text-water-700' : 'text-slate-500'}`}>
+                  {form.alarmEnabled ? 'Đang bật · app sẽ nhắc đúng các mốc giờ' : 'Đang tắt · app không nhắc gì'}
                 </span>
               </span>
               <span
                 className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  form.enabled ? 'bg-water-600' : 'bg-slate-300'
+                  form.alarmEnabled ? 'bg-water-600' : 'bg-slate-300'
                 }`}
               >
                 <span
                   className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${
-                    form.enabled ? 'left-[22px]' : 'left-0.5'
+                    form.alarmEnabled ? 'left-[22px]' : 'left-0.5'
                   }`}
                 />
               </span>
             </button>
 
-            {form.enabled && (
+            {form.alarmEnabled && (
             <div className="mt-4 rounded-xl border border-slate-200 p-3">
               <p className="text-sm font-medium text-slate-800">Kiểu báo thức khi đến giờ</p>
               <p className="text-xs text-slate-500">

@@ -24,6 +24,7 @@ import { sleepService } from '../../../services/sleepService';
 import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders';
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
 import { SettingsTabs } from '../components/SettingsTabs';
+import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 import { stopSleepAlarmToday } from '../sleepAlarmStorage';
 
@@ -242,6 +243,7 @@ export function SleepSettingsPage() {
   return (
     <div className="pb-4">
       <SettingsTabs active="sleep" />
+      <FeatureEnableCard kind="sleep" label="giấc ngủ" />
 
 
       {/* Tóm tắt đêm nay */}
@@ -270,10 +272,6 @@ export function SleepSettingsPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Nhắc</p>
-              <Switch checked={form.enabled} onChange={(v) => setForm({ ...form, enabled: v })} label="Bật nhắc nhở" />
-            </div>
             <div className="text-center">
               <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Báo thức</p>
               <Switch
