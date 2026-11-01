@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { mediaUrl } from '../../../services/apiClient';
+import { makeCutout } from '../../../utils/cutout';
 import { HabitFx } from './HabitFx';
 
 /**
@@ -44,8 +45,25 @@ export function HabitAvatar3D({
     lastSignal.current = signal;
   }, [signal]);
 
-  const src = cutoutUrl || imageUrl;
-  const cut = Boolean(cutoutUrl);
+  // Server (rembg) tắt trên bản cloud → tự tách nền bằng AI phía máy người dùng,
+  // nhờ vậy vật thể vẫn "tách khỏi nền" như cốc nước thay vì hiện ảnh chữ nhật.
+  const [clientCut, setClientCut] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    setClientCut(null);
+    if (!imageUrl || cutoutUrl) return undefined;
+    makeCutout(mediaUrl(imageUrl))
+      .then((result) => {
+        if (alive && result?.transparentRatio > 0.08) setClientCut(result.dataUrl);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [imageUrl, cutoutUrl]);
+
+  const src = cutoutUrl || clientCut || imageUrl;
+  const cut = Boolean(cutoutUrl || clientCut);
   // `plain` = không khung nền/viền, dùng cho thẻ lớn ở trang Hôm nay (giống cốc nước).
   // Ảnh chưa tách nền thì vẫn cần khung để không thành một khối trắng trên nền trắng.
   const frame = plain && cut ? 'rounded-none' : 'rounded-2xl bg-white/70 ring-1 ring-white/80';
