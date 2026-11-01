@@ -790,7 +790,7 @@ function PhotoCup({
     setUnwrapFailed(false);
     setImageMissing(false);
     // Ảnh đã tách nền ở server (PNG trong suốt) thì dùng luôn, không chạy model trên máy.
-    const job = preCut ? makePreCut(url) : makeCutout(url, { symmetry: true });
+    const job = preCut ? makePreCut(url) : makeCutout(url, { symmetry: true, singleObject: true });
     job
       .then(result => {
         if (!alive) return;

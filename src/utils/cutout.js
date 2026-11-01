@@ -331,7 +331,7 @@ function fillSmallHoles(px, w, h) {
  * Quy tắc: bỏ khối chạm viền ảnh nhiều (lá cây, tường, nền), rồi giữ khối lớn nhất
  * cùng các khối đủ lớn (phụ kiện rời như nắp, ống hút, móc).
  */
-function keepLargeBlobs(px, w, h, minRatio = 0.25) {
+function keepLargeBlobs(px, w, h, minRatio = 0.25, onlyLargest = false) {
   const seen = new Uint8Array(w * h);
   const queue = new Int32Array(w * h);
   const blobs = [];
@@ -361,10 +361,12 @@ function keepLargeBlobs(px, w, h, minRatio = 0.25) {
   if (blobs.length === 0) return;
 
   const largest = Math.max(...blobs.map((b) => b.count));
+  const largestBlob = blobs.reduce((a, b) => (b.count > a.count ? b : a));
   const minArea = Math.max(120, largest * minRatio);
   const keep = new Uint8Array(w * h);
   for (const blob of blobs) {
-    if (blob.count < minArea) continue;
+    // onlyLargest: ảnh cốc chỉ có MỘT vật thể → bỏ mọi mảng khác (ly/cốc khác lọt vào khung).
+    if (onlyLargest ? blob !== largestBlob : blob.count < minArea) continue;
     // Mảng vừa lớn vừa bám viền ảnh = nền (lá cây, tường) chứ không phải vật thể.
     if (blob.edge > blob.count * 0.35) continue;
     let head = 0;
@@ -810,7 +812,7 @@ function uprightCanvas(canvas, symmetry = false) {
   let r = norm(0.5 * Math.atan2(2 * cxy, cxx - cyy) - Math.PI / 2);
   if (Math.abs(r) > Math.PI / 2) r = norm(r + Math.PI);
   const rotation = (r * 180) / Math.PI;
-  if (Math.abs(rotation) > 35) return { canvas, rotation: 0 };
+  if (Math.abs(rotation) > 35 || Math.abs(rotation) < 8) return { canvas, rotation: 0 };
 
   // r đã là radian (góc lệch của trục chính so với trục dọc) → xoay ngược dấu để cốc thẳng.
   const rad = -r;
@@ -874,10 +876,11 @@ const ENABLE_CLIENT_AI = true;
 /** Tách nền ảnh cốc (có cache theo URL để không xử lý lại mỗi lần render). */
 export function makeCutout(url, options) {
   const symmetry = options?.symmetry === true;
-  const key = symmetry ? `sym:${url}` : url;
+  const onlyLargest = options?.singleObject === true;
+  const key = `${symmetry ? 'sym:' : ''}${onlyLargest ? 'one:' : ''}${url}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const job = computeCutout(url, symmetry).catch((error) => {
+  const job = computeCutout(url, { symmetry, onlyLargest }).catch((error) => {
     cache.delete(key);
     throw error;
   });
@@ -923,7 +926,7 @@ export async function makePreCut(url) {
   return job;
 }
 
-async function computeCutout(url, symmetry = false) {
+async function computeCutout(url, { symmetry = false, onlyLargest = false } = {}) {
   const img = await loadImage(url);
   const longest = Math.max(img.width, img.height);
   // Ảnh nhỏ được phóng to trước khi tách nền để mép cốc mượt hơn trên màn hình mật độ cao.
@@ -954,7 +957,7 @@ async function computeCutout(url, symmetry = false) {
     // Model đã cho alpha: vá lỗ nhỏ bên trong vật, dọn quầng mờ + sợi rác, bỏ đảo rác rời rạc.
     fillSmallHoles(px, w, h);
     cleanMask(px, w, h);
-    keepLargeBlobs(px, w, h, 0.03);
+    keepLargeBlobs(px, w, h, 0.03, onlyLargest);
   } else {
     // ---- 2) Không có model (offline/chặn CDN) → thuật toán heuristic tại chỗ ----
     const palette = buildBorderPalette(px, w, h);
@@ -1081,11 +1084,13 @@ function sharpen(ctx, w, h) {
  * Tách nền một File ảnh ngay trên máy người dùng, trả về File PNG trong suốt
  * (để gửi kèm lên server khi server không chạy được rembg). Lỗi thì trả null.
  */
-export async function cutoutFileFromFile(file) {
+export async function cutoutFileFromFile(file, options) {
   const url = URL.createObjectURL(file);
   try {
-    const result = await makeCutout(url);
+    const result = await makeCutout(url, options);
     if (!result || result.transparentRatio <= 0.08) return null;
+    // requireAi: không lưu kết quả của thuật toán dự phòng (nền tối/bokeh rất dễ nát).
+    if (options?.requireAi && !result.usedAi) return null;
     const blob = await (await fetch(result.dataUrl)).blob();
     return new File([blob], 'cutout.png', { type: 'image/png' });
   } catch {

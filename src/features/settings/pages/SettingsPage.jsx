@@ -96,7 +96,7 @@ export function SettingsPage() {
       // Tách nền NGAY TRÊN MÁY rồi gửi kèm: server cloud không chạy rembg, mà nếu để mỗi
       // thiết bị tự tách thì chủ cốc và partner sẽ thấy 2 ảnh khác nhau.
       setProgress({ value: 4, label: 'AI đang tách nền cốc...' });
-      const cut = await cutoutFileFromFile(file);
+      const cut = await cutoutFileFromFile(file, { symmetry: true, singleObject: true, requireAi: true });
       const form = new FormData();
       form.append('image', file);
       if (cut) form.append('cutout', cut);
