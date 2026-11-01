@@ -17,7 +17,7 @@ export function useLiquidColor(textureUrl, preCut = false) {
       return;
     }
     let alive = true;
-    const job = preCut ? makePreCut(textureUrl) : makeCutout(textureUrl);
+    const job = preCut ? makePreCut(textureUrl) : makeCutout(textureUrl, { symmetry: true });
     job
       .then((cut) => {
         if (alive && cut?.liquidColor) setColor(cut.liquidColor);

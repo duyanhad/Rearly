@@ -769,7 +769,7 @@ function cropToAlpha(canvas) {
  * alpha) rồi xoay lại cho trục đó thẳng đứng, sau đó crop sát viền. Chỉ xoay khi lệch ≤ 35°
  * để tránh lật ngược ảnh.
  */
-function uprightCanvas(canvas) {
+function uprightCanvas(canvas, symmetry = false) {
   const w = canvas.width;
   const h = canvas.height;
   const ctx = canvas.getContext('2d');
@@ -850,10 +850,14 @@ function uprightCanvas(canvas) {
   cropped.getContext('2d').drawImage(out, minX, minY, cw, ch, 0, 0, cw, ch);
 
   // Bù phần bị che mất để cốc cân đối hai bên (lấy gương từ bên còn đầy).
-  const sctx = cropped.getContext('2d');
-  const sImg = sctx.getImageData(0, 0, cw, ch);
-  completeSymmetry(sImg.data, cw, ch);
-  sctx.putImageData(sImg, 0, 0);
+  // Chỉ dùng cho CỐC: với vật thể khác (gấu bông, hộp thuốc…) gương theo hàng sẽ tạo
+  // ra các vệt ngang lơ lửng hai bên — đó chính là "nhiễu" thấy trên ảnh.
+  if (symmetry) {
+    const sctx = cropped.getContext('2d');
+    const sImg = sctx.getImageData(0, 0, cw, ch);
+    completeSymmetry(sImg.data, cw, ch);
+    sctx.putImageData(sImg, 0, 0);
+  }
 
   return { canvas: cropToAlpha(cropped), rotation };
 }
@@ -868,14 +872,16 @@ const cache = new Map();
 const ENABLE_CLIENT_AI = true;
 
 /** Tách nền ảnh cốc (có cache theo URL để không xử lý lại mỗi lần render). */
-export function makeCutout(url) {
-  const hit = cache.get(url);
+export function makeCutout(url, options) {
+  const symmetry = options?.symmetry === true;
+  const key = symmetry ? `sym:${url}` : url;
+  const hit = cache.get(key);
   if (hit) return hit;
-  const job = computeCutout(url).catch((error) => {
-    cache.delete(url);
+  const job = computeCutout(url, symmetry).catch((error) => {
+    cache.delete(key);
     throw error;
   });
-  cache.set(url, job);
+  cache.set(key, job);
   return job;
 }
 
@@ -899,7 +905,7 @@ export async function makePreCut(url) {
     if (!ctx) throw new Error('Canvas không khả dụng');
     ctx.drawImage(img, 0, 0, w, h);
     // Ảnh chụp tay hay bị nghiêng → xoay cho cốc đứng thẳng rồi mới dựng billboard.
-    const { canvas: straight, rotation } = uprightCanvas(canvas);
+    const { canvas: straight, rotation } = uprightCanvas(canvas, true);
     return {
       dataUrl: straight.toDataURL('image/png'),
       aspect: straight.width / Math.max(1, straight.height),
@@ -917,7 +923,7 @@ export async function makePreCut(url) {
   return job;
 }
 
-async function computeCutout(url) {
+async function computeCutout(url, symmetry = false) {
   const img = await loadImage(url);
   const longest = Math.max(img.width, img.height);
   // Ảnh nhỏ được phóng to trước khi tách nền để mép cốc mượt hơn trên màn hình mật độ cao.
@@ -1035,7 +1041,7 @@ async function computeCutout(url) {
   sharpen(octx, cw, ch);
 
   // Cốc chụp nghiêng → xoay cho thẳng đứng trước khi dựng billboard.
-  const { canvas: straight, rotation } = uprightCanvas(out);
+  const { canvas: straight, rotation } = uprightCanvas(out, symmetry);
   return {
     dataUrl: straight.toDataURL('image/png'),
     aspect: straight.width / Math.max(1, straight.height),
