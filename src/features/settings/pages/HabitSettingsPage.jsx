@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BellRing, BookOpen, Clock, Pill, Plus, Soup, Target, Trash2 } from 'lucide-react';
+import { BellRing, BookOpen, Clock, Flame, Moon, Pill, Plus, Soup, Target, Trash2 } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
 import { SettingsTabs } from '../components/SettingsTabs';
@@ -46,6 +46,13 @@ const KINDS = {
 
 const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
 
+// Giống trang giấc ngủ: 3 kiểu báo thức cho thuốc / bữa ăn / học tập.
+const ALARM_MODES = [
+  { key: 'gentle', label: 'Nhẹ nhàng', icon: Moon, desc: 'Kêu 1 lần' },
+  { key: 'insist', label: 'Nhắc dai', icon: BellRing, desc: 'Lặp vài lần' },
+  { key: 'crazy', label: 'Điên cuồng', icon: Flame, desc: 'Nhiều vòng' },
+];
+
 function SectionHeader({ icon: Icon, title, hint }) {
   return (
     <div className="mb-4 flex items-start gap-2.5">
@@ -84,6 +91,8 @@ export function HabitSettingsPage({ kind }) {
       targetValue: row.targetValue,
       remindBeforeMin: row.remindBeforeMin,
       note: row.note ?? '',
+      alarmEnabled: row.alarmEnabled ?? false,
+      alarmMode: row.alarmMode ?? 'gentle',
     });
   }, [row]);
 
@@ -249,6 +258,57 @@ export function HabitSettingsPage({ kind }) {
                 />
               </span>
             </button>
+
+            <div className="mt-4 rounded-xl border border-slate-200 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-slate-800">Báo thức kiểu giấc ngủ</span>
+                  <span className="block text-xs text-slate-500">
+                    {form.alarmEnabled
+                      ? 'Mở app tới mốc giờ sẽ hiện màn hình báo thức kêu theo kiểu đã chọn'
+                      : 'Đang tắt · chỉ nhắc bằng thông báo thường'}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={form.alarmEnabled}
+                  onClick={() => setForm((f) => ({ ...f, alarmEnabled: !f.alarmEnabled }))}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                    form.alarmEnabled ? 'bg-water-600' : 'bg-slate-300'
+                  }`}
+                  aria-label="Bật báo thức kiểu giấc ngủ"
+                >
+                  <span
+                    className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${
+                      form.alarmEnabled ? 'left-[22px]' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+              {form.alarmEnabled && (
+                <div className="mt-3 grid grid-cols-3 gap-1.5">
+                  {ALARM_MODES.map((m) => {
+                    const active = form.alarmMode === m.key;
+                    const ModeIcon = m.icon;
+                    return (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, alarmMode: m.key }))}
+                        className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2 text-center transition ${
+                          active ? 'border-water-500 bg-water-50 ring-1 ring-water-200' : 'border-slate-200 hover:border-water-300'
+                        }`}
+                      >
+                        <ModeIcon className="size-4 text-water-700" />
+                        <span className="text-[11px] font-semibold text-slate-700">{m.label}</span>
+                        <span className="text-[9px] text-slate-400">{m.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       )}

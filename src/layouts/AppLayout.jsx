@@ -11,16 +11,13 @@ import { ChatBubble } from '../features/chat/components/ChatBubble';
 import { AppBadge } from '../components/AppBadge';
 import { PushPermissionPrompt } from '../components/PushPermissionPrompt';
 import { DearlyMark } from '../components/DearlyLogo';
+import { HabitAlarmOverlay } from '../features/settings/components/HabitAlarmOverlay';
 import { SleepAlarmOverlay } from '../features/settings/components/SleepAlarmOverlay';
 const links = [{
   to: '/',
   label: 'Hôm nay',
   icon: LayoutDashboard
-}, {
-  to: '/feed',
-  label: 'Bảng tin',
-  icon: Rss 
-}, {
+},  {
   to: '/calendar',
   label: 'Lịch',
   icon: CalendarDays
@@ -124,5 +121,6 @@ export function AppLayout() {
       <PushPermissionPrompt />
       <InstallHint />
       <SleepAlarmOverlay />
+      <HabitAlarmOverlay />
     </div>;
 }
