@@ -8,7 +8,7 @@ import { VoiceNoteComposer } from './VoiceNoteComposer';
 export function VoiceNoteSheet({ onClose }) {
   return (
     <div
-      className="fixed inset-0 z-[85] flex items-end justify-center bg-slate-900/50 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Hẹn lời nhắn thoại"
