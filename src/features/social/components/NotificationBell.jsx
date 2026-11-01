@@ -191,9 +191,12 @@ export function NotificationBell() {
                             type="button"
                             onClick={() => {
                               if (!n.isRead) markRead.mutate(n.id);
-                              if (n.type === 'Proof') {
-                                // Ảnh đã duyệt / không duyệt → mở popup trả lời ngay tại đây.
+                              if (n.type === 'GoalAchieved' && n.senderId) {
+                                // "Ảnh đã được duyệt" / "Ảnh bị từ chối" → mở popup trả lời partner.
                                 openReply(n);
+                              } else if (n.type === 'Proof') {
+                                setOpen(false);
+                                navigate('/partner');
                               } else if (n.type === 'Reply') {
                                 setOpen(false);
                                 navigate('/chat');
@@ -220,7 +223,7 @@ export function NotificationBell() {
                               <span className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400">
                                 {timeAgo(n.createdAt)}
                                 {image && <span className="text-water-600">· ảnh</span>}
-                                {(n.type === 'Proof' || n.type === 'Reply') && n.senderId && (
+                                {(n.type === 'Proof' || n.type === 'Reply' || (n.type === 'GoalAchieved' && n.senderId)) && n.senderId && (
                                   <span className="text-water-700">· Trả lời</span>
                                 )}
                               </span>
