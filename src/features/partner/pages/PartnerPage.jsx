@@ -239,6 +239,8 @@ export function PartnerPage() {
     enabled: !!selectedId && !!kindFilter,
     staleTime: 20_000,
   });
+  const [showAllReviewed, setShowAllReviewed] = useState(false);
+  useEffect(() => setShowAllReviewed(false), [selectedId, kindFilter]);
 
   const needStrip = useRef(null);
   const {
@@ -973,7 +975,7 @@ export function PartnerPage() {
         )}
 
         <ul className="mt-3 space-y-2">
-          {reviewed.map((r) => {
+          {(showAllReviewed ? reviewed : reviewed.slice(0, 6)).map((r) => {
             const photo = mediaUrl(r.imageUrl);
             return (
               <li key={r.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2.5">
@@ -1011,6 +1013,16 @@ export function PartnerPage() {
             );
           })}
         </ul>
+
+        {reviewed.length > 6 && (
+          <button
+            type="button"
+            onClick={() => setShowAllReviewed((v) => !v)}
+            className="mt-3 w-full rounded-xl bg-slate-50 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100"
+          >
+            {showAllReviewed ? 'Thu gọn' : `Xem tất cả ${reviewed.length} phiếu đã duyệt`}
+          </button>
+        )}
       </section>
 
       {/* Dialog đặt biệt hiệu */}
