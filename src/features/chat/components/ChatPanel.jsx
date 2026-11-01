@@ -365,12 +365,18 @@ export function ChatPanel({ compact = false }) {
     };
     v?.addEventListener('resize', onViewport);
     v?.addEventListener('scroll', onViewport);
-    window.addEventListener('focusin', onViewport);
+    // focusin bên trong danh sách tin (bấm nút/icon) KHÔNG được kéo cuộn về cuối,
+    // nếu không cú click bị trượt vì nội dung nhảy giữa mousedown/mouseup.
+    const onFocused = (e) => {
+      if (scrollRef.current?.contains(e.target)) return;
+      onViewport();
+    };
+    window.addEventListener('focusin', onFocused);
     return () => {
       timers.forEach((t) => window.clearTimeout(t));
       v?.removeEventListener('resize', onViewport);
       v?.removeEventListener('scroll', onViewport);
-      window.removeEventListener('focusin', onViewport);
+      window.removeEventListener('focusin', onFocused);
     };
   }, [activeId]);
 
