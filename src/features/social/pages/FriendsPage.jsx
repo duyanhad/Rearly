@@ -75,7 +75,7 @@ export function FriendsPage() {
       for (const key of ['friends', 'today', 'my-partner', 'partner-clients', 'partner-pending', 'partner-requests']) void queryClient.invalidateQueries({
         queryKey: [key]
       });
-      toast.show('Đã gửi lời mời', 'Người bạn chọn cần đồng ý ở trang Partner thì mới thành người duyệt ảnh.');
+      toast.show('Đã gửi lời mời', 'Người bạn chọn cần đồng ý thì mới thành partner của bạn.');
     },
     onError: err => setError(errorMessage(err))
   });
@@ -209,7 +209,7 @@ export function FriendsPage() {
                       {f.nickname && <span className="ml-1 text-xs font-normal text-slate-400">({f.fullName})</span>}
                     </p>
                     <p className="truncate text-xs text-slate-500">
-                      {f.isMyPartner ? 'Partner duyệt ảnh & nhắc uống nước' : f.isPendingPartner ? 'Đang chờ họ đồng ý làm người duyệt' : f.theyFollow && f.iFollow ? 'Bạn bè' : f.theyFollow ? 'Đang theo dõi bạn' : 'Bạn đang theo dõi'}
+                      {f.isMyPartner ? 'Partner duyệt ảnh & nhắc uống nước' : f.isPendingPartner ? 'Đang chờ họ đồng ý làm partner' : f.theyFollow && f.iFollow ? 'Bạn bè' : f.theyFollow ? 'Đang theo dõi bạn' : 'Bạn đang theo dõi'}
                       {f.theirNickname && ` · họ gọi bạn là “${f.theirNickname}”`}
                     </p>
                   </div>
