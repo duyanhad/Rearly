@@ -87,7 +87,7 @@ export function HabitTodayPanel({ kind }) {
               className={setting?.imageUrl ? 'size-full' : 'size-28'}
             />
           </div>
-          <UseFeatureSwitch kind={kind} label={cfg.label} setting={setting} />
+          <UseFeatureSwitch kind={kind} label={{ medicine: 'thuốc', meal: 'bữa ăn', study: 'học tập' }[kind] ?? cfg.label} setting={setting} />
 
           <div className="mt-3 flex flex-col items-center gap-2 text-center">
             <div className="flex items-baseline gap-0.5">
