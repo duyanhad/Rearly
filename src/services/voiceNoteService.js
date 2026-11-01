@@ -11,6 +11,7 @@ export const voiceNoteService = {
       },
     }),
   incoming: () => api.get('/api/voice-notes/incoming'),
+  inbox: () => api.get('/api/voice-notes/inbox'),
   listen: (id) => api.post(`/api/voice-notes/${id}/listen`),
   cancel: (id) => api.delete(`/api/voice-notes/${id}`),
   sent: () => api.get('/api/voice-notes'),

@@ -1,7 +1,8 @@
 import { Mic } from 'lucide-react';
 import { VoiceNoteComposer } from '../components/VoiceNoteComposer';
+import { VoiceNoteInbox } from '../components/VoiceNoteInbox';
 
-/** Trang hẹn lời nhắn thoại (bản đầy đủ, có danh sách đã hẹn). */
+/** Trang hẹn lời nhắn thoại: gửi đi + hộp thư đã nhận (nghe lại được). */
 export function VoiceNotePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -15,6 +16,7 @@ export function VoiceNotePage() {
         </div>
       </header>
 
+      <VoiceNoteInbox />
       <VoiceNoteComposer />
     </div>
   );
