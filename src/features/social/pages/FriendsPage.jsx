@@ -213,11 +213,15 @@ export function FriendsPage() {
                   </div>
                   <span className="flex shrink-0 items-center gap-1">
                     <button
-                      onClick={() => partner.mutate(f.isMyPartner ? null : f.id)}
+                      onClick={() => {
+                        if (f.isMyPartner && !window.confirm(`Bỏ ${f.nickname || f.fullName} làm người duyệt? Người này sẽ không còn thấy phiếu của bạn để duyệt.`)) return;
+                        partner.mutate(f.isMyPartner ? null : f.id);
+                      }}
                       disabled={partner.isPending}
-                      title={f.isMyPartner ? 'Bỏ chọn partner' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
+                      title={f.isMyPartner ? 'Bỏ chọn người duyệt' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
                       className={`rounded-lg p-1.5 disabled:opacity-50 ${f.isMyPartner ? 'bg-water-600 text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
-                      aria-label={`Chọn ${f.fullName} làm partner`}
+                      aria-label={f.isMyPartner ? `Bỏ ${f.fullName} khỏi làm người duyệt` : `Chọn ${f.fullName} làm người duyệt`}
+                      aria-pressed={f.isMyPartner}
                     >
                       <ShieldCheck className="size-3.5" />
                     </button>

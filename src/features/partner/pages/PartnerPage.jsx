@@ -108,6 +108,13 @@ export function PartnerPage() {
     refetchInterval: 30_000,
   });
 
+  // Người đang duyệt ảnh cho tôi — hiện ngay trên trang để thấy rõ quan hệ 2 chiều.
+  const { data: myPartner } = useQuery({
+    queryKey: ['my-partner'],
+    queryFn: async () => (await socialService.getMyPartner()).data,
+    staleTime: 60_000,
+  });
+
   const { data: proofs = [], isLoading: proofsLoading } = useQuery({
     queryKey: ['pending-proofs'],
     queryFn: async () => (await socialService.getPendingProofs()).data,
@@ -352,6 +359,17 @@ export function PartnerPage() {
     return (
       <div className="space-y-5">
         {header}
+
+        {myPartner && (
+          <section className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <Avatar url={myPartner.avatarUrl} name={myPartner.fullName} size="md" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Người duyệt ảnh của tôi</p>
+              <p className="truncate text-sm font-semibold text-slate-800">{myPartner.fullName}</p>
+            </div>
+            <ShieldCheck className="size-4 shrink-0 text-water-600" />
+          </section>
+        )}
 
         {clients.length === 0 && (
           <section className="flex flex-col items-center gap-2 rounded-2xl bg-white p-8 text-center shadow-sm">
