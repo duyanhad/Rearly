@@ -128,10 +128,12 @@ export function ChatBubble() {
         setOpen((value) => !value);
         return;
       }
-      // Bám mép trái/phải gần nhất (giữ nguyên độ cao) cho gọn và dễ bấm lại.
-      const centerFromRight = drag.last.right + BUBBLE_SIZE / 2;
+      // Bám mép trái/phải khi thả GẦN mép; thả ở giữa thì giữ đúng chỗ vừa kéo tới.
+      const centerX = window.innerWidth - (drag.last.right + BUBBLE_SIZE / 2);
+      const nearLeft = centerX < window.innerWidth * 0.25;
+      const nearRight = centerX > window.innerWidth * 0.75;
       const snapped = {
-        right: centerFromRight < window.innerWidth / 2 ? EDGE : window.innerWidth - BUBBLE_SIZE - EDGE,
+        right: nearLeft ? EDGE : nearRight ? window.innerWidth - BUBBLE_SIZE - EDGE : drag.last.right,
         bottom: drag.last.bottom,
       };
       setPos(snapped);
@@ -171,7 +173,7 @@ export function ChatBubble() {
           <button
             aria-label="Đóng chat"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-[1px] sm:hidden"
+            className="fixed inset-0 z-[54] bg-slate-900/30 backdrop-blur-[1px] sm:hidden"
           />
           <section
             ref={panelRef}
@@ -182,7 +184,7 @@ export function ChatBubble() {
                   ? { left: sheetBox.left, right: sheetBox.right, top: sheetBox.top, height: sheetBox.height }
                   : undefined
             }
-            className={`fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 ${
+            className={`fixed z-[55] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 ${
               panelBox || sheetBox
                 ? ''
                 : 'inset-x-3 bottom-24 h-[70vh] sm:inset-auto sm:bottom-24 sm:right-4 sm:h-[32rem] sm:w-[22rem]'
@@ -227,7 +229,7 @@ export function ChatBubble() {
           onPointerDown={onPointerDown}
           style={{ right: pos.right, bottom: pos.bottom }}
           aria-label="Mở chat (kéo để di chuyển)"
-          className="fixed z-40 flex size-14 touch-none items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-water-700 text-white shadow-lg shadow-water-600/40 transition active:scale-95"
+          className="fixed z-[55] flex size-14 touch-none items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-water-700 text-white shadow-lg shadow-water-600/40 transition active:scale-95"
         >
           <MessageCircle className="size-6" />
           {!!unread && (
