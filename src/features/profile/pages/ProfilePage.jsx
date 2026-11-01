@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -26,7 +26,6 @@ import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
 import { eraService } from '../../../services/eraService';
-import { cupService } from '../../../services/cupService';
 
 // Nền dựng sẵn: viết đủ chuỗi class để Tailwind không xoá.
 const COVERS = {
@@ -61,49 +60,6 @@ export function ProfilePage() {
   });
   const partnerName = friends.find((f) => f.id === user?.partnerId)?.fullName ?? null;
 
-  // Cốc + mục tiêu nước chỉnh ngay tại trang cá nhân.
-  const queryClient = useQueryClient();
-  const { data: cups = [] } = useQuery({
-    queryKey: ['cups'],
-    queryFn: async () => (await cupService.list()).data,
-  });
-  const customCup = cups.find((cup) => cup.isDefault) ?? cups[0] ?? null;
-  const [goalDraft, setGoalDraft] = useState(String(user?.targetWaterMl ?? 2000));
-  const cupFileRef = useRef(null);
-
-  const saveTarget = useMutation({
-    mutationFn: async () =>
-      userService.updateTargets({
-        targetWaterMl: Math.max(200, Math.min(6000, Number(goalDraft) || 0)),
-        morningTargetMl: user?.morningTargetMl ?? 700,
-        afternoonTargetMl: user?.afternoonTargetMl ?? 800,
-        eveningTargetMl: user?.eveningTargetMl ?? 500,
-      }),
-    onSuccess: async () => {
-      await refreshProfile();
-      void queryClient.invalidateQueries({ queryKey: ['today'] });
-      toast.show('Đã cập nhật mục tiêu nước');
-    },
-    onError: (err) => setError(errorMessage(err)),
-  });
-
-  const uploadCup = useMutation({
-    mutationFn: async (file) => {
-      let cupId = customCup?.id;
-      if (!cupId) {
-        const created = await cupService.create({ name: 'Cốc của tôi', volumeMl: 250 });
-        cupId = created.data.id;
-      }
-      const form = new FormData();
-      form.append('image', file);
-      return cupService.uploadImage(cupId, form);
-    },
-    onSuccess: async () => {
-      void queryClient.invalidateQueries({ queryKey: ['cups'] });
-      toast.show('Đã cập nhật ảnh cốc');
-    },
-    onError: (err) => setError(errorMessage(err)),
-  });
 
   const avatar = useMutation({
     mutationFn: async (file) => {
@@ -289,85 +245,6 @@ export function ProfilePage() {
             </p>
           </div>
         ))}
-      </section>
-
-      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-slate-800">Mục tiêu nước & cốc của bạn</h2>
-          <Link to="/settings" className="text-[11px] font-medium text-water-700 hover:underline">
-            Chỉnh ca uống
-          </Link>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-            <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-              {customCup?.cutoutUrl || customCup?.imageUrl ? (
-                <img
-                  src={mediaUrl(customCup.cutoutUrl || customCup.imageUrl)}
-                  alt="Cốc của bạn"
-                  className="size-full object-contain"
-                />
-              ) : (
-                <Droplet className="size-7 text-water-400" />
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-800">{customCup?.name ?? 'Cốc thuỷ tinh'}</p>
-              <p className="text-[11px] text-slate-500">{customCup?.volumeMl ?? 250} ml mỗi lần đầy</p>
-              <button
-                onClick={() => cupFileRef.current?.click()}
-                disabled={uploadCup.isPending}
-                className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-water-700 ring-1 ring-water-200 hover:bg-water-50 disabled:opacity-50"
-              >
-                <Camera className="size-3" /> {uploadCup.isPending ? 'Đang tải…' : 'Đổi ảnh cốc'}
-              </button>
-              <input
-                ref={cupFileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) uploadCup.mutate(file);
-                  e.target.value = '';
-                }}
-              />
-            </div>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Mục tiêu mỗi ngày</p>
-            <div className="mt-1.5 flex items-center gap-2">
-              <input
-                type="number"
-                min={200}
-                max={6000}
-                step={50}
-                value={goalDraft}
-                onChange={(e) => setGoalDraft(e.target.value)}
-                className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-center text-sm font-bold tabular-nums text-slate-800 focus:border-water-400 focus:outline-none"
-              />
-              <span className="text-xs text-slate-500">ml / ngày</span>
-              <button
-                onClick={() => saveTarget.mutate()}
-                disabled={saveTarget.isPending || Number(goalDraft) === user?.targetWaterMl}
-                className="ml-auto rounded-lg bg-water-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-water-700 disabled:opacity-40"
-              >
-                Lưu
-              </button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200">
-                Sáng {user?.morningTargetMl ?? 700} ml
-              </span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200">
-                Trưa {user?.afternoonTargetMl ?? 800} ml
-              </span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200">
-                Tối {user?.eveningTargetMl ?? 500} ml
-              </span>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
