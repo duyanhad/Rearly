@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Camera, Home, MessageCircle, Plus, Settings, ShieldCheck, Users, X } from 'lucide-react';
+import { CalendarDays, Camera, Home, MessageCircle, Mic, Plus, Settings, ShieldCheck, Users, X } from 'lucide-react';
 import { RadialMenu } from './RadialMenu';
 import { QuickReportSheet } from '../components/QuickReportSheet';
+import { VoiceNoteSheet } from '../features/voice/components/VoiceNoteSheet';
 import { mediaUrl } from '../services/apiClient';
 import { socialService } from '../services/socialService';
 const tabs = [{
@@ -26,6 +27,7 @@ const tabs = [{
 export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -51,6 +53,13 @@ export function BottomNav() {
     onClick: () => {
       setMenuOpen(false);
       setReportOpen(true);
+    }
+  }, {
+    label: 'Lời nhắn',
+    icon: Mic,
+    onClick: () => {
+      setMenuOpen(false);
+      setVoiceOpen(true);
     }
   }, {
     label: myPartner?.fullName ?? 'Partner',
@@ -89,6 +98,7 @@ export function BottomNav() {
       </nav>
 
       {reportOpen && <QuickReportSheet onClose={() => setReportOpen(false)} />}
+      {voiceOpen && <VoiceNoteSheet onClose={() => setVoiceOpen(false)} />}
     </>;
 }
 function TabItem({
