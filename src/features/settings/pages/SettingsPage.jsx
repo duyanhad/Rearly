@@ -8,6 +8,7 @@ import { useAuth } from '../../../context/AuthProvider';
 import { WaterLoader } from '../../../components/WaterLoader';
 import { askNotificationPermission, notificationState, subscribePush } from '../../../utils/notify';
 import { isNativeApp, scheduleNativeReminders } from '../../../utils/nativeReminders';
+import { cutoutFileFromFile } from '../../../utils/cutout';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { useToast } from '../../../components/Toast';
 /** Tiêu đề mục gọn: icon trong ô màu + tên, không kèm đoạn mô tả dài. */
@@ -92,12 +93,17 @@ export function SettingsPage() {
         });
         cupId = created.data.id;
       }
+      // Tách nền NGAY TRÊN MÁY rồi gửi kèm: server cloud không chạy rembg, mà nếu để mỗi
+      // thiết bị tự tách thì chủ cốc và partner sẽ thấy 2 ảnh khác nhau.
+      setProgress({ value: 4, label: 'AI đang tách nền cốc...' });
+      const cut = await cutoutFileFromFile(file);
       const form = new FormData();
       form.append('image', file);
+      if (cut) form.append('cutout', cut);
       return cupService.uploadImage(cupId, form, event => {
         const total = event.total || 0;
-        const percent = total ? Math.round((event.loaded / total) * 55) : 30;
-        setProgress({ value: Math.max(2, Math.min(55, percent)), label: 'Đang tải ảnh lên...' });
+        const percent = total ? Math.round((event.loaded / total) * 50) : 30;
+        setProgress({ value: Math.max(4, Math.min(55, 5 + percent)), label: 'Đang tải ảnh lên...' });
       });
     },
     onSuccess: () => {
@@ -117,7 +123,7 @@ export function SettingsPage() {
     const id = setInterval(() => {
       setProgress(prev => {
         if (!prev || prev.value >= 95) return prev;
-        return { value: Math.min(95, prev.value + Math.max(0.7, (95 - prev.value) * 0.12)), label: 'AI đang tách nền cốc...' };
+        return { value: Math.min(95, prev.value + Math.max(0.7, (95 - prev.value) * 0.12)), label: 'Đang lưu ảnh...' };
       });
     }, 320);
     return () => clearInterval(id);
