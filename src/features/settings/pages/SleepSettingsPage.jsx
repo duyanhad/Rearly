@@ -243,19 +243,6 @@ export function SleepSettingsPage() {
     <div className="pb-4">
       <SettingsTabs active="sleep" />
 
-      <Link
-        to="/sleep"
-        className="mb-4 flex items-center gap-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 hover:bg-slate-50"
-      >
-        <span className="flex size-8 items-center justify-center rounded-xl bg-water-50 text-water-700">
-          <BedDouble className="size-4" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-slate-900">Trang giấc ngủ</span>
-          <span className="block text-[11px] text-slate-500">Xem đêm qua ngủ bao nhiêu giờ và ghi phiếu mới</span>
-        </span>
-        <ChevronRight className="size-4 text-slate-400" />
-      </Link>
 
       {/* Tóm tắt đêm nay */}
       <div

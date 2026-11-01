@@ -4,6 +4,7 @@ import { BookOpen, ChevronLeft, ChevronRight, Droplet, Gift, Moon, Pill, Scale, 
 import { useQuery } from '@tanstack/react-query';
 import { DashboardPage } from '../water/pages/DashboardPage';
 import { SleepTodayPanel } from '../sleep/components/SleepTodayPanel';
+import { habitService } from '../../services/habitService';
 import { HabitTodayPanel } from '../habits/components/HabitTodayPanel';
 import { WeightTodayPanel } from '../weight/components/WeightTodayPanel';
 import { rewardService } from '../../services/rewardService';
@@ -26,7 +27,14 @@ const VIEWS = [
 export function TodayPage() {
   const [params, setParams] = useSearchParams();
   const view = params.get('view');
-  const found = VIEWS.findIndex((v) => v.key === view);
+  const { data: habits = [] } = useQuery({
+    queryKey: ['habits'],
+    queryFn: async () => (await habitService.list()).data,
+    staleTime: 30_000,
+  });
+  // Nhu cầu nào người dùng tắt thì ẩn hẳn tab lẫn nội dung.
+  const views = VIEWS.filter((v) => v.key === 'water' || habits.find((h) => h.kind === v.key)?.enabled !== false);
+  const found = views.findIndex((v) => v.key === view);
   const index = found >= 0 ? found : 0;
   // Thanh danh mục: cuộn ngang được (chuột/kéo) và tự đưa tab đang chọn vào giữa.
   const stripRef = useRef(null);
@@ -44,7 +52,7 @@ export function TodayPage() {
   });
 
   const go = (dir) => {
-    const next = VIEWS[(index + dir + VIEWS.length) % VIEWS.length];
+    const next = views[(index + dir + views.length) % views.length];
     setParams(next.key === 'water' ? {} : { view: next.key }, { replace: true });
   };
 
@@ -53,7 +61,7 @@ export function TodayPage() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => go(-1)}
-          aria-label={`Khung trước: ${VIEWS[(index - 1 + VIEWS.length) % VIEWS.length].label}`}
+          aria-label={`Khung trước: ${views[(index - 1 + views.length) % views.length].label}`}
           className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700"
         >
           <ChevronLeft className="size-4" />
@@ -68,13 +76,13 @@ export function TodayPage() {
           }}
           className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto scroll-smooth px-0.5 py-0.5"
         >
-          {VIEWS.map(({ key, label, icon: Icon, to }) => (
+          {views.map(({ key, label, icon: Icon, to }) => (
             <Link
               key={key}
               to={to}
-              data-active={key === VIEWS[index].key}
+              data-active={key === views[index].key}
               className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                key === VIEWS[index].key
+                key === views[index].key
                   ? 'bg-water-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
               }`}
@@ -87,17 +95,17 @@ export function TodayPage() {
 
         <button
           onClick={() => go(1)}
-          aria-label={`Khung sau: ${VIEWS[(index + 1) % VIEWS.length].label}`}
+          aria-label={`Khung sau: ${views[(index + 1) % views.length].label}`}
           className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700"
         >
           <ChevronRight className="size-4" />
         </button>
       </div>
 
-      {VIEWS[index].key === 'water' && <DashboardPage />}
-      {VIEWS[index].key === 'sleep' && <SleepTodayPanel />}
-      {['meal', 'medicine', 'study'].includes(VIEWS[index].key) && <HabitTodayPanel kind={VIEWS[index].key} />}
-      {VIEWS[index].key === 'weight' && <WeightTodayPanel />}
+      {views[index].key === 'water' && <DashboardPage />}
+      {views[index].key === 'sleep' && <SleepTodayPanel />}
+      {['meal', 'medicine', 'study'].includes(views[index].key) && <HabitTodayPanel kind={views[index].key} />}
+      {views[index].key === 'weight' && <WeightTodayPanel />}
 
       {/* Tiền thưởng đạt mục tiêu hôm nay (mỗi nhu cầu chỉ thưởng một lần/ngày) */}
       {rewards.length > 0 && (

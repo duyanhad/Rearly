@@ -6,6 +6,7 @@ import { habitService } from '../../../services/habitService';
 import { PhotoThumb } from '../../water/components/AddWaterModal';
 import { HabitAvatar3D } from '../../habits/components/HabitAvatar3D';
 import { HabitObjectAvatars } from '../../habits/components/HabitObjectAvatars';
+import { UseFeatureSwitch } from '../../habits/components/UseFeatureSwitch';
 import { useHabitEvents } from '../../habits/useHabitEvents';
 import { WeightLogModal } from './WeightLogModal';
 import { WeightGoalModal } from './WeightGoalModal';
@@ -158,6 +159,7 @@ export function WeightTodayPanel() {
               </span>
             )}
           </div>
+          <UseFeatureSwitch kind="weight" label="cân nặng" setting={setting} />
 
           <div className="mt-3 flex flex-col items-center gap-2 text-center">
             <div className="flex items-baseline gap-0.5">

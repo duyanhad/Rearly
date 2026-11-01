@@ -41,7 +41,7 @@ export function HabitAlarmOverlay() {
   const [call, setCall] = useState(1);
 
   useEffect(() => {
-    const rows = habits.filter((h) => KIND_META[h.kind] && h.alarmEnabled && (h.times ?? []).length > 0);
+    const rows = habits.filter((h) => KIND_META[h.kind] && h.enabled !== false && h.alarmEnabled && (h.times ?? []).length > 0);
     if (rows.length === 0) return undefined;
     const tick = () => {
       const now = new Date();

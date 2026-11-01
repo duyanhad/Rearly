@@ -97,7 +97,7 @@ export function HabitSettingsPage({ kind }) {
   }, [row]);
 
   const save = useMutation({
-    mutationFn: () => habitService.save(kind, form),
+    mutationFn: () => habitService.save(kind, { ...form, alarmEnabled: form.enabled }),
     onSuccess: async () => {
       setError(null);
       setSaved(true);
@@ -259,34 +259,13 @@ export function HabitSettingsPage({ kind }) {
               </span>
             </button>
 
+            {form.enabled && (
             <div className="mt-4 rounded-xl border border-slate-200 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-slate-800">Báo thức kiểu giấc ngủ</span>
-                  <span className="block text-xs text-slate-500">
-                    {form.alarmEnabled
-                      ? 'Mở app tới mốc giờ sẽ hiện màn hình báo thức kêu theo kiểu đã chọn'
-                      : 'Đang tắt · chỉ nhắc bằng thông báo thường'}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={form.alarmEnabled}
-                  onClick={() => setForm((f) => ({ ...f, alarmEnabled: !f.alarmEnabled }))}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                    form.alarmEnabled ? 'bg-water-600' : 'bg-slate-300'
-                  }`}
-                  aria-label="Bật báo thức kiểu giấc ngủ"
-                >
-                  <span
-                    className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${
-                      form.alarmEnabled ? 'left-[22px]' : 'left-0.5'
-                    }`}
-                  />
-                </button>
-              </div>
-              {form.alarmEnabled && (
+              <p className="text-sm font-medium text-slate-800">Kiểu báo thức khi đến giờ</p>
+              <p className="text-xs text-slate-500">
+                Mở app tới mốc giờ sẽ hiện màn hình báo thức kêu theo kiểu đã chọn.
+              </p>
+              {true && (
                 <div className="mt-3 grid grid-cols-3 gap-1.5">
                   {ALARM_MODES.map((m) => {
                     const active = form.alarmMode === m.key;
@@ -309,6 +288,7 @@ export function HabitSettingsPage({ kind }) {
                 </div>
               )}
             </div>
+            )}
           </section>
         </div>
       )}
