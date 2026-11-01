@@ -1039,3 +1039,21 @@ function sharpen(ctx, w, h) {
   }
   ctx.putImageData(image, 0, 0);
 }
+
+/**
+ * Tách nền một File ảnh ngay trên máy người dùng, trả về File PNG trong suốt
+ * (để gửi kèm lên server khi server không chạy được rembg). Lỗi thì trả null.
+ */
+export async function cutoutFileFromFile(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const result = await makeCutout(url);
+    if (!result || result.transparentRatio <= 0.08) return null;
+    const blob = await (await fetch(result.dataUrl)).blob();
+    return new File([blob], 'cutout.png', { type: 'image/png' });
+  } catch {
+    return null;
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 5_000);
+  }
+}

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlarmClock, Flame, Loader2, Lock, Minus, Moon, Plus, Save, Target, X, Zap } from 'lucide-react';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
+import { cutoutFileFromFile } from '../../../utils/cutout';
 import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders';
 
 const GOAL_PRESETS = [420, 450, 480, 510];
@@ -70,8 +71,10 @@ export function SleepSettingsModal({ onClose }) {
     setUploading(true);
     setError(null);
     try {
+      const cut = await cutoutFileFromFile(file);
       const form = new FormData();
       form.append('image', file);
+      if (cut) form.append('cutout', cut);
       await habitService.uploadImage('sleep', form);
       await qc.invalidateQueries({ queryKey: ['habits'] });
     } catch (err) {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, Trash2 } from 'lucide-react';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
+import { cutoutFileFromFile } from '../../../utils/cutout';
 import { habitService } from '../../../services/habitService';
 import { WaterLoader } from '../../../components/WaterLoader';
 import { HABIT_KINDS } from '../config';
@@ -34,8 +35,12 @@ export function HabitImageCard({ kind }) {
     setError(null);
     setProgress({ value: 2, label: 'Đang chuẩn bị ảnh...' });
     try {
+      // Tách nền bằng AI ngay trên máy rồi gửi kèm bản PNG trong suốt.
+      setProgress({ value: 8, label: 'Đang tách nền trên máy bạn...' });
+      const cut = await cutoutFileFromFile(file);
       const form = new FormData();
       form.append('image', file);
+      if (cut) form.append('cutout', cut);
       await habitService.uploadImage(kind, form, (event) => {
         const total = event.total || 0;
         const percent = total ? Math.round((event.loaded / total) * 55) : 30;
