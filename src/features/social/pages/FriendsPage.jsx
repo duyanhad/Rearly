@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BellRing, Check, Pencil, Search, ShieldCheck, UserMinus, UserPlus, X } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
@@ -18,6 +18,8 @@ export function FriendsPage() {
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
   const nav = useNavigate();
+  // Chống chạm đúp vào nút khiên: lần chạm thứ 2 (sau khi trạng thái đã đổi) sẽ vô tình bỏ chọn người duyệt.
+  const lastPartnerToggle = useRef(0);
 
   // Xoá bạn bè: bỏ follow cả hai chiều (backend xoá luôn chiều kia).
   const unfriend = useMutation({
@@ -214,6 +216,8 @@ export function FriendsPage() {
                   <span className="flex shrink-0 items-center gap-1">
                     <button
                       onClick={() => {
+                        if (Date.now() - lastPartnerToggle.current < 800) return;
+                        lastPartnerToggle.current = Date.now();
                         if (f.isMyPartner && !window.confirm(`Bỏ ${f.nickname || f.fullName} làm người duyệt? Người này sẽ không còn thấy phiếu của bạn để duyệt.`)) return;
                         partner.mutate(f.isMyPartner ? null : f.id);
                       }}
