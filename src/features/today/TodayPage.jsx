@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ChevronRight, Droplet, Gift, Moon, Pill, Scale, Soup } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardPage } from '../water/pages/DashboardPage';
 import { SleepTodayPanel } from '../sleep/components/SleepTodayPanel';
 import { habitService } from '../../services/habitService';
