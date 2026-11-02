@@ -75,7 +75,7 @@ export function TodayPage() {
               e.currentTarget.scrollLeft += e.deltaY;
             }
           }}
-          className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto scroll-smooth px-0.5 py-0.5"
+          className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto scroll-smooth px-0.5 py-0.5 [mask-image:linear-gradient(to_right,transparent,black_14px,black_calc(100%-14px),transparent)]"
         >
           {views.map(({ key, label, icon: Icon, to }) => (
             <Link
