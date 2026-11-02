@@ -239,7 +239,7 @@ export function SleepSettingsPage() {
   const loudMode = form.alarmMode !== 'gentle';
 
   const timeInput =
-    'w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none';
+    'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 shadow-sm focus:border-water-400 focus:ring-4 focus:ring-water-100 focus:outline-none';
 
   return (
     <div className="pb-4">
@@ -407,7 +407,7 @@ export function SleepSettingsPage() {
           hint="Giờ ngủ, giờ thức và kiểu kêu."
           className="lg:col-span-2"
         >
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Đi ngủ">
               <input
                 type="time"

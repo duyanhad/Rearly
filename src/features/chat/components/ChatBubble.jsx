@@ -88,24 +88,34 @@ export function ChatBubble() {
     panelDragRef.current = null;
   }, []);
 
-  // Kéo bong bóng: di chuyển > 4px thì coi là kéo, không mở cửa sổ.
-  // Trên điện thoại phải bắt pointer ở window (setPointerCapture hay bị mất khi ngón tay đi nhanh)
-  // và bám mép gần nhất sau khi thả để lần sau bấm/kéo lại dễ.
+  // Kéo bong bóng: >4px mới tính là kéo. Trong lúc kéo, ghi thẳng vào style của nút
+  // (không setState mỗi frame) → mượt trên điện thoại; thả ra mới lưu vị trí.
   const BUBBLE_SIZE = 56;
   const EDGE = 12;
 
   const onPointerDown = useCallback((event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const el = event.currentTarget;
+    el.style.transition = 'none';
+    el.style.willChange = 'right, bottom';
     dragRef.current = {
       start: { x: event.clientX, y: event.clientY, right: pos.right, bottom: pos.bottom },
       moved: false,
       last: pos,
-      id: event.pointerId,
+      el,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   }, [pos]);
 
   useEffect(() => {
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      const drag = dragRef.current;
+      if (!drag || !drag.el) return;
+      drag.el.style.right = `${drag.last.right}px`;
+      drag.el.style.bottom = `${drag.last.bottom}px`;
+    };
+
     const move = (event) => {
       const drag = dragRef.current;
       if (!drag) return;
@@ -113,29 +123,47 @@ export function ChatBubble() {
       const dy = event.clientY - drag.start.y;
       if (!drag.moved && Math.hypot(dx, dy) < 4) return;
       drag.moved = true;
-      const next = {
-        right: Math.min(Math.max(EDGE, drag.start.right - dx), window.innerWidth - BUBBLE_SIZE - EDGE),
-        bottom: Math.min(Math.max(EDGE, drag.start.bottom - dy), window.innerHeight - BUBBLE_SIZE - EDGE),
+      // Kẹp trong khung nhìn thật (visualViewport khi bàn phím mở trên iOS).
+      const vw = window.visualViewport?.width ?? window.innerWidth;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      drag.last = {
+        right: Math.min(Math.max(EDGE, drag.start.right - dx), vw - BUBBLE_SIZE - EDGE),
+        bottom: Math.min(Math.max(EDGE, drag.start.bottom - dy), vh - BUBBLE_SIZE - EDGE),
       };
-      drag.last = next;
-      setPos(next);
+      // Vẽ tối đa 1 lần mỗi khung hình thay vì mỗi sự kiện.
+      if (!frame) frame = requestAnimationFrame(apply);
     };
+
     const up = () => {
       const drag = dragRef.current;
       dragRef.current = null;
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
       if (!drag) return;
+      const el = drag.el;
+      if (el) {
+        el.style.transition = '';
+        el.style.willChange = '';
+      }
       if (!drag.moved) {
         setOpen((value) => !value);
         return;
       }
-      // Bám mép trái/phải khi thả GẦN mép; thả ở giữa thì giữ đúng chỗ vừa kéo tới.
-      const centerX = window.innerWidth - (drag.last.right + BUBBLE_SIZE / 2);
-      const nearLeft = centerX < window.innerWidth * 0.25;
-      const nearRight = centerX > window.innerWidth * 0.75;
+      // Thả đâu để đó; chỉ bám mép khi thả RẤT gần mép (trong 12% bề ngang).
+      const cx = window.innerWidth - (drag.last.right + BUBBLE_SIZE / 2);
+      const snapLeft = cx < window.innerWidth * 0.12;
+      const snapRight = cx > window.innerWidth * 0.88;
       const snapped = {
-        right: nearLeft ? EDGE : nearRight ? window.innerWidth - BUBBLE_SIZE - EDGE : drag.last.right,
+        right: snapLeft ? EDGE : snapRight ? window.innerWidth - BUBBLE_SIZE - EDGE : drag.last.right,
         bottom: drag.last.bottom,
       };
+      // Đặt lại style ngay để không nháy về vị trí cũ trước khi React render.
+      if (el) {
+        el.style.right = `${snapped.right}px`;
+        el.style.bottom = `${snapped.bottom}px`;
+      }
       setPos(snapped);
       try {
         localStorage.setItem(POS_KEY, JSON.stringify(snapped));
@@ -143,10 +171,11 @@ export function ChatBubble() {
         /* bộ nhớ bị chặn thì thôi */
       }
     };
-    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointermove', move, { passive: true });
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
     return () => {
+      if (frame) cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);

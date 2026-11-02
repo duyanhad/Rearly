@@ -163,7 +163,7 @@ export function WeightSettingsPage() {
             </div>
 
             {/* Thiết lập kiểu "từ X kg xuống/đến Y kg" */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <label>
                 <span className="mb-1 block text-xs font-medium text-slate-500">Từ (kg hiện tại)</span>
                 <input
@@ -173,7 +173,7 @@ export function WeightSettingsPage() {
                   value={currentKg}
                   onChange={(e) => setCurrentKg(e.target.value)}
                   placeholder="70.0"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-center text-lg font-bold tabular-nums text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:border-water-400 focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-lg font-bold tabular-nums text-slate-800 shadow-sm placeholder:font-normal placeholder:text-slate-400 focus:border-water-400 focus:ring-4 focus:ring-water-100 focus:outline-none"
                 />
               </label>
               <label>
@@ -185,7 +185,7 @@ export function WeightSettingsPage() {
                   value={targetKgInput}
                   onChange={(e) => setTargetKgInput(e.target.value)}
                   placeholder="60.0"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-center text-lg font-bold tabular-nums text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:border-water-400 focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-lg font-bold tabular-nums text-slate-800 shadow-sm placeholder:font-normal placeholder:text-slate-400 focus:border-water-400 focus:ring-4 focus:ring-water-100 focus:outline-none"
                 />
               </label>
             </div>
