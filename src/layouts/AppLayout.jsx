@@ -79,7 +79,7 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3">
           <Link to="/" className="group flex items-center gap-2 font-bold text-water-700">
             <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-water-500 to-water-700 text-white shadow-sm shadow-water-500/30 transition group-hover:from-water-600 group-hover:to-water-800">
-              <DearlyMark className="size-5" />
+              <DearlyMark className="size-5" tone="cream" />
             </span>
             <span className="font-brand text-lg tracking-tight">Dearly</span>
           </Link>
