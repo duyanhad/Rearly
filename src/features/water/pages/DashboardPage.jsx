@@ -299,7 +299,7 @@ export function DashboardPage() {
               onClick={() => setOpen(true)}
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 520, damping: 22 }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-water-600 py-4 text-base font-semibold text-white shadow-sm shadow-water-500/30"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-water-600 py-4 text-base font-semibold text-white shadow-md shadow-water-500/35"
             >
               <Plus className="size-5" /> Uống nước
             </m.button>

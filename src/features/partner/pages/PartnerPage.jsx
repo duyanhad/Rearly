@@ -583,7 +583,7 @@ export function PartnerPage() {
                   setKindFilter(key);
                   e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
                 }}
-                className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
+                className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
                   active
                     ? 'bg-water-700 text-white shadow-sm'
                     : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'

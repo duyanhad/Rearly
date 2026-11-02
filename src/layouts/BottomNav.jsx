@@ -113,7 +113,7 @@ function TabItem({
       {active && (
         <m.span
           layoutId="nav-active-pill"
-          className="absolute inset-x-0.5 -top-0.5 -bottom-0.5 rounded-xl bg-water-50 ring-1 ring-water-100"
+          className="absolute inset-x-0.5 -top-1 -bottom-1 rounded-2xl bg-water-50 ring-1 ring-water-100"
           transition={{ type: 'spring', stiffness: 420, damping: 34 }}
         />
       )}

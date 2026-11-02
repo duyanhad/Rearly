@@ -16,6 +16,14 @@
   --color-cream-50: #fdfaf7;
   --color-cream-100: #f9f1ea;
   --color-cream-200: #f3e7dc;
+
+  /* Bo góc có cá tính: khối lớn mềm hơn hẳn, điều khiển thì tròn (pill).
+     Nhờ vậy nhìn có 2 "họ" hình khác nhau thay vì mọi thứ cùng một cỡ. */
+  --radius-lg: 0.75rem;    /* 12px — chi tiết nhỏ */
+  --radius-xl: 1rem;       /* 16px — ô nhập, nút phụ */
+  --radius-2xl: 1.375rem;  /* 22px — thẻ nội dung */
+  --radius-3xl: 1.75rem;   /* 28px — khối lớn, hero */
+  --radius-4xl: 2rem;      /* 32px */
 }
 
 html, body, #root {

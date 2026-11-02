@@ -40,7 +40,7 @@ export function SettingsTabs({ active }) {
             key={key}
             to={to}
             data-active={key === active}
-            className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
               key === active
                 ? 'bg-water-600 text-white shadow-sm'
                 : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
