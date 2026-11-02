@@ -21,7 +21,7 @@ export function SettingsTabs({ active }) {
       <Link
         to={prev.to}
         aria-label={`Cài đặt ${prev.label}`}
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
+        className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
       >
         <ChevronLeft className="size-4" />
       </Link>
@@ -55,7 +55,7 @@ export function SettingsTabs({ active }) {
       <Link
         to={next.to}
         aria-label={`Cài đặt ${next.label}`}
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
+        className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
       >
         <ChevronRight className="size-4" />
       </Link>

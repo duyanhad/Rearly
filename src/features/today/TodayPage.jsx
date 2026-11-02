@@ -63,7 +63,7 @@ export function TodayPage() {
         <button
           onClick={() => go(-1)}
           aria-label={`Khung trước: ${views[(index - 1 + views.length) % views.length].label}`}
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
         >
           <ChevronLeft className="size-4" />
         </button>
@@ -97,7 +97,7 @@ export function TodayPage() {
         <button
           onClick={() => go(1)}
           aria-label={`Khung sau: ${views[(index + 1) % views.length].label}`}
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
         >
           <ChevronRight className="size-4" />
         </button>

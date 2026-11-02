@@ -564,7 +564,7 @@ export function PartnerPage() {
           type="button"
           onClick={() => scrollNeeds(-1)}
           aria-label="Nhu cầu trước"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
         >
           <ChevronLeft className="size-4" />
         </button>
@@ -608,7 +608,7 @@ export function PartnerPage() {
           type="button"
           onClick={() => scrollNeeds(1)}
           aria-label="Nhu cầu sau"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
         >
           <ChevronRight className="size-4" />
         </button>
