@@ -119,8 +119,9 @@ export function ChatBubble() {
     const move = (event) => {
       const drag = dragRef.current;
       if (!drag) return;
-      const dx = event.clientX - drag.start.x;
-      const dy = event.clientY - drag.start.y;
+      const point = event.touches?.[0] ?? event;
+      const dx = point.clientX - drag.start.x;
+      const dy = point.clientY - drag.start.y;
       if (!drag.moved && Math.hypot(dx, dy) < 4) return;
       drag.moved = true;
       // Kẹp trong khung nhìn thật (visualViewport khi bàn phím mở trên iOS).
@@ -132,6 +133,14 @@ export function ChatBubble() {
       };
       // Vẽ tối đa 1 lần mỗi khung hình thay vì mỗi sự kiện.
       if (!frame) frame = requestAnimationFrame(apply);
+    };
+
+    // Chặn trình duyệt "cướp" thao tác để cuộn trang → nếu không sẽ nhận pointercancel
+    // giữa lúc kéo và bong bóng chỉ nhích được một nấc.
+    const stopScroll = (event) => {
+      if (!dragRef.current) return;
+      if (event.cancelable) event.preventDefault();
+      move(event);
     };
 
     const up = () => {
@@ -174,11 +183,18 @@ export function ChatBubble() {
     window.addEventListener('pointermove', move, { passive: true });
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
+    // Cảm ứng: preventDefault để không bị cuộn trang / huỷ thao tác giữa chừng.
+    window.addEventListener('touchmove', stopScroll, { passive: false });
+    window.addEventListener('touchend', up);
+    window.addEventListener('touchcancel', up);
     return () => {
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
+      window.removeEventListener('touchmove', stopScroll);
+      window.removeEventListener('touchend', up);
+      window.removeEventListener('touchcancel', up);
     };
   }, []);
 
