@@ -75,6 +75,26 @@ function Field({ label, hint, children, className = '' }) {
   );
 }
 
+/**
+ * Ô giờ tự vẽ khung: iOS/Android mặc định vẽ <input type="time"> kiểu vuông góc
+ * và phủ nền trắng lên, làm 2 ô cạnh nhau trông như dính/ghép. Bo góc + viền do
+ * div bên ngoài lo, input chỉ còn chữ.
+ */
+function TimeBox({ value, onChange, className = '' }) {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-xl border border-slate-300 bg-white py-2.5 shadow-sm transition focus-within:border-water-400 focus-within:ring-4 focus-within:ring-water-100 ${className || 'w-full px-2'}`}
+    >
+      <input
+        type="time"
+        value={value}
+        onChange={onChange}
+        className="w-full appearance-none border-0 bg-transparent text-center text-base font-bold tabular-nums text-slate-800 outline-none [&::-webkit-calendar-picker-indicator]:opacity-50"
+      />
+    </div>
+  );
+}
+
 function Section({ icon: Icon, title, hint, children, action, className = '' }) {
   return (
     <section className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 ${className}`}>
@@ -238,9 +258,6 @@ export function SleepSettingsPage() {
   const totalCalls = (Number(form.perRound) || 1) * (Number(form.rounds) || 1);
   const loudMode = form.alarmMode !== 'gentle';
 
-  const timeInput =
-    'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 shadow-sm focus:border-water-400 focus:ring-4 focus:ring-water-100 focus:outline-none';
-
   return (
     <div className="pb-4">
       <SettingsTabs active="sleep" />
@@ -356,23 +373,21 @@ export function SleepSettingsPage() {
           </button>
 
           {logOpen && (
-            <div className="mt-3 flex flex-wrap items-end gap-2">
+            <div className="mt-3 flex flex-wrap items-end gap-3">
               <label className="min-w-0">
                 <span className="mb-1 block text-[11px] font-medium text-slate-500">Đi ngủ</span>
-                <input
-                  type="time"
+                <TimeBox
                   value={logForm.bed}
                   onChange={(e) => setLogForm({ ...logForm, bed: e.target.value })}
-                  className="w-32 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm font-semibold tabular-nums text-slate-800"
+                  className="w-32 px-2 py-2 text-sm"
                 />
               </label>
               <label className="min-w-0">
                 <span className="mb-1 block text-[11px] font-medium text-slate-500">Thức dậy</span>
-                <input
-                  type="time"
+                <TimeBox
                   value={logForm.wake}
                   onChange={(e) => setLogForm({ ...logForm, wake: e.target.value })}
-                  className="w-32 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm font-semibold tabular-nums text-slate-800"
+                  className="w-32 px-2 py-2 text-sm"
                 />
               </label>
               <span className="rounded-lg bg-water-50 px-2.5 py-1.5 text-sm font-bold tabular-nums text-water-700">
@@ -407,22 +422,12 @@ export function SleepSettingsPage() {
           hint="Giờ ngủ, giờ thức và kiểu kêu."
           className="lg:col-span-2"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[1fr_1fr] gap-3">
             <Field label="Đi ngủ">
-              <input
-                type="time"
-                value={form.bed}
-                onChange={(e) => setForm({ ...form, bed: e.target.value })}
-                className={timeInput}
-              />
+              <TimeBox value={form.bed} onChange={(e) => setForm({ ...form, bed: e.target.value })} />
             </Field>
             <Field label="Thức dậy">
-              <input
-                type="time"
-                value={form.wake}
-                onChange={(e) => setForm({ ...form, wake: e.target.value })}
-                className={timeInput}
-              />
+              <TimeBox value={form.wake} onChange={(e) => setForm({ ...form, wake: e.target.value })} />
             </Field>
           </div>
 
