@@ -758,3 +758,43 @@ img,
 [role='button'] {
   touch-action: manipulation;
 }
+
+/* ================= A11y & chuyển động dùng chung ================= */
+
+/* Vòng focus rõ ràng khi điều hướng bằng bàn phím (bấm chuột không hiện). */
+:where(button, a, [role='button'], input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-water-500);
+  outline-offset: 2px;
+}
+
+/* Người dùng bật "giảm chuyển động" ở hệ điều hành → tắt animation/transition toàn app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Chuyển trang nhẹ (CSS thuần, không thêm thư viện animation). */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.page-in {
+  animation: page-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in { animation: none; }
+}
+
+/* Vùng chạm tối thiểu 44px cho điều khiển chính trên điện thoại. */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}

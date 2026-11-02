@@ -113,7 +113,11 @@ export function AppLayout() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-5 pb-28 md:py-6">
-        <Outlet />
+        {/* key theo đường dẫn (không theo ?query) → đổi trang thì phát lại hiệu ứng,
+            còn chuyển tab ?view=... bên trong một trang thì không remount. */}
+        <div key={location.pathname} className="page-in">
+          <Outlet />
+        </div>
       </main>
 
       <BottomNav />

@@ -63,7 +63,7 @@ export function TodayPage() {
         <button
           onClick={() => go(-1)}
           aria-label={`Khung trước: ${views[(index - 1 + views.length) % views.length].label}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
         >
           <ChevronLeft className="size-4" />
         </button>
@@ -82,7 +82,7 @@ export function TodayPage() {
               key={key}
               to={to}
               data-active={key === views[index].key}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+              className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
                 key === views[index].key
                   ? 'bg-water-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
@@ -97,7 +97,7 @@ export function TodayPage() {
         <button
           onClick={() => go(1)}
           aria-label={`Khung sau: ${views[(index + 1) % views.length].label}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-water-700 sm:size-8"
         >
           <ChevronRight className="size-4" />
         </button>

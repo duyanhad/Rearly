@@ -564,7 +564,7 @@ export function PartnerPage() {
           type="button"
           onClick={() => scrollNeeds(-1)}
           aria-label="Nhu cầu trước"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
         >
           <ChevronLeft className="size-4" />
         </button>
@@ -583,7 +583,7 @@ export function PartnerPage() {
                   setKindFilter(key);
                   e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
                 }}
-                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:min-h-0 sm:py-1.5 ${
                   active
                     ? 'bg-water-700 text-white shadow-sm'
                     : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
@@ -608,7 +608,7 @@ export function PartnerPage() {
           type="button"
           onClick={() => scrollNeeds(1)}
           aria-label="Nhu cầu sau"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 sm:size-7"
         >
           <ChevronRight className="size-4" />
         </button>
