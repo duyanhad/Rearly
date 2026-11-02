@@ -28,8 +28,10 @@ export function RadialMenu({
         if (open) action.onClick();
       }} style={{
         transform: open ? `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1)` : 'translate(-50%, -50%) scale(0.3)',
-        transitionDelay: `${index * 40}ms`
-      }} className={`absolute left-1/2 top-1/2 flex size-12 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-out ${open ? 'pointer-events-auto opacity-100' : 'opacity-0'} ${action.tone === 'primary' ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}>
+        transitionDelay: `${index * 40}ms`,
+        // Nảy nhẹ khi bung ra (overshoot) cho cảm giác "bật" thay vì trượt đều.
+        transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+      }} className={`absolute left-1/2 top-1/2 flex size-12 items-center justify-center rounded-full shadow-lg transition-all duration-300 ${open ? 'pointer-events-auto opacity-100' : 'opacity-0'} ${action.tone === 'primary' ? 'bg-water-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}>
             {action.avatarUrl ? (
               <img
                 src={action.avatarUrl}

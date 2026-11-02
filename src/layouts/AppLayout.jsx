@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { m } from 'framer-motion';
 import { LayoutDashboard, CalendarDays, Users, Rss, Shield, ShieldCheck } from 'lucide-react';
 import { socialService } from '../services/socialService';
 import { useAuth } from '../context/AuthProvider';
@@ -113,11 +114,15 @@ export function AppLayout() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-5 pb-28 md:py-6">
-        {/* key theo đường dẫn (không theo ?query) → đổi trang thì phát lại hiệu ứng,
-            còn chuyển tab ?view=... bên trong một trang thì không remount. */}
-        <div key={location.pathname} className="page-in">
+        {/* Đổi trang: trượt nhẹ lên + mờ dần (spring). Key theo pathname để không remount khi đổi ?view= */}
+        <m.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }}
+        >
           <Outlet />
-        </div>
+        </m.div>
       </main>
 
       <BottomNav />
