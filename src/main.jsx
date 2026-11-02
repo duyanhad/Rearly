@@ -9,18 +9,26 @@ import { ToastProvider } from './components/Toast';
 import { registerServiceWorker } from './utils/notify';
 import { queryClient } from './queryClient';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { MotionConfig } from 'framer-motion';
+import { LazyMotion, domAnimation } from 'framer-motion';
 
 createRoot(document.getElementById('root')).render(<StrictMode>
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+      {/* reducedMotion='user': máy nào bật "giảm chuyển động" thì mọi hiệu ứng tự tắt */}
+      {/* domAnimation: chỉ nạp phần animation cần dùng (~15KB) thay vì cả thư viện */}
+      <LazyMotion features={domAnimation} strict>
+        <MotionConfig reducedMotion="user">
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+              <AuthProvider>
+                <ToastProvider>
+                  <App />
+                </ToastProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </QueryClientProvider>
+        </MotionConfig>
+      </LazyMotion>
     </ErrorBoundary>
   </StrictMode>);
 

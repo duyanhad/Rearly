@@ -18,6 +18,7 @@ import { LogCarousel } from '../components/LogCarousel';
 import { WaterBar } from '../../../components/WaterBar';
 import { accent, shade } from '../../../utils/color';
 import { readLastAction, saveLastAction } from '../../../utils/lastAction';
+import { m } from 'framer-motion';
 const periodLabels = {
   Morning: 'Sáng',
   Afternoon: 'Trưa',
@@ -294,9 +295,14 @@ export function DashboardPage() {
 
         <section className="min-w-0 space-y-3">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <button onClick={() => setOpen(true)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-water-600 py-4 text-base font-semibold text-white shadow-sm shadow-water-500/30 transition active:scale-[0.99]">
+            <m.button
+              onClick={() => setOpen(true)}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 520, damping: 22 }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-water-600 py-4 text-base font-semibold text-white shadow-sm shadow-water-500/30"
+            >
               <Plus className="size-5" /> Uống nước
-            </button>
+            </m.button>
             <p className="mt-2 text-center text-xs text-slate-500">
               Mở camera chụp ảnh cốc nước → ghi chú → thêm nước
             </p>

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, Camera, Home, MessageCircle, Mic, Plus, Settings, ShieldCheck, Users, X } from 'lucide-react';
 import { RadialMenu } from './RadialMenu';
+import { m } from 'framer-motion';
 import { QuickReportSheet } from '../components/QuickReportSheet';
 import { VoiceNoteSheet } from '../features/voice/components/VoiceNoteSheet';
 import { mediaUrl } from '../services/apiClient';
@@ -88,8 +89,7 @@ export function BottomNav() {
 
           <div className="relative size-14">
             <RadialMenu open={menuOpen} actions={actions} radius={120} />
-            <button onClick={() => setMenuOpen(open => !open)} aria-label={menuOpen ? 'Đóng menu nhanh' : 'Mở menu nhanh'} className={`absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-water-700 text-white shadow-lg shadow-water-500/40 transition-transform duration-300 ${menuOpen ? 'rotate-45' : ''}`}>
-              {menuOpen ? <X className="size-6" /> : <Plus className="size-6" />}
+            <button onClick={() => setMenuOpen(open => !open)} aria-label={menuOpen ? 'Đóng menu nhanh' : 'Mở menu nhanh'} className={`absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-water-500 to-water-700 text-white shadow-lg shadow-water-500/40 transition-transform duration-300 ${menuOpen ? 'rotate-45' : ''}`}>              {menuOpen ? <X className="size-6" /> : <Plus className="size-6" />}
             </button>
           </div>
 
@@ -109,8 +109,16 @@ function TabItem({
   badge = 0
 }) {
   return <Link to={to} className={`relative flex w-16 flex-col items-center gap-1 rounded-lg py-1 text-[11px] font-medium ${active ? 'text-water-700' : 'text-slate-500'}`}>
-      <Icon className={`size-5 ${active ? 'fill-water-100' : ''}`} />
-      {label}
+      {/* Viên nền trượt sang tab đang chọn (layoutId dùng chung → tự chuyển động) */}
+      {active && (
+        <m.span
+          layoutId="nav-active-pill"
+          className="absolute inset-x-0.5 -top-0.5 -bottom-0.5 rounded-xl bg-water-50 ring-1 ring-water-100"
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+        />
+      )}
+      <Icon className={`relative size-5 ${active ? 'fill-water-100' : ''}`} />
+      <span className="relative">{label}</span>
       {!!badge && <span className="absolute -top-0.5 right-3 min-w-4 rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
           {badge > 9 ? '9+' : badge}
         </span>}
