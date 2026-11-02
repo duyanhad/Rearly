@@ -104,16 +104,26 @@ export function DashboardPage() {
     else setSpillFx((prev) => ({ key: prev.key + 1, ml: action.ml }));
   }, [today, user?.id]);
 
-  // Phần chờ duyệt bị giảm (bị từ chối) → nước trong cốc đổ ra ngoài.
+  // Phần chờ duyệt giảm:
+  // - Partner DUYỆT → tổng tăng đúng bằng phần chờ giảm: KHÔNG chạy hiệu ứng (nước đã rót lúc gửi).
+  // - Partner TỪ CHỐI → tổng không tăng: nước trong cốc đổ ra ngoài.
+  const lastTotalForSpill = useRef(null);
   useEffect(() => {
     if (!today) return;
     const pending = today.pendingMl ?? 0;
-    if (lastPending.current !== null && pending < lastPending.current) {
-      triggerSpill(Math.max(1, lastPending.current - pending));
+    const total = today.totalDrankMl ?? 0;
+
+    if (lastPending.current !== null && lastTotalForSpill.current !== null && pending < lastPending.current) {
+      const drop = lastPending.current - pending;
+      const rise = Math.max(0, total - lastTotalForSpill.current);
+      const rejected = drop - rise;
+      if (rejected > 0) triggerSpill(Math.max(1, rejected));
     }
+
     lastPending.current = pending;
+    lastTotalForSpill.current = total;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [today?.pendingMl]);
+  }, [today?.pendingMl, today?.totalDrankMl]);
 
   // Bị partner trừ nước (realtime) → cốc nghiêng đổ nước.
   useEffect(() => {

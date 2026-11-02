@@ -51,7 +51,9 @@ export function SleepAlarmOverlay() {
   }, []);
 
   useEffect(() => {
-    if (!row?.alarmEnabled || row?.enabled === false) {
+    // Nhắc trước giờ ngủ chỉ cần bật tính năng giấc ngủ + đặt số phút nhắc
+    // (không phụ thuộc công tắc "Báo thức" buổi sáng).
+    if (row?.enabled === false || !(remindBefore > 0)) {
       setPrebed(null);
       return undefined;
     }
@@ -77,7 +79,7 @@ export function SleepAlarmOverlay() {
     tick();
     const id = setInterval(tick, 15_000);
     return () => clearInterval(id);
-  }, [row?.alarmEnabled, row?.enabled, bed, remindBefore]);
+  }, [row?.enabled, bed, remindBefore]);
 
   // Rung + thông báo hệ thống lặp lại mỗi 30 giây cho tới khi người dùng tắt.
   useEffect(() => {
