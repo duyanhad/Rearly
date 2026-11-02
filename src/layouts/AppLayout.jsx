@@ -69,14 +69,13 @@ export function AppLayout() {
     '/friends': followRequests.length
   };
   return <div className="flex min-h-full flex-col">
-      <header
-        className={`sticky top-0 z-30 bg-gradient-to-b from-white to-water-50/60 pt-[env(safe-area-inset-top)] backdrop-blur transition-shadow duration-300 ${
-          scrolled ? 'shadow-[0_10px_30px_-18px_rgba(87,23,34,0.55)]' : 'shadow-[0_1px_0_rgba(223,169,166,0.35)]'
-        }`}
-      >
-        {/* Đường kẻ mảnh mờ dần hai đầu cho tách khỏi nội dung mà không cứng như border */}
-        <span className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-water-200 to-transparent" aria-hidden="true" />
-        <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3">
+      <header className="sticky top-0 z-30 px-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-1 sm:px-3">
+        {/* Thanh nổi bo tròn 4 góc (2 góc trên sát mép màn hình) — không còn dải phẳng chạy hết chiều ngang */}
+        <div
+          className={`mx-auto flex max-w-5xl items-center gap-2 rounded-2xl border border-white/70 bg-gradient-to-b from-white/95 to-white/80 px-3 py-2 backdrop-blur-md transition-shadow duration-300 ${
+            scrolled ? 'shadow-lg' : 'shadow-sm'
+          }`}
+        >
           <Link to="/" className="group flex items-center gap-2 font-bold text-water-700">
             <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-water-500 to-water-700 text-white shadow-sm shadow-water-500/30 transition group-hover:from-water-600 group-hover:to-water-800">
               <DearlyMark className="size-5" tone="cream" />
