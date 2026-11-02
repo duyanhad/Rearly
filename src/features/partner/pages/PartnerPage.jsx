@@ -570,7 +570,7 @@ export function PartnerPage() {
         </button>
         <div
           ref={needStrip}
-          className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto px-0.5 py-0.5 [mask-image:linear-gradient(to_right,transparent,black_14px,black_calc(100%-14px),transparent)]"
+          className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto px-0.5 py-0.5 [mask-image:linear-gradient(to_right,transparent,black_14px,black_calc(100%_-_14px),transparent)]"
         >
           {visibleTabs.slice(1).map(({ key, label, icon: Icon }) => {
             const n = kindCount(key);
