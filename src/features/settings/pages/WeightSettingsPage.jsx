@@ -7,6 +7,7 @@ import { habitService } from '../../../services/habitService';
 import { habitLogService } from '../../../services/habitLogService';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
+import { QuickSetupButton } from '../components/QuickSetupButton';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
 const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
@@ -132,6 +133,7 @@ export function WeightSettingsPage() {
     <div>
       <SettingsTabs active="weight" />
       <FeatureEnableCard kind="weight" label="cân nặng" />
+      <QuickSetupButton kind="weight" label="cân nặng" row={row} />
 
       {isLoading ? (
         <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader /></div>

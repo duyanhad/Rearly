@@ -6,6 +6,7 @@ import { errorMessage } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
+import { QuickSetupButton } from '../components/QuickSetupButton';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
 /** Cấu hình hiển thị cho từng nhu cầu — thêm nhu cầu mới chỉ cần thêm một mục ở đây. */
@@ -116,6 +117,7 @@ export function HabitSettingsPage({ kind }) {
     <div>
       <SettingsTabs active={kind} />
       <FeatureEnableCard kind={kind} label={{ medicine: 'thuốc', meal: 'bữa ăn', study: 'học tập' }[kind] ?? cfg.label} />
+      <QuickSetupButton kind={kind} label={cfg.label} row={row} />
 
       {isLoading ? (
         <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"><DearlyLoader /></div>

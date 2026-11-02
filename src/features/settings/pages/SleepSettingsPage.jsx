@@ -25,6 +25,7 @@ import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
+import { QuickSetupButton } from '../components/QuickSetupButton';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 import { stopSleepAlarmToday } from '../sleepAlarmStorage';
 
@@ -244,6 +245,7 @@ export function SleepSettingsPage() {
     <div className="pb-4">
       <SettingsTabs active="sleep" />
       <FeatureEnableCard kind="sleep" label="giấc ngủ" />
+      <QuickSetupButton kind="sleep" label="giấc ngủ" row={row} />
 
 
       {/* Tóm tắt đêm nay */}
