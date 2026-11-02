@@ -27,6 +27,7 @@ import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
 import { eraService } from '../../../services/eraService';
+import { downscaleImage } from '../../../utils/imageDownscale';
 
 // Nền dựng sẵn: viết đủ chuỗi class để Tailwind không xoá.
 const COVERS = {
@@ -67,7 +68,8 @@ export function ProfilePage() {
   const avatar = useMutation({
     mutationFn: async (file) => {
       const form = new FormData();
-      form.append('image', file);
+      // Ảnh đại diện chỉ hiện cỡ nhỏ → thu về tối đa 512px cho nhẹ (trang Bạn bè/Partner tải nhanh hơn).
+      form.append('image', await downscaleImage(file, 512));
       setUploading('Đang tải ảnh đại diện...');
       return userService.uploadAvatar(form);
     },
@@ -84,7 +86,8 @@ export function ProfilePage() {
     mutationFn: async (payload = {}) => {
       const form = new FormData();
       if (payload.file) {
-        form.append('image', payload.file);
+        // Ảnh bìa hiện tối đa ~1200px → thu nhỏ trước khi gửi (giữ tỉ lệ, không phóng to).
+        form.append('image', await downscaleImage(payload.file, 1600));
         setUploading('Đang tải ảnh bìa...');
       } else if (payload.preset) {
         form.append('preset', payload.preset);

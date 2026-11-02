@@ -50,8 +50,18 @@ self.addEventListener('push', (event) => {
   );
 });
 
-async function broadcast(message) {
-  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+/** Giữ cache ảnh trong giới hạn N phần tử (xoá bớt bản cũ nhất) để không phình bộ nhớ máy. */
+async function trimCache(cache, max) {
+  try {
+    const keys = await cache.keys();
+    if (keys.length <= max) return;
+    await Promise.all(keys.slice(0, keys.length - max).map((k) => cache.delete(k)));
+  } catch {
+    // cache bị chặn / hết dung lượng → bỏ qua
+  }
+}
+
+async function broadcast(message) {  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
   clients.forEach((client) => client.postMessage(message));
 }
 
@@ -74,7 +84,10 @@ self.addEventListener('notificationclick', (event) => {
 // ---- Bộ nhớ đệm: chỉ cache tài nguyên có hash (an toàn), KHÔNG cache index.html ----
 // Lý do: index.html cũ trỏ tới /assets/index-<hash cũ>.js đã bị xoá sau mỗi lần deploy
 // → phục vụ index cũ = trang trắng. Vì vậy điều hướng luôn lấy từ mạng.
-const CACHE = 'drinkwater-shell-v2';
+const CACHE = 'drinkwater-shell-v3';
+// Ảnh trên Supabase Storage có URL bất biến (tên file hash) → cache lại để lần mở sau không tải lại.
+const IMG_CACHE = 'drinkwater-img-v1';
+const IMG_MAX = 160;
 const SHELL = ['/icon.svg', '/icon-192.png', '/manifest.webmanifest'];
 const isDev = new URL(self.location.href).searchParams.get('mode') !== 'prod';
 
@@ -82,7 +95,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const names = await caches.keys();
-      await Promise.all(names.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+      await Promise.all(names.filter((n) => n !== CACHE && n !== IMG_CACHE).map((n) => caches.delete(n)));
       await self.clients.claim();
     })(),
   );
@@ -93,6 +106,26 @@ self.addEventListener('fetch', (event) => {
   if (isDev || request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // Ảnh Supabase Storage (avatar, ảnh cốc/vật thể, ảnh minh chứng): URL bất biến → cache-first.
+  // Trước đây khối này bị chặn bởi điều kiện cùng origin nên mỗi lần mở app phải tải lại ảnh.
+  if (request.destination === 'image' && /\.supabase\.co$/.test(url.host) && url.pathname.includes('/storage/')) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(IMG_CACHE);
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        const fresh = await fetch(request);
+        if (fresh && (fresh.ok || fresh.type === 'opaque')) {
+          void cache.put(request, fresh.clone());
+          void trimCache(cache, IMG_MAX);
+        }
+        return fresh;
+      })(),
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/hubs') || url.pathname.startsWith('/uploads')) return;
 

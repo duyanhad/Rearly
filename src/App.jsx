@@ -1,33 +1,34 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { DearlyLoader } from './components/DearlyLoader';
 import { useAuth } from './context/AuthProvider';
 import { AppLayout } from './layouts/AppLayout';
 import { RealtimeBridge } from './components/RealtimeBridge';
-import { LandingPage } from './features/landing/pages/LandingPage';
+const LandingPage = lazy(() => import('./features/landing/pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { RegisterPage } from './features/auth/pages/RegisterPage';
 import { TodayPage } from './features/today/TodayPage';
-import { SettingsPage } from './features/settings/pages/SettingsPage';
-import { HabitSettingsPage } from './features/settings/pages/HabitSettingsPage';
-import { SleepSettingsPage } from './features/settings/pages/SleepSettingsPage';
-import { WeightSettingsPage } from './features/settings/pages/WeightSettingsPage';
-import { SleepHomePage } from './features/sleep/pages/SleepHomePage';
-import { PartnerSleepPage } from './features/partner/pages/PartnerSleepPage';
-import { CalendarPage } from './features/water/pages/CalendarPage';
-import { FriendsPage } from './features/social/pages/FriendsPage';
-import { FriendProfilePage } from './features/social/pages/FriendProfilePage';
-import { ProfilePage } from './features/profile/pages/ProfilePage';
-import { ChatPage } from './features/chat/pages/ChatPage';
-import { PartnerPage } from './features/partner/pages/PartnerPage';
-import { MascotLabPage } from './features/mascot/pages/MascotLabPage';
-import { VoiceNotePage } from './features/voice/pages/VoiceNotePage';
-import { AdminLayout } from './features/admin/layouts/AdminLayout';
-import { AdminOverview } from './features/admin/pages/AdminOverview';
-import { AdminUsers } from './features/admin/pages/AdminUsers';
-import { AdminBroadcast } from './features/admin/pages/AdminBroadcast';
-import { AdminLogs } from './features/admin/pages/AdminLogs';
-import { AdminEras } from './features/admin/pages/AdminEras';
-import { AdminCups } from './features/admin/pages/AdminCups';
+const SettingsPage = lazy(() => import('./features/settings/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const HabitSettingsPage = lazy(() => import('./features/settings/pages/HabitSettingsPage').then((m) => ({ default: m.HabitSettingsPage })));
+const SleepSettingsPage = lazy(() => import('./features/settings/pages/SleepSettingsPage').then((m) => ({ default: m.SleepSettingsPage })));
+const WeightSettingsPage = lazy(() => import('./features/settings/pages/WeightSettingsPage').then((m) => ({ default: m.WeightSettingsPage })));
+const SleepHomePage = lazy(() => import('./features/sleep/pages/SleepHomePage').then((m) => ({ default: m.SleepHomePage })));
+const PartnerSleepPage = lazy(() => import('./features/partner/pages/PartnerSleepPage').then((m) => ({ default: m.PartnerSleepPage })));
+const CalendarPage = lazy(() => import('./features/water/pages/CalendarPage').then((m) => ({ default: m.CalendarPage })));
+const FriendsPage = lazy(() => import('./features/social/pages/FriendsPage').then((m) => ({ default: m.FriendsPage })));
+const FriendProfilePage = lazy(() => import('./features/social/pages/FriendProfilePage').then((m) => ({ default: m.FriendProfilePage })));
+const ProfilePage = lazy(() => import('./features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const ChatPage = lazy(() => import('./features/chat/pages/ChatPage').then((m) => ({ default: m.ChatPage })));
+const PartnerPage = lazy(() => import('./features/partner/pages/PartnerPage').then((m) => ({ default: m.PartnerPage })));
+const MascotLabPage = lazy(() => import('./features/mascot/pages/MascotLabPage').then((m) => ({ default: m.MascotLabPage })));
+const VoiceNotePage = lazy(() => import('./features/voice/pages/VoiceNotePage').then((m) => ({ default: m.VoiceNotePage })));
+const AdminLayout = lazy(() => import('./features/admin/layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminOverview = lazy(() => import('./features/admin/pages/AdminOverview').then((m) => ({ default: m.AdminOverview })));
+const AdminUsers = lazy(() => import('./features/admin/pages/AdminUsers').then((m) => ({ default: m.AdminUsers })));
+const AdminBroadcast = lazy(() => import('./features/admin/pages/AdminBroadcast').then((m) => ({ default: m.AdminBroadcast })));
+const AdminLogs = lazy(() => import('./features/admin/pages/AdminLogs').then((m) => ({ default: m.AdminLogs })));
+const AdminEras = lazy(() => import('./features/admin/pages/AdminEras').then((m) => ({ default: m.AdminEras })));
+const AdminCups = lazy(() => import('./features/admin/pages/AdminCups').then((m) => ({ default: m.AdminCups })));
 function Loading() {
   return <DearlyLoader full />;
 }
@@ -68,7 +69,8 @@ function GuestOnly({
 export default function App() {
   return <>
       <RealtimeBridge />
-      <Routes>
+      <Suspense fallback={<Loading />}>
+        <Routes>
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
@@ -104,6 +106,7 @@ export default function App() {
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </>;
 }
