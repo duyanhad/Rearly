@@ -15,6 +15,14 @@ import {
 } from 'lucide-react';
 import { API_URL } from '../../../services/apiClient';
 import { DearlyMark } from '../../../components/DearlyLogo';
+import { m } from 'framer-motion';
+
+// Hiệu ứng vào trang: các khối lần lượt trượt lên, ảnh minh hoạ bồng bềnh nhẹ.
+const listVariants = { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
+const itemVariants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 250, damping: 26 } },
+};
 
 const APK_URL = `${API_URL}/downloads/Dearly-test.apk`;
 
@@ -104,17 +112,28 @@ export function LandingPage() {
       <main className="relative z-10 mx-auto max-w-5xl px-5 pb-16">
         <div className="grid items-center gap-10 pt-10 lg:grid-cols-2 lg:gap-6 lg:pt-14">
           {/* Minh hoạ cặp đôi: ảnh cắt từ mockup (kèm tim, vòng xoáy, chữ viết tay) */}
-          <div className="relative mx-auto w-full max-w-md">
-            <img src="/landing/couple.png" alt="Một chút thương, mỗi ngày" className="w-full select-none" />
-          </div>
+          <m.div
+            className="relative mx-auto w-full max-w-md"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 210, damping: 24 }}
+          >
+            <m.img
+              src="/landing/couple.png"
+              alt="Một chút thương, mỗi ngày"
+              className="w-full select-none"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </m.div>
 
           {/* Nội dung */}
-          <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fbe3de] px-3 py-1 text-xs font-semibold text-[#8e2f3c]">
+          <m.div className="min-w-0" variants={listVariants} initial="hidden" animate="show">
+            <m.span variants={itemVariants} className="inline-flex items-center gap-1.5 rounded-full bg-[#fbe3de] px-3 py-1 text-xs font-semibold text-[#8e2f3c]">
               <Heart className="size-3.5 fill-[#e78f86] text-[#e78f86]" /> Dành cho bạn
-            </span>
+            </m.span>
 
-            <h1 className="mt-4 text-[2.1rem] font-extrabold leading-[1.12] tracking-tight text-[#7d2836] sm:text-[2.5rem]">
+            <m.h1 variants={itemVariants} className="mt-4 text-[2.1rem] font-extrabold leading-[1.12] tracking-tight text-[#7d2836] sm:text-[2.5rem]">
               Một chút thương,
               <br />
               mỗi ngày{' '}
@@ -124,38 +143,47 @@ export function LandingPage() {
                 aria-hidden="true"
                 className="inline-block w-16 -translate-y-1 select-none sm:w-20"
               />
-            </h1>
+            </m.h1>
 
-            <p className="mt-4 max-w-md text-[13px] leading-relaxed text-[#6b5a55]">
+            <m.p variants={itemVariants} className="mt-4 max-w-md text-[13px] leading-relaxed text-[#6b5a55]">
               Dearly ở đây để nhắc bạn uống nước, ăn đủ bữa, uống thuốc đúng giờ, ngủ một giấc
               trọn vẹn — và thương yêu bản thân mình nhiều hơn một chút.
-            </p>
+            </m.p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <a
+            <m.div variants={itemVariants} className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <m.a
                 href={APK_URL}
                 download
-                className="group flex items-center justify-center gap-2 rounded-2xl bg-[#8e2f3c] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_-12px_rgba(142,47,60,0.7)] transition hover:bg-[#7d2836] active:scale-[0.99]"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 24 }}
+                className="group flex items-center justify-center gap-2 rounded-2xl bg-[#8e2f3c] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_-12px_rgba(142,47,60,0.7)] transition-colors hover:bg-[#7d2836]"
               >
                 <Smartphone className="size-4" /> Tải cho Android
                 <ChevronRight className="size-4 opacity-80 transition group-hover:translate-x-0.5" />
-              </a>
-              <button
+              </m.a>
+              <m.button
                 type="button"
                 onClick={() => setIosSheet(true)}
-                className="group flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-[#8e2f3c] ring-1 ring-[#e8b7ae] transition hover:bg-[#fdf1ee] active:scale-[0.99]"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 24 }}
+                className="group flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-[#8e2f3c] ring-1 ring-[#e8b7ae] transition-colors hover:bg-[#fdf1ee]"
               >
                 <Apple className="size-4" /> Tải cho iPhone
                 <ChevronRight className="size-4 opacity-60 transition group-hover:translate-x-0.5" />
-              </button>
-            </div>
+              </m.button>
+            </m.div>
 
             {/* Danh sách tính năng */}
             <ul className="mt-6 space-y-2.5">
               {FEATURES.map(({ icon: Icon, filled, title, text }) => (
-                <li
+                <m.li
                   key={title}
-                  className="flex items-center gap-3 rounded-2xl bg-[#fdf6f4] px-3.5 py-3 shadow-[0_6px_18px_-14px_rgba(142,47,60,0.45)] ring-1 ring-[#f6e3dd] transition hover:bg-white"
+                  variants={itemVariants}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+                  className="flex items-center gap-3 rounded-2xl bg-[#fdf6f4] px-3.5 py-3 shadow-[0_6px_18px_-14px_rgba(142,47,60,0.45)] ring-1 ring-[#f6e3dd] transition-colors hover:bg-white"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fbe3de] text-[#8e2f3c]">
                     <Icon className={`size-[18px] ${filled ? 'fill-[#8e2f3c]' : ''}`} />
@@ -165,14 +193,19 @@ export function LandingPage() {
                     <span className="block truncate text-[11px] text-[#a08c86]">{text}</span>
                   </span>
                   <ChevronRight className="size-4 shrink-0 text-[#c9a49c]" />
-                </li>
+                </m.li>
               ))}
             </ul>
-          </div>
+          </m.div>
         </div>
 
         {/* Khối kết */}
-        <section className="relative mx-auto mt-12 max-w-2xl overflow-hidden rounded-2xl bg-[#7e2636] px-6 py-6 text-center text-white shadow-[0_20px_44px_-24px_rgba(125,40,54,0.8)]">
+        <m.section
+          initial={{ opacity: 0, y: 24, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 190, damping: 24, delay: 0.35 }}
+          className="relative mx-auto mt-12 max-w-2xl overflow-hidden rounded-2xl bg-[#7e2636] px-6 py-6 text-center text-white shadow-[0_20px_44px_-24px_rgba(125,40,54,0.8)]"
+        >
           <img
             src="/landing/ctaL.png"
             alt=""
@@ -215,7 +248,7 @@ export function LandingPage() {
               <UserRound className="size-3.5" /> Đăng nhập
             </Link>
           </div>
-        </section>
+        </m.section>
       </main>
 
       <footer className="relative z-10 pb-8">

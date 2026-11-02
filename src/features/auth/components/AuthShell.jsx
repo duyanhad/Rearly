@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { Droplet, Eye, EyeOff, Moon, Pill, Soup } from 'lucide-react';
+import { m } from 'framer-motion';
 import { DearlyMark } from '../../../components/DearlyLogo';
+
+// Hiệu ứng vào trang: mờ dần + nhích lên, các em nhỏ lần lượt hiện (stagger).
+const listVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 26 } },
+};
 function Bubbles() {
   return <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute -left-16 -top-16 size-64 rounded-full bg-water-200/50 blur-3xl animate-shimmer" />
@@ -109,35 +120,42 @@ export function AuthShell({
 
       <div className="relative mx-auto grid min-h-full max-w-5xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:py-16">
         <section className="hidden lg:block">
-          <div className="flex items-center gap-2 text-water-700">
+          <m.div variants={listVariants} initial="hidden" animate="show">
+          <m.div variants={itemVariants} className="flex items-center gap-2 text-water-700">
             <DearlyMark className="size-9" />
             <span className="font-brand text-2xl font-bold tracking-tight">Dearly</span>
-          </div>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-water-500">
+          </m.div>
+          <m.p variants={itemVariants} className="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-water-500">
             A little note, a lot of love.
-          </p>
-          <h1 className="font-brand mt-7 text-4xl font-bold leading-[1.15] text-slate-900">
+          </m.p>
+          <m.h1 variants={itemVariants} className="font-brand mt-7 text-4xl font-bold leading-[1.15] text-slate-900">
             Nhắc bạn từng điều nhỏ,
             <br />
             <span className="bg-gradient-to-r from-water-700 to-[#c98883] bg-clip-text text-transparent">
               để sống khoẻ mỗi ngày.
             </span>
-          </h1>
+          </m.h1>
           <ul className="mt-6 grid max-w-sm grid-cols-2 gap-2">
             {areas.map(({
             icon: Icon,
             label,
             sub
-          }) => <li key={label} className="rounded-2xl bg-white/80 p-3 ring-1 ring-water-100">
+          }) => <m.li
+                key={label}
+                variants={itemVariants}
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+                className="rounded-2xl bg-white/80 p-3 ring-1 ring-water-100 transition-shadow hover:shadow-md hover:shadow-water-500/10"
+              >
                 <span className="flex size-8 items-center justify-center rounded-xl bg-water-50 text-water-600 ring-1 ring-water-100">
                   <Icon className="size-4" />
                 </span>
                 <p className="mt-2 text-sm font-semibold text-slate-800">{label}</p>
                 <p className="text-[11px] text-slate-500">{sub}</p>
-              </li>)}
+              </m.li>)}
           </ul>
 
-          <div className="mt-6 max-w-sm rounded-2xl bg-white/75 p-3 shadow-sm ring-1 ring-water-200/60 backdrop-blur">
+          <m.div variants={itemVariants} className="mt-6 max-w-sm rounded-2xl bg-white/75 p-3 shadow-sm ring-1 ring-water-200/60 backdrop-blur">
             <div className="mb-2 flex items-baseline justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-water-500">Hôm nay của bạn</p>
               <p className="font-brand text-sm font-bold text-water-700">Dearly</p>
@@ -147,21 +165,31 @@ export function AuthShell({
               label,
               text,
               percent
-            }) => <div key={label} className="flex items-center gap-2">
+            }, i) => <div key={label} className="flex items-center gap-2">
                   <span className="w-16 shrink-0 text-[11px] font-semibold text-slate-600">{label}</span>
                   <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-water-100">
-                    <span className="block h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883]" style={{
-                    width: `${percent}%`
-                  }} />
+                    {/* Thanh tiến độ chạy từ 0 → % thật, lần lượt từng dòng */}
+                    <m.span
+                      className="block h-full rounded-full bg-gradient-to-r from-water-600 to-[#c98883]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percent}%` }}
+                      transition={{ duration: 0.9, delay: 0.45 + i * 0.12, ease: 'easeOut' }}
+                    />
                   </span>
                   <span className="w-20 shrink-0 text-right text-[10px] tabular-nums text-slate-500">{text}</span>
                 </div>)}
             </div>
-          </div>
+          </m.div>
+          </m.div>
         </section>
 
         <section className="w-full">
-          <div className="mx-auto w-full max-w-md rounded-3xl bg-white/85 p-6 shadow-xl shadow-water-500/10 ring-1 ring-white/70 backdrop-blur-xl sm:p-8">
+          <m.div
+            initial={{ opacity: 0, y: 18, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 240, damping: 26, delay: 0.08 }}
+            className="mx-auto w-full max-w-md rounded-3xl bg-white/85 p-6 shadow-xl shadow-water-500/10 ring-1 ring-white/70 backdrop-blur-xl sm:p-8"
+          >
             <div className="mb-6 flex flex-col items-center text-center lg:hidden">
               <DearlyMark className="size-14 drop-shadow-md" />
               <p className="font-brand mt-3 text-xl font-bold text-slate-900">Dearly</p>
@@ -172,11 +200,16 @@ export function AuthShell({
 
             {children}
             <div className="mt-6 text-center text-sm text-slate-500">{footer}</div>
-          </div>
+          </m.div>
 
-          <p className="mt-6 text-center text-xs text-slate-400">
+          <m.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="mt-6 text-center text-xs text-slate-400"
+          >
             Dearly · Care · Connect · Well-being
-          </p>
+          </m.p>
         </section>
       </div>
     </div>;
