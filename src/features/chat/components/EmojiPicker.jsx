@@ -50,13 +50,16 @@ export function EmojiPicker({ onPick, onClose }) {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-24 z-50 mx-auto w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 sm:bottom-28">
+    <div className="absolute inset-x-0 bottom-full z-50 mb-1.5 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
       <div className="flex items-center gap-1.5 border-b border-slate-100 px-2 py-1.5">
         <Search className="size-3.5 text-slate-400" />
         <input
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.preventDefault();
+          }}
           placeholder="Tìm emoji…"
           className="min-w-0 flex-1 bg-transparent text-sm outline-none"
         />

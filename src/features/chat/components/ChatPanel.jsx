@@ -638,7 +638,8 @@ export function ChatPanel({ compact = false }) {
         ))}
         <div ref={endRef} />
       </div>
-      <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-slate-100 p-1.5">
+      <form onSubmit={submit} className="relative flex items-center gap-1.5 border-t border-slate-100 p-1.5">
+        {emojiOpen && <EmojiPicker onPick={(e) => setDraft((d) => d + e)} onClose={() => setEmojiOpen(false)} />}
         {!voiceBusy && (
           <input
             value={draft}
@@ -659,7 +660,6 @@ export function ChatPanel({ compact = false }) {
             >
               <Smile className="size-4" />
             </button>
-            {emojiOpen && <EmojiPicker onPick={(e) => setDraft((d) => d + e)} onClose={() => setEmojiOpen(false)} />}
           </div>
         )}
         {!voiceBusy && (
