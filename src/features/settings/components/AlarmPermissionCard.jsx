@@ -18,11 +18,11 @@ export function AlarmPermissionCard() {
   const [push, setPush] = useState(() => isPushActive());
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
-  const [installed, setInstalled] = useState(true);
+  const [needsInstall, setNeedsInstall] = useState(false);
 
   useEffect(() => {
-    setInstalled(isStandalone());
-    if (isIos() && !isStandalone()) setInstalled(false);
+    // Chỉ iPhone mới bắt buộc cài vào MH chính; trình duyệt khác nhận push ngay trong tab.
+    setNeedsInstall(isIos() && !isStandalone());
   }, []);
 
   const enable = async () => {
@@ -45,7 +45,7 @@ export function AlarmPermissionCard() {
 
   if (state === 'unsupported') return null;
 
-  if (!installed) {
+  if (!needsInstall) {
     return (
       <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5">
         <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-800">
