@@ -178,6 +178,19 @@ export function RealtimeBridge() {
 
     connection.on('ReceiveSleepAlarm', onSleepAlarm);
     connection.on('ReceiveSleepFull', onSleepFull);
+
+    // Nhắc thuốc / bữa ăn / học tập / cân nặng theo giờ đã đặt.
+    const onHabitReminder = (payload) => {
+      const title = payload?.title ?? 'Nhắc nhở Dearly';
+      const body = payload?.body ?? '';
+      toast.show(title, body);
+      playChime('normal');
+      vibrate('normal');
+      // force: vẫn hiện dù máy đã đăng ký Web Push.
+      void showSystemNotification(title, body, 'normal', { force: true, tag: `dearly-habit-${payload?.kind ?? 'x'}` });
+      void queryClient.invalidateQueries({ queryKey: ['habit-logs'] });
+    };
+    connection.on('ReceiveHabitReminder', onHabitReminder);
     connection.on('ReceiveMessage', onMessage);
     connection.on('ReceiveReaction', onReaction);
     connection.on('ReceiveMessageUpdate', onMessageUpdate);
@@ -190,6 +203,7 @@ export function RealtimeBridge() {
       connection.off('ReceiveReminder', onReminder);
       connection.off('ReceiveSleepAlarm', onSleepAlarm);
       connection.off('ReceiveSleepFull', onSleepFull);
+      connection.off('ReceiveHabitReminder', onHabitReminder);
       connection.off('ReceiveMessage', onMessage);
       connection.off('ReceiveReaction', onReaction);
       connection.off('ReceiveMessageUpdate', onMessageUpdate);

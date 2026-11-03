@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellRing, BookOpen, Clock, Flame, Moon, Pill, Plus, Soup, Target, Trash2 } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
+import { isNativeApp, scheduleHabitReminders } from '../../../utils/nativeReminders';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { QuickSetupButton } from '../components/QuickSetupButton';
@@ -105,6 +106,15 @@ export function HabitSettingsPage({ kind }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       await qc.invalidateQueries({ queryKey: ['habits'] });
+      // Bản APK: đặt lịch thông báo của hệ điều hành để nhắc cả khi tắt app.
+      if (isNativeApp()) {
+        void scheduleHabitReminders({
+          kind,
+          enabled: form.enabled,
+          times: form.times,
+          remindBeforeMin: Number(form.remindBeforeMin) || 0,
+        });
+      }
     },
     onError: (err) => setError(errorMessage(err)),
   });

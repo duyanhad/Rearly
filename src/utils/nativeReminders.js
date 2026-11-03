@@ -235,3 +235,79 @@ export async function listenNativeAlarmTap() {
     handle?.remove?.();
   };
 }
+
+const HABIT_BASE = { medicine: 301000, meal: 302000, study: 303000, weight: 304000 };
+const HABIT_IDS_KEY = 'dearly.nativeHabitIds';
+const HABIT_TEXT = {
+  medicine: '💊 Đến giờ uống thuốc',
+  meal: '🍚 Đến giờ ăn',
+  study: '📚 Đến giờ học',
+  weight: '⚖️ Giờ cân nặng',
+};
+
+function readHabitIds() {
+  try {
+    return JSON.parse(localStorage.getItem(HABIT_IDS_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function writeHabitIds(map) {
+  try {
+    localStorage.setItem(HABIT_IDS_KEY, JSON.stringify(map));
+  } catch {
+    /* trình duyệt chặn localStorage thì thôi */
+  }
+}
+
+/**
+ * Nhắc thuốc / bữa ăn / học tập / cân nặng bằng lịch của hệ điều hành (bản APK): lặp hằng ngày,
+ * nhắc trước `remindBeforeMin` phút. `times` là mảng "HH:mm".
+ */
+export async function scheduleHabitReminders({ kind, enabled, times = [], remindBeforeMin = 0 }) {
+  if (!isNativeApp()) return false;
+  const base = HABIT_BASE[kind];
+  if (!base) return false;
+
+  const map = readHabitIds();
+  const previous = map[kind] ?? [];
+  if (previous.length) await LocalNotifications.cancel({ notifications: previous.map((id) => ({ id })) }).catch(() => {});
+  map[kind] = [];
+  writeHabitIds(map);
+
+  if (!enabled) return false;
+  if (!(await ensureNativePermission())) return false;
+  await ensureAlarmChannel();
+
+  const before = Math.max(0, Number(remindBeforeMin) || 0);
+  const title = HABIT_TEXT[kind] ?? 'Nhắc nhở Dearly';
+  const notifications = [];
+  (times ?? []).forEach((raw, index) => {
+    const [h, m] = String(raw).split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return;
+    const total = (((h * 60 + m - before) % 1440) + 1440) % 1440;
+    notifications.push({
+      id: base + index,
+      title,
+      body:
+        before > 0
+          ? `Còn ${before} phút là tới giờ đặt (${raw}). Mở Dearly để ghi lại nhé.`
+          : `Tới giờ đặt (${raw}). Mở Dearly để ghi lại nhé.`,
+      schedule: { on: { hour: Math.floor(total / 60), minute: total % 60 }, repeats: true, allowWhileIdle: true },
+      channelId: SLEEP_CHANNEL,
+      ...(Capacitor.getPlatform() === 'android' ? { smallIcon: 'ic_stat_water', priority: 4 } : {}),
+      extra: { kind: `habit-${kind}` },
+    });
+  });
+  if (!notifications.length) return false;
+
+  try {
+    await LocalNotifications.schedule({ notifications });
+    map[kind] = notifications.map((n) => n.id);
+    writeHabitIds(map);
+    return true;
+  } catch {
+    return false;
+  }
+}
