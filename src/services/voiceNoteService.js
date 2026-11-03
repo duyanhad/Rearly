@@ -13,7 +13,8 @@ export const voiceNoteService = {
   incoming: () => api.get('/api/voice-notes/incoming'),
   inbox: () => api.get('/api/voice-notes/inbox'),
   listen: (id) => api.post(`/api/voice-notes/${id}/listen`),
-  cancel: (id) => api.delete(`/api/voice-notes/${id}`),
+  /** Xoá khỏi danh sách của mình (người gửi = huỷ luôn, người nhận = ẩn khỏi hộp thư). */
+  remove: (id) => api.delete(`/api/voice-notes/${id}`),
   sent: () => api.get('/api/voice-notes'),
   audioUrl: (url) => mediaUrl(url),
 };

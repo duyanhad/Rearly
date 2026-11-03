@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { BellRing, Headphones, Pause, Play, Reply } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BellRing, Headphones, Pause, Play, Reply, Trash2 } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
+import { useToast } from '../../../components/Toast';
 import { voiceNoteService } from '../../../services/voiceNoteService';
 import { VoiceNoteReplySheet } from './VoiceNoteReplySheet';
 
@@ -10,14 +11,26 @@ const whenLabel = (iso) =>
 
 /**
  * Hộp thư lời nhắn thoại ĐÃ NHẬN — nghe lại bất cứ lúc nào và trả lời bằng voice nếu muốn.
+ * Lời nhắn chưa tới giờ hẹn không nằm trong danh sách này (server chặn).
  */
 export function VoiceNoteInbox() {
+  const toast = useToast();
+  const qc = useQueryClient();
   const [playingId, setPlayingId] = useState(null);
   const [replying, setReplying] = useState(null);
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['voice-notes-inbox'],
     queryFn: async () => (await voiceNoteService.inbox()).data,
     refetchInterval: 30_000,
+  });
+
+  const remove = useMutation({
+    mutationFn: (id) => voiceNoteService.remove(id),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['voice-notes-inbox'] });
+      toast.show('Đã xoá lời nhắn');
+    },
+    onError: () => toast.show('Không xoá được', 'Thử lại sau nhé.'),
   });
 
   if (isLoading || items.length === 0) return null;
@@ -64,6 +77,16 @@ export function VoiceNoteInbox() {
                     className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-water-700 disabled:opacity-40"
                   >
                     <Reply className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove.mutate(v.id)}
+                    disabled={remove.isPending}
+                    aria-label="Xoá lời nhắn khỏi hộp thư"
+                    title="Xoá khỏi hộp thư"
+                    className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-slate-400 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                  >
+                    <Trash2 className="size-4" />
                   </button>
                 </div>
                 {playing && (

@@ -93,7 +93,7 @@ export function VoiceNoteComposer({ showList = true, onScheduled }) {
   });
 
   const cancel = useMutation({
-    mutationFn: (id) => voiceNoteService.cancel(id),
+    mutationFn: (id) => voiceNoteService.remove(id),
     onSuccess: () => {
       toast.show('Đã huỷ', 'Lời nhắn này sẽ không được gửi nữa.');
       setJustScheduled(null);
@@ -326,16 +326,16 @@ export function VoiceNoteComposer({ showList = true, onScheduled }) {
                     {v.listenedAtUtc ? ' · đã nghe' : v.ringCount > 0 ? ` · đã kêu ${v.ringCount} lần` : ' · chờ tới giờ'}
                   </p>
                 </div>
-                {!v.listenedAtUtc && (
-                  <button
-                    type="button"
-                    onClick={() => cancel.mutate(v.id)}
-                    aria-label="Huỷ lời nhắn"
-                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => cancel.mutate(v.id)}
+                  disabled={cancel.isPending}
+                  aria-label="Xoá lời nhắn khỏi danh sách"
+                  title={v.listenedAtUtc ? 'Xoá khỏi danh sách' : 'Huỷ lời nhắn'}
+                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                >
+                  <Trash2 className="size-4" />
+                </button>
               </li>
             ))}
           </ul>
