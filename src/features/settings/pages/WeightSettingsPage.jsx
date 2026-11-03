@@ -8,6 +8,7 @@ import { habitLogService } from '../../../services/habitLogService';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { TimeBox } from '../../../components/TimeBox';
+import { isNativeApp, scheduleHabitReminders } from '../../../utils/nativeReminders';
 import { QuickSetupButton } from '../components/QuickSetupButton';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
@@ -125,6 +126,15 @@ export function WeightSettingsPage() {
       await qc.invalidateQueries({ queryKey: ['habit-history', 'weight'] });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+      // Bản APK: đặt lịch nhắc cân bằng thông báo của hệ điều hành.
+      if (isNativeApp()) {
+        void scheduleHabitReminders({
+          kind: 'weight',
+          enabled: form.enabled,
+          times: form.times,
+          remindBeforeMin: Number(form.remindBeforeMin) || 0,
+        });
+      }
     },
     onError: (err) => setError(errorMessage(err)),
   });
