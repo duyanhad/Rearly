@@ -25,7 +25,7 @@ import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
 import { SettingsTabs } from '../components/SettingsTabs';import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { QuickSetupButton } from '../components/QuickSetupButton';
-import { AlarmPermissionCard } from '../components/AlarmPermissionCard';
+import { NotifyPermissionCard } from '../components/NotifyPermissionCard';
 import { TimeBox } from '../../../components/TimeBox';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 import { stopSleepAlarmToday } from '../sleepAlarmStorage';
@@ -509,7 +509,7 @@ export function SleepSettingsPage() {
             </Field>
           </div>
 
-          {!isNativeApp() && form.alarmEnabled && <AlarmPermissionCard />}
+          {!isNativeApp() && form.alarmEnabled && <NotifyPermissionCard className="mt-3" />}
 
           <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
             {isNativeApp()

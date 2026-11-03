@@ -8,6 +8,7 @@ import { isNativeApp, scheduleHabitReminders } from '../../../utils/nativeRemind
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { QuickSetupButton } from '../components/QuickSetupButton';
+import { NotifyPermissionCard } from '../components/NotifyPermissionCard';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
 /** Cấu hình hiển thị cho từng nhu cầu — thêm nhu cầu mới chỉ cần thêm một mục ở đây. */
@@ -196,6 +197,8 @@ export function HabitSettingsPage({ kind }) {
                 ))}
               </select>
             </label>
+
+            {!isNativeApp() && form.enabled && <NotifyPermissionCard className="mt-2.5" />}
           </section>
 
           <section className="order-1 min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">

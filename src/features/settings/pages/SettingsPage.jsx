@@ -10,6 +10,7 @@ import { askNotificationPermission, notificationState, subscribePush } from '../
 import { isNativeApp, scheduleNativeReminders } from '../../../utils/nativeReminders';
 import { cutoutFileFromFile } from '../../../utils/cutout';
 import { SettingsTabs } from '../components/SettingsTabs';
+import { NotifyPermissionCard } from '../components/NotifyPermissionCard';
 import { useToast } from '../../../components/Toast';
 /** Tiêu đề mục gọn: icon trong ô màu + tên, không kèm đoạn mô tả dài. */
 function SectionHeader({ icon: Icon, title }) {
@@ -327,6 +328,8 @@ export function SettingsPage() {
             <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${reminder.enabled ? 'left-[22px]' : 'left-0.5'}`} />
           </span>
         </button>
+
+        {!isNativeApp() && reminder.enabled && <NotifyPermissionCard className="mt-2.5" />}
 
         {reminder.enabled && (
           <>

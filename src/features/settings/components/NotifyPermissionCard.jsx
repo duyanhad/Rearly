@@ -9,11 +9,12 @@ const isStandalone = () =>
 const isIos = () => typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 /**
- * Bật thông báo báo thức trên web/PWA.
- * iPhone chỉ nhận được thông báo khi app đã "Thêm vào MH chính" và quyền được cấp trong một lần bấm
- * của người dùng — nên phải có nút bấm thật, không thể xin quyền tự động.
+ * Bật thông báo để nhắc đúng giờ trên web/PWA (nước, thuốc, bữa ăn, học, cân nặng, giấc ngủ).
+ *
+ * iPhone chỉ nhận được thông báo khi app đã "Thêm vào MH chính" và quyền được cấp trong một lần
+ * bấm của người dùng — nên phải có nút bấm thật, không thể xin quyền tự động.
  */
-export function AlarmPermissionCard() {
+export function NotifyPermissionCard({ className = '' }) {
   const [state, setState] = useState(() => notificationState());
   const [push, setPush] = useState(() => isPushActive());
   const [busy, setBusy] = useState(false);
@@ -47,13 +48,13 @@ export function AlarmPermissionCard() {
 
   if (needsInstall) {
     return (
-      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5">
+      <div className={`rounded-xl border border-amber-200 bg-amber-50/70 p-2.5 ${className}`}>
         <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-800">
           <Smartphone className="size-3.5" /> Trên iPhone: thêm vào MH chính trước
         </p>
         <p className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-snug text-amber-700">
           Mở Safari → nút <Share className="inline size-3" /> Chia sẻ → “Thêm vào MH chính”, rồi mở Dearly từ
-          icon ngoài màn hình để bật báo thức.
+          icon ngoài màn hình để bật nhắc nhở.
         </p>
       </div>
     );
@@ -63,19 +64,19 @@ export function AlarmPermissionCard() {
 
   return (
     <div
-      className={`mt-3 flex items-center gap-2 rounded-xl border p-2.5 ${
+      className={`flex items-center gap-2 rounded-xl border p-2.5 ${
         ready ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-slate-50'
-      }`}
+      } ${className}`}
     >
       <BellRing className={`size-4 shrink-0 ${ready ? 'text-emerald-600' : 'text-slate-400'}`} />
       <div className="min-w-0 flex-1">
         <p className={`text-[12px] font-semibold ${ready ? 'text-emerald-800' : 'text-slate-700'}`}>
-          {ready ? 'Báo thức kêu cả khi app đóng' : 'Bật thông báo để báo thức kêu'}
+          {ready ? 'Nhắc nhở kêu cả khi app đóng' : 'Bật thông báo để nhắc đúng giờ'}
         </p>
         <p className="text-[10px] leading-snug text-slate-500">
           {ready
-            ? 'Máy này đã nhận được thông báo báo thức. Máy khác thì bật riêng trên máy đó.'
-            : note || 'Không bật thì báo thức chỉ hiện khi bạn đang mở app.'}
+            ? 'Máy này đã nhận được thông báo. Máy khác thì bật riêng trên máy đó.'
+            : note || 'Không bật thì chỉ hiện thông báo khi bạn đang mở app.'}
         </p>
       </div>
       {!ready && (
@@ -92,4 +93,4 @@ export function AlarmPermissionCard() {
   );
 }
 
-export default AlarmPermissionCard;
+export default NotifyPermissionCard;
