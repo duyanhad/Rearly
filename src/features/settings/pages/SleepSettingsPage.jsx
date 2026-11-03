@@ -532,7 +532,7 @@ export function SleepSettingsPage() {
           <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
             {isNativeApp()
               ? 'Bản app: báo thức do hệ điều hành đặt lịch nên vẫn kêu khi tắt app.'
-              : 'Bản web: báo thức chỉ kêu khi app đang mở. Cài APK để chạy nền.'}
+              : 'Bản web/PWA: báo thức do máy chủ đẩy tới, vẫn kêu khi app đóng nếu đã bật thông báo.'}
           </p>
           {alarmInfo && <p className="mt-1 text-[11px] font-medium text-water-700">{alarmInfo}</p>}
         </Section>
