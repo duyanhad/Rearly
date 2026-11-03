@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, Loader2, Moon, Play, Sunrise, X } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
+import { TimeBox } from '../../../components/TimeBox';
 
 /**
  * Bước 1 của giấc ngủ: chốt giờ đi ngủ + chụp ảnh minh chứng (ảnh này chỉ chụp lúc bắt đầu).
@@ -75,28 +76,18 @@ export function SleepStartModal({ onClose, defaultBed = '23:00', defaultWake = '
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <Moon className="size-3.5" /> Đi ngủ
             </span>
-            <input
-              type="time"
-              value={bed}
-              onChange={(e) => setBed(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-            />
+            <TimeBox value={bed} onChange={(e) => setBed(e.target.value)} className="w-full px-3" />
           </label>
           <label className="block">
             <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <Sunrise className="size-3.5" /> Thức dậy
             </span>
-            <input
-              type="time"
-              value={wake}
-              onChange={(e) => setWake(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-            />
+            <TimeBox value={wake} onChange={(e) => setWake(e.target.value)} className="w-full px-3" />
           </label>
         </div>
 

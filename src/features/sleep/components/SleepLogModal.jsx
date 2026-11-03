@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, ImageIcon, Loader2, Moon, Send, Sunrise, X } from 'lucide-react';
 import { errorMessage } from '../../../services/apiClient';
 import { sleepService } from '../../../services/sleepService';
+import { TimeBox } from '../../../components/TimeBox';
 
 const toHours = (m) => `${Math.floor((m || 0) / 60)}h${String((m || 0) % 60).padStart(2, '0')}`;
 
@@ -110,29 +111,24 @@ export function SleepLogModal({ onClose, bed: bedProp = '23:00', bedEditable = t
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <label>
               <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 <Moon className="size-3.5" /> Đi ngủ
               </span>
-              <input
-                type="time"
+              <TimeBox
                 value={bed}
                 onChange={(e) => setBed(e.target.value)}
                 readOnly={!bedEditable}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none read-only:text-slate-500"
+                className="w-full px-3"
+                inputClassName="read-only:text-slate-500"
               />
             </label>
             <label>
               <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 <Sunrise className="size-3.5" /> Thức dậy
               </span>
-              <input
-                type="time"
-                value={wake}
-                onChange={(e) => setWake(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-center text-base font-bold tabular-nums text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
-              />
+              <TimeBox value={wake} onChange={(e) => setWake(e.target.value)} className="w-full px-3" />
             </label>
           </div>
         )}

@@ -23,10 +23,10 @@ import { habitService } from '../../../services/habitService';
 import { sleepService } from '../../../services/sleepService';
 import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders';
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
-import { SettingsTabs } from '../components/SettingsTabs';
-import { FeatureEnableCard } from '../components/FeatureEnableCard';
+import { SettingsTabs } from '../components/SettingsTabs';import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { QuickSetupButton } from '../components/QuickSetupButton';
 import { AlarmPermissionCard } from '../components/AlarmPermissionCard';
+import { TimeBox } from '../../../components/TimeBox';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 import { stopSleepAlarmToday } from '../sleepAlarmStorage';
 
@@ -72,26 +72,6 @@ function Field({ label, hint, children, className = '' }) {
       <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
       {children}
       {hint && <p className="mt-1 text-[11px] text-slate-400">{hint}</p>}
-    </div>
-  );
-}
-
-/**
- * Ô giờ tự vẽ khung: iOS/Android mặc định vẽ <input type="time"> kiểu vuông góc
- * và phủ nền trắng lên, làm 2 ô cạnh nhau trông như dính/ghép. Bo góc + viền do
- * div bên ngoài lo, input chỉ còn chữ.
- */
-function TimeBox({ value, onChange, className = '' }) {
-  return (
-    <div
-      className={`flex items-center justify-center rounded-xl border border-slate-300 bg-white py-2.5 shadow-sm transition focus-within:border-water-400 focus-within:ring-4 focus-within:ring-water-100 ${className || 'w-full px-2'}`}
-    >
-      <input
-        type="time"
-        value={value}
-        onChange={onChange}
-        className="w-full appearance-none border-0 bg-transparent text-center text-base font-bold tabular-nums text-slate-800 outline-none [&::-webkit-calendar-picker-indicator]:opacity-50"
-      />
     </div>
   );
 }
@@ -380,7 +360,8 @@ export function SleepSettingsPage() {
                 <TimeBox
                   value={logForm.bed}
                   onChange={(e) => setLogForm({ ...logForm, bed: e.target.value })}
-                  className="w-32 px-2 py-2 text-sm"
+                  className="w-32 px-2 py-2"
+                  inputClassName="text-sm"
                 />
               </label>
               <label className="min-w-0">
@@ -388,7 +369,8 @@ export function SleepSettingsPage() {
                 <TimeBox
                   value={logForm.wake}
                   onChange={(e) => setLogForm({ ...logForm, wake: e.target.value })}
-                  className="w-32 px-2 py-2 text-sm"
+                  className="w-32 px-2 py-2"
+                  inputClassName="text-sm"
                 />
               </label>
               <span className="rounded-lg bg-water-50 px-2.5 py-1.5 text-sm font-bold tabular-nums text-water-700">

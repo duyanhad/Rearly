@@ -7,6 +7,7 @@ import { habitService } from '../../../services/habitService';
 import { habitLogService } from '../../../services/habitLogService';
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
+import { TimeBox } from '../../../components/TimeBox';
 import { QuickSetupButton } from '../components/QuickSetupButton';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 
@@ -243,11 +244,11 @@ export function WeightSettingsPage() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
                 <span className="text-xs font-medium text-slate-600">Giờ nhắc</span>
-                <input
-                  type="time"
+                <TimeBox
                   value={form.times?.[0] ?? '07:00'}
                   onChange={(e) => setForm({ ...form, times: [e.target.value] })}
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold tabular-nums text-slate-800"
+                  className="w-auto rounded-lg px-2 py-1.5"
+                  inputClassName="text-sm font-semibold"
                 />
               </label>
               <label className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">

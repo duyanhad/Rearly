@@ -5,6 +5,7 @@ import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { habitService } from '../../../services/habitService';
 import { cutoutFileFromFile } from '../../../utils/cutout';
 import { isNativeApp, scheduleSleepAlarms } from '../../../utils/nativeReminders';
+import { TimeBox } from '../../../components/TimeBox';
 
 const GOAL_PRESETS = [420, 450, 480, 510];
 const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
@@ -231,23 +232,23 @@ export function SleepSettingsModal({ onClose }) {
           <Switch checked={form.alarmEnabled} onChange={(v) => setForm({ ...form, alarmEnabled: v })} label="Báo thức" />
         </div>
 
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-3">
           <label>
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Đi ngủ</span>
-            <input
-              type="time"
+            <TimeBox
               value={form.bed}
               onChange={(e) => setForm({ ...form, bed: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-2 py-2 text-center text-sm font-bold tabular-nums text-slate-800"
+              className="w-full px-2 py-2"
+              inputClassName="text-sm"
             />
           </label>
           <label>
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Thức dậy</span>
-            <input
-              type="time"
+            <TimeBox
               value={form.wake}
               onChange={(e) => setForm({ ...form, wake: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-2 py-2 text-center text-sm font-bold tabular-nums text-slate-800"
+              className="w-full px-2 py-2"
+              inputClassName="text-sm"
             />
           </label>
         </div>
