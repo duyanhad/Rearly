@@ -51,7 +51,7 @@ export function EmojiPicker({ onPick, onClose }) {
 
   return (
     <div className="absolute inset-x-0 bottom-full z-50 mb-1.5 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
-      <div className="flex items-center gap-1.5 border-b border-slate-100 px-2 py-1.5 focus-within:bg-slate-50">
+      <div className="flex items-center gap-1.5 border-b border-slate-100 px-2 py-1.5 focus-within:bg-slate-50 focus-within:ring-2 focus-within:ring-water-300">
         <Search className="size-3.5 text-slate-400" />
         <input
           autoFocus
@@ -61,7 +61,8 @@ export function EmojiPicker({ onPick, onClose }) {
             if (e.key === 'Enter') e.preventDefault();
           }}
           placeholder="Tìm emoji…"
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none focus-visible:outline-none"
+          style={{ outline: 'none' }}
+          className="min-w-0 flex-1 bg-transparent text-sm"
         />
         <button type="button" onClick={onClose} className="rounded px-1 text-xs text-slate-400 hover:text-slate-600" aria-label="Đóng bảng emoji">
           ✕
