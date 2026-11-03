@@ -154,6 +154,30 @@ export function RealtimeBridge() {
     connection.on('ReceiveProof', onProof);
     connection.on('ReceiveDeduct', onDeduct);
     connection.on('ReceiveReminder', onReminder);
+
+    // Báo thức thức dậy do server đẩy (app đóng vẫn nhận qua web push).
+    const onSleepAlarm = (payload) => {
+      vibrate('normal');
+      playChime('demon');
+      void showSystemNotification(payload?.title ?? '⏰ Báo thức Dearly', payload?.body ?? 'Dậy thôi!', 'normal', {
+        force: true,
+        tag: 'dearly-sleep-alarm',
+      });
+      window.dispatchEvent(new CustomEvent('dearly:sleep-alarm', { detail: payload }));
+    };
+
+    // Đã ngủ đủ số phút dự định: nhắc một lần, người dùng tự tắt.
+    const onSleepFull = (payload) => {
+      toast.show(payload?.title ?? '🌙 Đã ngủ đủ giấc', payload?.body ?? '');
+      vibrate('gentle');
+      void showSystemNotification(payload?.title ?? '🌙 Đã ngủ đủ giấc', payload?.body ?? '', 'normal', {
+        tag: 'dearly-sleep-full',
+      });
+      window.dispatchEvent(new CustomEvent('dearly:sleep-full', { detail: payload }));
+    };
+
+    connection.on('ReceiveSleepAlarm', onSleepAlarm);
+    connection.on('ReceiveSleepFull', onSleepFull);
     connection.on('ReceiveMessage', onMessage);
     connection.on('ReceiveReaction', onReaction);
     connection.on('ReceiveMessageUpdate', onMessageUpdate);
@@ -164,6 +188,8 @@ export function RealtimeBridge() {
       connection.off('ReceiveProof', onProof);
       connection.off('ReceiveDeduct', onDeduct);
       connection.off('ReceiveReminder', onReminder);
+      connection.off('ReceiveSleepAlarm', onSleepAlarm);
+      connection.off('ReceiveSleepFull', onSleepFull);
       connection.off('ReceiveMessage', onMessage);
       connection.off('ReceiveReaction', onReaction);
       connection.off('ReceiveMessageUpdate', onMessageUpdate);

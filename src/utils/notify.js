@@ -80,9 +80,12 @@ export async function subscribePush() {
   }
 }
 
-/** Hiện thông báo hệ thống ngay tại chỗ (dùng khi chưa có Web Push). */
-export async function showSystemNotification(title, body, style = 'normal') {
-  if (pushActive || notificationState() !== 'granted') return;
+/**
+ * Hiện thông báo hệ thống ngay tại chỗ.
+ * @param {object} [options] `force: true` = hiện kể cả khi đã có Web Push (báo thức phải chắc chắn kêu).
+ */
+export async function showSystemNotification(title, body, style = 'normal', { force = false, tag = 'drinkwater-reminder' } = {}) {
+  if ((pushActive && !force) || notificationState() !== 'granted') return;
   try {
     const registration = (await navigator.serviceWorker?.getRegistration()) ?? null;
     if (registration?.showNotification) {
@@ -90,9 +93,9 @@ export async function showSystemNotification(title, body, style = 'normal') {
         body,
         icon: '/icon-192.png',
         badge: '/favicon.svg',
-        tag: 'drinkwater-reminder',
+        tag,
         renotify: true,
-        requireInteraction: style === 'demon',
+        requireInteraction: style === 'demon' || force,
         vibrate: style === 'demon' ? [600, 200, 600, 200, 900] : [300, 150, 300],
       });
       return;

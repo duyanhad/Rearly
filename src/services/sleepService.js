@@ -17,6 +17,8 @@ export const sleepService = {
   review: (id, { approve, reason }) => api.post(`/api/sleep/${id}/review`, { approve, reason }),
   /** Tắt nhắc "sắp tới giờ đi ngủ" cho hôm nay. */
   dismissReminder: () => api.post('/api/sleep/reminder/dismiss'),
+  /** Tắt báo thức thức dậy cho hôm nay (server thôi đẩy thông báo). */
+  dismissAlarm: () => api.post('/api/sleep/alarm/dismiss'),
 };
 
 export default sleepService;

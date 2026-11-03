@@ -33,6 +33,8 @@ export function SleepAlarmOverlay() {
   const close = useCallback(() => {
     setRinging(false);
     stopSleepAlarmToday('dismissed');
+    // Báo server thôi đẩy thông báo hôm nay (app đóng vẫn kêu nếu không gọi API này).
+    void sleepService.dismissAlarm().catch(() => {});
   }, []);
 
   // ---- Nhắc TRƯỚC giờ đi ngủ (vd. trước 10 phút) ----
@@ -127,9 +129,12 @@ export function SleepAlarmOverlay() {
       if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
       const ok = await askNotificationPermission();
       if (ok) {
-        showSystemNotification(
+        // force: kể cả khi đã đăng ký Web Push vẫn hiện, báo thức không được im lặng.
+        void showSystemNotification(
           '⏰ Báo thức Dearly',
           `Vòng ${roundIndex}/${rounds} · lần ${perRoundIndex}/${perRound} — dậy thôi!`,
+          'normal',
+          { force: true, tag: 'dearly-sleep-alarm' },
         );
       }
     };
@@ -158,7 +163,58 @@ export function SleepAlarmOverlay() {
     return () => window.removeEventListener('dearly:sleep-alarm-stop', handler);
   }, []);
 
-  if (!ringing && !prebed) return null;
+  // Server đẩy báo thức (app đang mở): hiện màn hình kêu ngay cả khi đồng hồ máy lệch.
+  useEffect(() => {
+    const onAlarm = (event) => {
+      if (isSleepAlarmStoppedToday()) return;
+      setPrebed(null);
+      setRinging(true);
+      const detail = event?.detail ?? {};
+      if (detail.callIndex) setCall(Math.max(1, (detail.roundIndex - 1) * (detail.perRound ?? 1) + detail.callIndex));
+      if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
+    };
+    window.addEventListener('dearly:sleep-alarm', onAlarm);
+    return () => window.removeEventListener('dearly:sleep-alarm', onAlarm);
+  }, []);
+
+  // Ngủ đủ số phút dự định → thẻ báo để người dùng tắt (báo thức sáng vẫn giữ nguyên).
+  const [enough, setEnough] = useState(null);
+  useEffect(() => {
+    const onEnough = (event) => setEnough(event?.detail ?? {});
+    window.addEventListener('dearly:sleep-full', onEnough);
+    return () => window.removeEventListener('dearly:sleep-full', onEnough);
+  }, []);
+
+  if (!ringing && !prebed && !enough) return null;
+
+  if (!ringing && !prebed && enough) {
+    const planned = Number(enough.plannedMinutes) || 0;
+    const label = planned >= 60 ? `${Math.floor(planned / 60)} giờ${planned % 60 ? ` ${planned % 60} phút` : ''}` : `${planned} phút`;
+    return (
+      <div className="fixed inset-x-3 bottom-24 z-[95] mx-auto max-w-sm rounded-2xl border border-emerald-200 bg-white p-3 shadow-xl sm:inset-x-auto sm:right-4">
+        <p className="text-sm font-semibold text-slate-800">🌙 Đã ngủ đủ giấc</p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Bạn đã ngủ đủ {label}. Báo thức buổi sáng vẫn kêu theo giờ đã đặt.
+        </p>
+        <div className="mt-2 flex gap-2">
+          <Link
+            to="/?view=sleep"
+            onClick={() => setEnough(null)}
+            className="flex-1 rounded-xl bg-emerald-600 py-2 text-center text-xs font-semibold text-white"
+          >
+            Ghi lại giấc ngủ
+          </Link>
+          <button
+            type="button"
+            onClick={() => setEnough(null)}
+            className="flex-1 rounded-xl bg-slate-100 py-2 text-xs font-semibold text-slate-600"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Màn hình nhắc trước giờ ngủ (ưu tiên hiện khi chưa tới giờ báo thức dậy).
   if (!ringing && prebed) {
