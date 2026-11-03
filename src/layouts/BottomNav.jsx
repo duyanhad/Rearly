@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Camera, Home, MessageCircle, Mic, Plus, Settings, ShieldCheck, Users, X } from 'lucide-react';
+import { CalendarDays, Camera, ClipboardList, Home, Mic, Plus, Settings, ShieldCheck, Users, X } from 'lucide-react';
 import { RadialMenu } from './RadialMenu';
 import { m } from 'framer-motion';
 import { QuickReportSheet } from '../components/QuickReportSheet';
@@ -73,11 +73,11 @@ export function BottomNav() {
       navigate('/partner');
     }
   }, {
-    label: 'Chat',
-    icon: MessageCircle,
+    label: 'Nhiệm vụ',
+    icon: ClipboardList,
     onClick: () => {
       setMenuOpen(false);
-      navigate('/chat');
+      navigate('/duties');
     }
   }];
   return <>

@@ -1,0 +1,38 @@
+import api, { mediaUrl } from './apiClient';
+
+/**
+ * Nhiệm vụ partner giao nhau. Tệp đính kèm gửi dạng multipart: `files` (ảnh hoặc ghi âm),
+ * kèm `text` là tin nhắn chữ. Người dùng có thể chọn nhiều loại cùng lúc.
+ */
+export const dutyService = {
+  list: (box = 'mine') => api.get('/api/duties', { params: { box } }),
+  detail: (id) => api.get(`/api/duties/${id}`),
+
+  create: ({ title, note, dueAtUtc, text, files, voiceDurationMs }) => {
+    const form = new FormData();
+    form.append('title', title);
+    form.append('note', note ?? '');
+    form.append('dueAtUtc', new Date(dueAtUtc).toISOString());
+    if (text) form.append('text', text);
+    if (voiceDurationMs) form.append('voiceDurationMs', String(voiceDurationMs));
+    (files ?? []).forEach((file) => form.append('files', file));
+    return api.post('/api/duties', form);
+  },
+
+  update: (id, payload) => api.put(`/api/duties/${id}`, payload),
+  remove: (id) => api.delete(`/api/duties/${id}`),
+
+  report: ({ id, note, text, files, voiceDurationMs }) => {
+    const form = new FormData();
+    if (note) form.append('note', note);
+    if (text) form.append('text', text);
+    if (voiceDurationMs) form.append('voiceDurationMs', String(voiceDurationMs));
+    (files ?? []).forEach((file) => form.append('files', file));
+    return api.post(`/api/duties/${id}/report`, form);
+  },
+
+  review: (id, { approve, note }) => api.post(`/api/duties/${id}/review`, { approve, note: note ?? '' }),
+  mediaUrl: (url) => mediaUrl(url),
+};
+
+export default dutyService;

@@ -191,6 +191,18 @@ export function RealtimeBridge() {
       void queryClient.invalidateQueries({ queryKey: ['habit-logs'] });
     };
     connection.on('ReceiveHabitReminder', onHabitReminder);
+
+    // Nhiệm vụ partnership: thông báo mọi bước cho cả hai bên.
+    const onDuty = (payload) => {
+      const title = payload?.title ?? '📋 Nhiệm vụ';
+      const body = payload?.body ?? '';
+      toast.show(title, body);
+      playChime('normal');
+      vibrate('normal');
+      void showSystemNotification(title, body, 'normal', { force: true, tag: 'dearly-duty' });
+      void queryClient.invalidateQueries({ queryKey: ['duties'] });
+    };
+    connection.on('ReceiveDuty', onDuty);
     connection.on('ReceiveMessage', onMessage);
     connection.on('ReceiveReaction', onReaction);
     connection.on('ReceiveMessageUpdate', onMessageUpdate);
@@ -204,6 +216,7 @@ export function RealtimeBridge() {
       connection.off('ReceiveSleepAlarm', onSleepAlarm);
       connection.off('ReceiveSleepFull', onSleepFull);
       connection.off('ReceiveHabitReminder', onHabitReminder);
+      connection.off('ReceiveDuty', onDuty);
       connection.off('ReceiveMessage', onMessage);
       connection.off('ReceiveReaction', onReaction);
       connection.off('ReceiveMessageUpdate', onMessageUpdate);
