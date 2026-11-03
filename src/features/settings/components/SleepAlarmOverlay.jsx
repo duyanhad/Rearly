@@ -185,6 +185,31 @@ export function SleepAlarmOverlay() {
     return () => window.removeEventListener('dearly:sleep-full', onEnough);
   }, []);
 
+  // Mở app muộn (sau khi server đã báo) vẫn thấy thẻ: tự kiểm tra giấc đang ngủ.
+  useEffect(() => {
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data } = await sleepService.summary();
+        const running = (data?.logs ?? []).find((l) => l.status === 'sleeping' && l.startedAtUtc);
+        if (!running) return;
+        const planned = Number(running.plannedMinutes) || 0;
+        const slept = (Date.now() - new Date(running.startedAtUtc).getTime()) / 60000;
+        if (alive && planned > 0 && slept >= planned) {
+          setEnough((prev) => prev ?? { plannedMinutes: planned });
+        }
+      } catch {
+        /* mất mạng thì thôi */
+      }
+    };
+    void check();
+    const id = setInterval(check, 5 * 60_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
+
   if (!ringing && !prebed && !enough) return null;
 
   if (!ringing && !prebed && enough) {
