@@ -45,7 +45,7 @@ export function AlarmPermissionCard() {
 
   if (state === 'unsupported') return null;
 
-  if (!needsInstall) {
+  if (needsInstall) {
     return (
       <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5">
         <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-800">
