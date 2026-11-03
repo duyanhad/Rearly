@@ -26,6 +26,7 @@ import { askNotificationPermission, showSystemNotification } from '../../../util
 import { SettingsTabs } from '../components/SettingsTabs';
 import { FeatureEnableCard } from '../components/FeatureEnableCard';
 import { QuickSetupButton } from '../components/QuickSetupButton';
+import { AlarmPermissionCard } from '../components/AlarmPermissionCard';
 import { HabitImageCard } from '../../habits/components/HabitImageCard';
 import { stopSleepAlarmToday } from '../sleepAlarmStorage';
 
@@ -499,8 +500,7 @@ export function SleepSettingsPage() {
           )}
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <Field label="Nhắc trước khi ngủ">
-              <select
+            <Field label="Nhắc trước khi ngủ">              <select
                 value={form.remindBeforeMin}
                 onChange={(e) => setForm({ ...form, remindBeforeMin: Number(e.target.value) })}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-2 py-2 text-sm font-semibold text-slate-800 focus:border-water-400 focus:bg-white focus:outline-none"
@@ -526,6 +526,8 @@ export function SleepSettingsPage() {
               </select>
             </Field>
           </div>
+
+          {!isNativeApp() && form.alarmEnabled && <AlarmPermissionCard />}
 
           <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
             {isNativeApp()
