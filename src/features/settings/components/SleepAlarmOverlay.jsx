@@ -7,6 +7,7 @@ import { sleepService } from '../../../services/sleepService';
 import { askNotificationPermission, showSystemNotification } from '../../../utils/notify';
 
 import { isSleepAlarmStoppedToday, isSleepReminderStoppedToday, stopSleepAlarmToday, stopSleepReminderToday } from '../sleepAlarmStorage';
+import { cancelNativeSleepAlarms, listenNativeAlarmTap } from '../../../utils/nativeReminders';
 
 /**
  * Màn hình báo thức ngủ: kêu theo "số lần mỗi vòng × số vòng" của chế độ đã chọn.
@@ -35,6 +36,8 @@ export function SleepAlarmOverlay() {
     stopSleepAlarmToday('dismissed');
     // Báo server thôi đẩy thông báo hôm nay (app đóng vẫn kêu nếu không gọi API này).
     void sleepService.dismissAlarm().catch(() => {});
+    // Bản APK: huỷ các lần kêu còn hẹn sẵn của đêm nay.
+    void cancelNativeSleepAlarms().catch(() => {});
   }, []);
 
   // ---- Nhắc TRƯỚC giờ đi ngủ (vd. trước 10 phút) ----
@@ -175,6 +178,20 @@ export function SleepAlarmOverlay() {
     };
     window.addEventListener('dearly:sleep-alarm', onAlarm);
     return () => window.removeEventListener('dearly:sleep-alarm', onAlarm);
+  }, []);
+
+  // Bản APK: bấm vào thông báo báo thức cũng mở màn hình kêu.
+  useEffect(() => {
+    let off = () => {};
+    let alive = true;
+    void listenNativeAlarmTap().then((fn) => {
+      if (alive) off = fn;
+      else fn?.();
+    });
+    return () => {
+      alive = false;
+      off?.();
+    };
   }, []);
 
   // Ngủ đủ số phút dự định → thẻ báo để người dùng tắt (báo thức sáng vẫn giữ nguyên).
