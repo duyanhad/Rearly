@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardList, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { socialService } from '../../../services/socialService';
 import { DutySheet, DutyRow, useDuties } from './DutySheet';
 
@@ -17,7 +18,22 @@ export function DutyTodayCard() {
     staleTime: 60_000,
   });
 
-  if (!myPartner) return null;
+  if (!myPartner) {
+    return (
+      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+        <Link to="/partner" className="flex items-center gap-2">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200">
+            <ClipboardList className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-slate-800">Nhiệm vụ</p>
+            <p className="truncate text-[11px] text-slate-500">Chưa có partner — vào Kênh partner để mời một người.</p>
+          </div>
+          <ChevronRight className="size-4 shrink-0 text-slate-400" />
+        </Link>
+      </section>
+    );
+  }
 
   // Việc cần xử lý lên trước: chưa nhận việc, chưa báo cáo, hoặc chờ mình duyệt.
   const pendingAccept = mine.filter((d) => d.needsAccept);

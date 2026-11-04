@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { m } from 'framer-motion';
-import { LayoutDashboard, CalendarDays, Users, Rss, Shield, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Users, Rss, Shield, ShieldCheck, ClipboardList } from 'lucide-react';
 import { socialService } from '../services/socialService';
 import { useAuth } from '../context/AuthProvider';
 import { Avatar } from '../components/Avatar';
 import { NotificationBell } from '../features/social/components/NotificationBell';
 import { BottomNav } from './BottomNav';
+import { DutySheet } from '../features/duties/components/DutySheet';
 import { InstallHint } from '../components/InstallHint';
 import { ChatBubble } from '../features/chat/components/ChatBubble';
 import { AppBadge } from '../components/AppBadge';
@@ -34,6 +35,7 @@ export function AppLayout() {
   const location = useLocation();
   // Cuộn xuống một chút thì topbar nổi lên (đổ bóng) cho tách khỏi nội dung.
   const [scrolled, setScrolled] = useState(false);
+  const [dutyOpen, setDutyOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6);
     onScroll();
@@ -108,6 +110,11 @@ export function AppLayout() {
                     {badges['/partner']}
                   </span>}
               </Link>}
+            {/* Máy tính không có menu "+" ở đáy → mở nhiệm vụ bằng mục này. */}
+            <button type="button" onClick={() => setDutyOpen(true)} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold whitespace-nowrap text-slate-600 transition-colors hover:bg-white hover:text-water-700">
+              <ClipboardList className="size-4" />
+              Nhiệm vụ
+            </button>
             {user?.role === 'Admin' && <Link to="/admin" className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold whitespace-nowrap text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700">
                 <Shield className="size-4" />
                 Admin
@@ -159,5 +166,6 @@ export function AppLayout() {
       <SleepAlarmOverlay />
       <HabitAlarmOverlay />
       <VoiceNoteOverlay />
+      {dutyOpen && <DutySheet onClose={() => setDutyOpen(false)} />}
     </div>;
 }
