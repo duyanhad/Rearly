@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BellRing, Check, X } from 'lucide-react';
+import { BellRing, Check, Volume2, VolumeX, X } from 'lucide-react';
 import { notificationService } from '../../../services/notificationService';
 import { nudgeVideoService } from '../../../services/nudgeVideoService';
 
@@ -26,6 +26,22 @@ const markSeen = (id) => {
 export function NudgeVideoOverlay() {
   const qc = useQueryClient();
   const [current, setCurrent] = useState(null);
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(false);
+
+  // Có tiếng: thử phát kèm âm thanh trước, trình duyệt chặn thì tạm tắt tiếng + hiện nút bật.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !current) return;
+    v.muted = false;
+    v.play()
+      .then(() => setMuted(false))
+      .catch(() => {
+        v.muted = true;
+        setMuted(true);
+        void v.play().catch(() => {});
+      });
+  }, [current]);
 
   // Mở app: tìm nhắc kèm video chưa đọc, chưa từng phát.
   const { data: notifications = [] } = useQuery({
@@ -74,24 +90,39 @@ export function NudgeVideoOverlay() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm overflow-hidden rounded-3xl bg-cream-50 shadow-2xl"
+        className="w-full max-w-md overflow-hidden rounded-3xl bg-cream-50 shadow-2xl"
       >
         <div className="relative">
           <video
+            ref={videoRef}
             src={nudgeVideoService.url(current.videoUrl)}
-            className="aspect-[4/3] w-full bg-slate-900 object-cover"
+            className="max-h-[62vh] w-full bg-slate-900 object-cover"
             autoPlay
             loop
-            muted
             playsInline
           />
           <button
             type="button"
             onClick={close}
             aria-label="Đóng"
-            className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-slate-900/50 text-white"
+            className="absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-slate-900/50 text-white"
           >
             <X className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const v = videoRef.current;
+              if (!v) return;
+              v.muted = !v.muted;
+              setMuted(v.muted);
+              if (!v.muted) void v.play().catch(() => {});
+            }}
+            aria-label={muted ? 'Bật tiếng' : 'Tắt tiếng'}
+            className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-slate-900/55 px-2.5 py-1.5 text-[11px] font-semibold text-white backdrop-blur"
+          >
+            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+            {muted ? 'Bật tiếng' : 'Tắt tiếng'}
           </button>
         </div>
 

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BellRing, Send, X } from 'lucide-react';
+import { BellRing, Send, Volume2, VolumeX, X } from 'lucide-react';
 import { nudgeVideoService } from '../../../services/nudgeVideoService';
 
 // Chọn nhắc nhu cầu nào (kèm lời nhắn) — dùng chung cho chat và trang Bạn/Partner.
@@ -17,6 +17,8 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
   const [kind, setKind] = useState('water');
   const [message, setMessage] = useState('');
   const [withVideo, setWithVideo] = useState(false);
+  const previewRef = useRef(null);
+  const [previewMuted, setPreviewMuted] = useState(true);
 
   const { data: videos = [] } = useQuery({
     queryKey: ['nudge-videos'],
@@ -80,18 +82,39 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
 
         {preview && (
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <video
+                ref={previewRef}
                 src={nudgeVideoService.url(preview)}
-                className={`size-14 shrink-0 rounded-lg bg-slate-900 object-cover ${withVideo ? '' : 'opacity-40'}`}
+                className={`w-full rounded-lg bg-slate-900 object-cover transition ${withVideo ? '' : 'opacity-50'}`}
+                style={{ maxHeight: '32vh' }}
                 autoPlay
                 loop
                 muted
                 playsInline
               />
+              <button
+                type="button"
+                onClick={() => {
+                  const v = previewRef.current;
+                  if (!v) return;
+                  v.muted = !v.muted;
+                  setPreviewMuted(v.muted);
+                  if (!v.muted) void v.play().catch(() => {});
+                }}
+                aria-label={previewMuted ? 'Bật tiếng' : 'Tắt tiếng'}
+                className="absolute bottom-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+              >
+                {previewMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
+            </div>
+
+            <div className="mt-2 flex items-center gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-[12px] font-semibold text-slate-800">Kèm video ngắn</p>
-                <p className="text-[11px] text-slate-500">Video của nhu cầu đang chọn, gửi kèm khi người kia mở app.</p>
+                <p className="text-[11px] text-slate-500">
+                  {withVideo ? 'Sẽ gửi kèm video này' : 'Không gửi video — chỉ gửi lời nhắc như thường'}
+                </p>
               </div>
               <button
                 type="button"
@@ -106,9 +129,6 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
                 />
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-slate-400">
-              {withVideo ? 'Sẽ gửi kèm video này' : 'Không gửi video — chỉ gửi lời nhắc như thường'}
-            </p>
           </div>
         )}
 
