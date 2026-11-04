@@ -58,14 +58,19 @@ export function AdminNudgeVideos() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-xl font-bold text-slate-900">Video nhắc nhở</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Video ngắn 7–8 giây gửi kèm khi người dùng bấm “Nhắc nhở”. Mỗi nhu cầu có thể có nhiều video.
-        </p>
+      <header className="flex items-start gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-water-50 text-water-700 ring-1 ring-water-100">
+          <Film className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900">Video nhắc nhở</h1>
+          <p className="mt-0.5 text-sm text-slate-500">
+            Video ngắn 7–8 giây gửi kèm khi người dùng bấm “Nhắc nhở”. Mỗi nhu cầu có thể có nhiều video.
+          </p>
+        </div>
       </header>
 
-      <section className="rounded-2xl bg-white p-4 shadow-sm">
+      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={uploadKind}
@@ -95,11 +100,11 @@ export function AdminNudgeVideos() {
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={upload.isPending}
-            className="flex items-center gap-1.5 rounded-xl bg-water-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-xl bg-water-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-water-800 disabled:opacity-60"
           >
             <Upload className="size-4" /> {upload.isPending ? 'Đang tải…' : 'Tải video lên'}
           </button>
-          <span className="text-[11px] text-slate-400">mp4 / webm / gif · tối đa 12 MB</span>
+          <span className="text-[11px] text-slate-400">mp4 / webm / gif · tối đa 12 MB · nên dài 7–8 giây</span>
         </div>
       </section>
 
@@ -109,67 +114,85 @@ export function AdminNudgeVideos() {
         KINDS.map((k) => {
           const list = videos.filter((v) => v.kind === k.id);
           return (
-            <section key={k.id} className="rounded-2xl bg-white p-4 shadow-sm">
+            <section key={k.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="text-base">{k.emoji}</span> {k.label}
+                <span className="grid size-7 place-items-center rounded-lg bg-slate-50 text-base ring-1 ring-slate-100">{k.emoji}</span>
+                {k.label}
                 <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-bold text-slate-500">{list.length}</span>
               </h2>
 
               {list.length === 0 ? (
-                <p className="rounded-xl bg-slate-50 p-3 text-center text-[12px] text-slate-400">
+                <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center text-[12px] text-slate-400">
                   Chưa có video — nhắc nhu cầu này sẽ không gửi kèm video.
                 </p>
               ) : (
-                <ul className="grid gap-2 sm:grid-cols-2">
+                <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                   {list.map((v) => (
                     <li
                       key={v.id}
-                      className={`flex items-center gap-2 rounded-xl p-2 ring-1 ${
-                        v.isActive ? 'bg-slate-50 ring-slate-200' : 'bg-slate-100/60 ring-slate-200 opacity-70'
+                      className={`overflow-hidden rounded-2xl ring-1 transition ${
+                        v.isActive ? 'bg-white ring-slate-200' : 'bg-slate-50 ring-slate-200/70'
                       }`}
                     >
-                      {nudgeVideoService.isGif(v.url) ? (
-                        <img
-                          src={nudgeVideoService.url(v.url)}
-                          alt={v.label || 'Video nhắc'}
-                          className="size-16 shrink-0 rounded-lg bg-slate-900 object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={nudgeVideoService.url(v.url)}
-                          className="size-16 shrink-0 rounded-lg bg-slate-900 object-cover"
-                          muted
-                          loop
-                          playsInline
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-1 truncate text-[12px] font-semibold text-slate-800">
-                          <Film className="size-3 shrink-0 text-slate-400" />
-                          {v.label || `Video #${v.id}`}
-                        </p>
-                        <p className="text-[10px] text-slate-400">
-                          {v.isActive ? 'Đang dùng' : 'Đang tắt'} · {new Date(v.createdAt).toLocaleDateString('vi-VN')}
-                        </p>
+                      <div className="relative">
+                        {nudgeVideoService.isGif(v.url) ? (
+                          <img
+                            src={nudgeVideoService.url(v.url)}
+                            alt={v.label || 'Video nhắc'}
+                            className={`aspect-video w-full bg-slate-900 object-cover ${v.isActive ? '' : 'opacity-50'}`}
+                          />
+                        ) : (
+                          <video
+                            src={nudgeVideoService.url(v.url)}
+                            className={`aspect-video w-full bg-slate-900 object-cover ${v.isActive ? '' : 'opacity-50'}`}
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                          />
+                        )}
+                        <span
+                          className={`absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                            v.isActive ? 'bg-emerald-500/90 text-white' : 'bg-slate-900/60 text-white'
+                          }`}
+                        >
+                          {v.isActive ? 'Đang dùng' : 'Đang tắt'}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => toggle.mutate(v.id)}
-                        aria-label={v.isActive ? 'Tắt video này' : 'Bật video này'}
-                        className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-white"
-                      >
-                        {v.isActive ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm('Xoá video này?')) remove.mutate(v.id);
-                        }}
-                        aria-label="Xoá video"
-                        className="grid size-8 shrink-0 place-items-center rounded-lg text-rose-500 hover:bg-rose-50"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
+
+                      <div className="flex items-center gap-1.5 p-2.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="flex items-center gap-1 truncate text-[12px] font-semibold text-slate-800">
+                            <Film className="size-3 shrink-0 text-slate-400" />
+                            {v.label || `Video #${v.id}`}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            {new Date(v.createdAt).toLocaleDateString('vi-VN')}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggle.mutate(v.id)}
+                          aria-label={v.isActive ? 'Tắt video này' : 'Bật video này'}
+                          title={v.isActive ? 'Tắt' : 'Bật'}
+                          className={`grid size-8 shrink-0 place-items-center rounded-lg transition ${
+                            v.isActive ? 'text-slate-500 hover:bg-slate-100' : 'text-emerald-600 hover:bg-emerald-50'
+                          }`}
+                        >
+                          {v.isActive ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Xoá video này?')) remove.mutate(v.id);
+                          }}
+                          aria-label="Xoá video"
+                          title="Xoá"
+                          className="grid size-8 shrink-0 place-items-center rounded-lg text-rose-500 transition hover:bg-rose-50"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
