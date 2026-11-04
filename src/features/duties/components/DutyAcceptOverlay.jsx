@@ -81,7 +81,7 @@ export function DutyAcceptOverlay() {
         <X className="size-5" />
       </button>
 
-      <div className="flex w-full flex-col items-center gap-3 sm:max-w-md sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#4a1520] sm:to-[#2b1a1e] sm:p-6 sm:shadow-2xl">
+      <div className="flex w-full flex-col items-center gap-3 sm:max-w-md sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#4a1520] sm:to-[#2b1a1e] sm:p-6 sm:shadow-2xl sm:ring-1 sm:ring-white/15">
         <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-200">
         <BellRing className="size-3.5" />
         {pending.length > 1 ? `${pending.length} nhiệm vụ đang chờ bạn nhận` : 'Nhiệm vụ đang chờ bạn nhận'}
