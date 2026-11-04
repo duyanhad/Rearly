@@ -8,6 +8,7 @@ import { userService } from '../../../services/userService';
 import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
 import { useAuth } from '../../../context/AuthProvider';
+import { NudgeSheet } from '../components/NudgeSheet';
 
 /** Trang Bạn bè: chỉ danh sách bạn bè + lời mời (bảng tin ở trang riêng). */
 export function FriendsPage() {
@@ -99,9 +100,14 @@ export function FriendsPage() {
     },
     onError: err => setError(errorMessage(err))
   });
+  // Chuông: mở popup chọn nhu cầu + lời nhắn (giống Kênh partner).
+  const [nudgeTarget, setNudgeTarget] = useState(null);
   const nudge = useMutation({
-    mutationFn: async id => socialService.nudge(id),
-    onSuccess: () => toast.show('Đã gửi nhắc nhở', 'Bạn của bạn sẽ nhận thông báo ngay.'),
+    mutationFn: async ({ id, kind, message }) => socialService.nudge(id, { kind, message }),
+    onSuccess: () => {
+      toast.show('Đã gửi nhắc nhở', `${nudgeTarget?.nickname || nudgeTarget?.fullName || 'Bạn'} sẽ nhận thông báo ngay.`);
+      setNudgeTarget(null);
+    },
     onError: err => toast.show('Không gửi được', errorMessage(err))
   });
   return <div className="space-y-4">
@@ -229,7 +235,7 @@ export function FriendsPage() {
                     >
                       <ShieldCheck className="size-3.5" />
                     </button>
-                    <button onClick={() => nudge.mutate(f.id)} disabled={nudge.isPending} className="rounded-lg p-1.5 text-water-600 hover:bg-water-50 disabled:opacity-50" aria-label={`Nhắc ${f.fullName} uống nước`} title="Nhắc uống nước">
+                    <button onClick={() => setNudgeTarget(f)} className="rounded-lg p-1.5 text-water-600 hover:bg-water-50" aria-label={`Nhắc ${f.fullName}`} title="Nhắc nhở">
                       <BellRing className="size-3.5" />
                     </button>
                     <button onClick={() => {
@@ -270,5 +276,13 @@ export function FriendsPage() {
               </li>)}
           </ul>}
       </section>
+      {nudgeTarget && (
+        <NudgeSheet
+          name={nudgeTarget.nickname || nudgeTarget.fullName}
+          sending={nudge.isPending}
+          onClose={() => setNudgeTarget(null)}
+          onSend={({ kind, message }) => nudge.mutate({ id: nudgeTarget.id, kind, message })}
+        />
+      )}
     </div>;
 }
