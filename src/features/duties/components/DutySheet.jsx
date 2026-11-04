@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ClipboardList, Plus, X, XCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Check, ClipboardList, Plus, Users, X, XCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../../../components/Avatar';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { useToast } from '../../../components/Toast';
@@ -9,6 +9,7 @@ import { errorMessage } from '../../../services/apiClient';
 import { dutyService } from '../../../services/dutyService';
 import { socialService } from '../../../services/socialService';
 import { DutyCreateSheet, DutyDetailSheet, DeclineReasonSheet } from './DutySheets';
+import { DutyRespondSheet } from './DutyRespondSheet';
 import { dueCountdown, statusMeta } from './dutyStatus';
 
 const TABS = [
@@ -125,8 +126,9 @@ export function DutyRow({ duty, onOpen }) {
  * tạo nhiệm vụ, mở chi tiết để nhận việc / báo cáo / duyệt.
  */
 export function DutySheet({ onClose, initialTab = 'mine' }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState(initialTab);
-  const [creating, setCreating] = useState(false);
+  const [responding, setResponding] = useState(false);
   const [editing, setEditing] = useState(null);
   const [openId, setOpenId] = useState(null);
 
@@ -138,6 +140,7 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
   const { mine, given, isLoading } = useDuties();
   const list = tab === 'mine' ? mine : given;
   const open = [...mine, ...given].find((d) => d.id === openId) ?? null;
+  const pending = mine.filter((d) => d.needsAccept);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -174,7 +177,10 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
           {myPartner && (
             <button
               type="button"
-              onClick={() => setCreating(true)}
+              onClick={() => {
+                onClose();
+                navigate('/duties/new');
+              }}
               className="flex min-h-9 shrink-0 items-center gap-1 rounded-full bg-water-700 px-2.5 text-[11px] font-bold text-white"
             >
               <Plus className="size-3.5" /> Giao việc
@@ -228,6 +234,21 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+              {pending.length > 1 && tab === 'mine' && (
+                <button
+                  type="button"
+                  onClick={() => setResponding(true)}
+                  className="mb-2 flex w-full items-center gap-2 rounded-2xl bg-water-700 px-3 py-2.5 text-left text-white shadow-sm transition active:scale-[0.99]"
+                >
+                  <Users className="size-4 shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-bold">Chọn nhận việc nào</span>
+                    <span className="block truncate text-[10px] text-water-100">
+                      {pending.length} việc đang chờ · nhận việc này, từ chối việc kia
+                    </span>
+                  </span>
+                </button>
+              )}
               {isLoading ? (
                 <DearlyLoader />
               ) : list.length === 0 ? (
@@ -257,8 +278,8 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
       {open && !editing && (
         <DutyDetailSheet duty={open} onClose={() => setOpenId(null)} onEdit={(d) => setEditing(d)} />
       )}
-      {creating && (
-        <DutyCreateSheet partner={myPartner} onClose={() => setCreating(false)} onSaved={() => setTab('given')} />
+      {responding && pending.length > 0 && (
+        <DutyRespondSheet duties={pending} onClose={() => setResponding(false)} />
       )}
       {editing && (
         <DutyCreateSheet

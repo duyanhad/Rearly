@@ -20,6 +20,7 @@ const FriendProfilePage = lazy(() => import('./features/social/pages/FriendProfi
 const ProfilePage = lazy(() => import('./features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const ChatPage = lazy(() => import('./features/chat/pages/ChatPage').then((m) => ({ default: m.ChatPage })));
 const PartnerPage = lazy(() => import('./features/partner/pages/PartnerPage').then((m) => ({ default: m.PartnerPage })));
+const DutyCreatePage = lazy(() => import('./features/duties/pages/DutyCreatePage').then((m) => ({ default: m.DutyCreatePage })));
 const MascotLabPage = lazy(() => import('./features/mascot/pages/MascotLabPage').then((m) => ({ default: m.MascotLabPage })));
 const VoiceNotePage = lazy(() => import('./features/voice/pages/VoiceNotePage').then((m) => ({ default: m.VoiceNotePage })));
 const AdminLayout = lazy(() => import('./features/admin/layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })));
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/partner" element={<PartnerPage />} />
+          <Route path="/duties/new" element={<DutyCreatePage />} />
           <Route path="/mascot" element={<MascotLabPage />} />
           <Route path="/voice-notes" element={<VoiceNotePage />} />
         </Route>

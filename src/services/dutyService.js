@@ -22,19 +22,35 @@ export const dutyService = {
   },
 
   update: (id, payload) => api.put(`/api/duties/${id}`, payload),
-  /** Giao nhiều nhiệm vụ một lần: dùng chung giờ bắt đầu / nhắc trước / hạn và nội dung kèm. */
-  createMany: ({ titles, note, startsAtUtc, remindBeforeMin, dueAtUtc, text, files, voiceDurationMs }) => {
+  /**
+   * Giao nhiều nhiệm vụ một lần. Mỗi việc có giờ + nội dung riêng; tệp của việc thứ i
+   * đặt tên `files_i` để server biết gắn vào việc nào.
+   * @param {Array<{title,note,startsAtUtc,dueAtUtc,remindBeforeMin,text,voiceDurationMs,files}>} items
+   */
+  createMany: (items) => {
     const form = new FormData();
-    (titles ?? []).forEach((t) => form.append('titles', t));
-    form.append('note', note ?? '');
-    form.append('startsAtUtc', new Date(startsAtUtc).toISOString());
-    form.append('remindBeforeMin', String(remindBeforeMin ?? 10));
-    form.append('dueAtUtc', new Date(dueAtUtc).toISOString());
-    if (text) form.append('text', text);
-    if (voiceDurationMs) form.append('voiceDurationMs', String(voiceDurationMs));
-    (files ?? []).forEach((file) => form.append('files', file));
+    form.append(
+      'items',
+      JSON.stringify(
+        items.map(({ title, note, startsAtUtc, dueAtUtc, remindBeforeMin, text, voiceDurationMs }) => ({
+          title,
+          note: note ?? '',
+          startsAtUtc: new Date(startsAtUtc).toISOString(),
+          dueAtUtc: new Date(dueAtUtc).toISOString(),
+          remindBeforeMin: remindBeforeMin ?? 10,
+          text: text || null,
+          voiceDurationMs: voiceDurationMs || null,
+        })),
+      ),
+    );
+    items.forEach((item, index) => {
+      (item.files ?? []).forEach((file) => form.append(`files_${index}`, file));
+    });
     return api.post('/api/duties/batch', form);
   },
+  /** Người nhận trả lời cả lô: nhận một số việc, từ chối số còn lại (lý do dùng chung). */
+  respond: (accepts, declines, reason) =>
+    api.post('/api/duties/respond', { accepts, declines, reason: reason ?? '' }),
   remove: (id) => api.delete(`/api/duties/${id}`),
   /** Người nhận bấm "đã nhận nhiệm vụ" → thôi kêu lặp. */
   accept: (id) => api.post(`/api/duties/${id}/accept`),

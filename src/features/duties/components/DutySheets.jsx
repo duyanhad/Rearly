@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BellRing, CalendarClock, Check, ClipboardList, Flag, Pencil, Plus, Send, Trash2, X, XCircle } from 'lucide-react';
+import { BellRing, CalendarClock, Check, ClipboardList, Flag, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
@@ -12,7 +12,7 @@ import { dueLabel, statusMeta } from './dutyStatus';
 
 const emptyMedia = { text: '', files: [], voice: null };
 
-const QUICK_REASONS = ['Bận việc đột xuất', 'Không kịp trong giờ này', 'Không phù hợp với mình'];
+export const DUTY_QUICK_REASONS = ['Bận việc đột xuất', 'Không kịp trong giờ này', 'Không phù hợp với mình'];
 
 /**
  * Hộp thoại nhập lý do từ chối nhiệm vụ (thay cho prompt mặc định của trình duyệt).
@@ -44,7 +44,7 @@ export function DeclineReasonSheet({ title, onClose, onConfirm, pending = false 
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {QUICK_REASONS.map((reason) => {
+          {DUTY_QUICK_REASONS.map((reason) => {
             const active = note === reason;
             return (
               <button
@@ -102,7 +102,7 @@ const toLocalInput = (iso) => {
 };
 
 /** Ô chọn ngày-giờ: hiện gọn "HH:mm · dd/MM" và mở bộ chọn gốc khi bấm (tránh chữ tràn như input gốc). */
-function TimeField({ label, hint, value, onChange }) {
+export function TimeField({ label, hint, value, onChange }) {
   const inputRef = useRef(null);
   const label2 = (() => {
     const d = new Date(value);
@@ -152,57 +152,31 @@ function TimeField({ label, hint, value, onChange }) {
 }
 
 /**
- * Tạo nhiệm vụ mới (người giao): tên, mô tả, giờ bắt đầu, nhắc trước, hạn báo cáo và nội dung kèm.
- * `duty` có giá trị = đang sửa nhiệm vụ đã giao (chỉ đổi thông tin, không đổi tệp đính kèm).
+ * Sửa nhiệm vụ đã giao (chỉ người giao, không đổi tệp đính kèm).
+ * Việc giao nhiệm vụ mới nằm ở trang riêng `DutyCreatePage` (mỗi việc có giờ + nội dung riêng).
  */
 export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
   const toast = useToast();
   const qc = useQueryClient();
-  const editing = Boolean(duty);
 
-  const [titles, setTitles] = useState(() => (duty?.title ? [duty.title] : ['']));
+  const [title, setTitle] = useState(duty?.title ?? '');
   const [note, setNote] = useState(duty?.note ?? '');
   const [start, setStart] = useState(() => toLocalInput(duty?.startsAtUtc));
   const [remindBeforeMin, setRemindBeforeMin] = useState(duty?.remindBeforeMin ?? 10);
   const [due, setDue] = useState(() => toLocalInput(duty?.dueAtUtc ?? new Date(Date.now() + 3 * 3600_000).toISOString()));
-  const [media, setMedia] = useState(emptyMedia);
-
-  const filledTitles = titles.map((t) => t.trim()).filter(Boolean);
 
   const save = useMutation({
-    mutationFn: async () => {
-      if (editing) {
-        return dutyService.update(duty.id, {
-          title: filledTitles[0] ?? '',
-          note,
-          startsAtUtc: new Date(start).toISOString(),
-          remindBeforeMin,
-          dueAtUtc: new Date(due).toISOString(),
-        });
-      }
-      const files = [...media.files];
-      if (media.voice) files.push(new File([media.voice.blob], `voice-${Date.now()}.webm`, { type: media.voice.blob.type }));
-      const shared = {
+    mutationFn: () =>
+      dutyService.update(duty.id, {
+        title: title.trim(),
         note,
         startsAtUtc: new Date(start).toISOString(),
         remindBeforeMin,
         dueAtUtc: new Date(due).toISOString(),
-        text: media.text,
-        files,
-        voiceDurationMs: media.voice?.durationMs,
-      };
-      // Nhiều nhiệm vụ → một request lô (tệp chỉ tải lên một lần).
-      return filledTitles.length > 1
-        ? dutyService.createMany({ ...shared, titles: filledTitles })
-        : dutyService.create({ ...shared, title: filledTitles[0] ?? '' });
-    },
+      }),
     onSuccess: async (res) => {
       await qc.invalidateQueries({ queryKey: ['duties'] });
-      const count = editing ? 1 : filledTitles.length;
-      toast.show(
-        editing ? 'Đã cập nhật nhiệm vụ' : count > 1 ? `Đã giao ${count} nhiệm vụ` : 'Đã giao nhiệm vụ',
-        editing ? '' : 'Người kia được báo tới khi bấm nhận.',
-      );
+      toast.show('Đã cập nhật nhiệm vụ');
       onSaved?.(res.data);
       onClose();
     },
@@ -215,16 +189,14 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const disabled = filledTitles.length === 0 || save.isPending;
-  const setTitleAt = (index, value) =>
-    setTitles((prev) => prev.map((t, i) => (i === index ? value : t)));
+  const disabled = !title.trim() || save.isPending;
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={editing ? 'Sửa nhiệm vụ' : 'Giao nhiệm vụ'}
+        aria-label="Sửa nhiệm vụ"
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl"
       >
@@ -233,7 +205,7 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
             <ClipboardList className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900">{editing ? 'Sửa nhiệm vụ' : 'Giao nhiệm vụ'}</p>
+            <p className="text-sm font-bold text-slate-900">Sửa nhiệm vụ</p>
             <p className="truncate text-[11px] text-slate-500">
               {partner?.fullName ? `Giao cho ${partner.fullName}` : 'Chưa có partner'} · đặt hạn để họ báo cáo
             </p>
@@ -243,65 +215,16 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
           </button>
         </div>
 
-        <div className="block">
-          <span className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <span>Nhiệm vụ {filledTitles.length > 1 ? `(${filledTitles.length})` : ''}</span>
-            <span className="text-[10px] font-medium normal-case text-slate-400">tối đa 10</span>
-          </span>
-
-          {editing ? (
-            <input
-              value={titles[0] ?? ''}
-              onChange={(e) => setTitleAt(0, e.target.value)}
-              maxLength={120}
-              placeholder="Ví dụ: Uống đủ 2 lít nước trước 21:00"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-water-400"
-            />
-          ) : (
-            <div className="space-y-1.5">
-              {titles.map((t, index) => (
-                <div key={index} className="flex items-center gap-1.5">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-water-50 text-[10px] font-bold text-water-700">
-                    {index + 1}
-                  </span>
-                  <input
-                    value={t}
-                    onChange={(e) => setTitleAt(index, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && index === titles.length - 1 && titles.length < 10) {
-                        e.preventDefault();
-                        setTitles((prev) => [...prev, '']);
-                      }
-                    }}
-                    maxLength={120}
-                    placeholder={index === 0 ? 'Ví dụ: Uống đủ 2 lít nước trước 21:00' : 'Nhiệm vụ tiếp theo…'}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-water-400"
-                  />
-                  {titles.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setTitles((prev) => prev.filter((_, i) => i !== index))}
-                      aria-label={`Bỏ nhiệm vụ ${index + 1}`}
-                      className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              {titles.length < 10 && (
-                <button
-                  type="button"
-                  onClick={() => setTitles((prev) => [...prev, ''])}
-                  className="flex min-h-9 w-full items-center justify-center gap-1 rounded-xl border border-dashed border-water-300 bg-white/60 text-[11px] font-semibold text-water-700 transition hover:bg-water-50"
-                >
-                  <Plus className="size-3.5" /> Thêm nhiệm vụ
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nhiệm vụ</span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={120}
+            placeholder="Ví dụ: Uống đủ 2 lít nước trước 21:00"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-water-400"
+          />
+        </label>
 
         <label className="mt-2 block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Mô tả (không bắt buộc)</span>
@@ -337,12 +260,6 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
           </select>
         </label>
 
-        {!editing && (
-          <div className="mt-2">
-            <DutyMediaPicker value={media} onChange={setMedia} label="Gửi kèm (tuỳ chọn)" />
-          </div>
-        )}
-
         <button
           type="button"
           onClick={() => save.mutate()}
@@ -350,13 +267,7 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
           className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-water-700 py-3 text-sm font-bold text-white disabled:opacity-50"
         >
           <Send className="size-4" />
-          {save.isPending
-            ? 'Đang lưu…'
-            : editing
-              ? 'Lưu thay đổi'
-              : filledTitles.length > 1
-                ? `Giao ${filledTitles.length} nhiệm vụ`
-                : 'Giao nhiệm vụ'}
+          {save.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}
         </button>
       </div>
     </div>
