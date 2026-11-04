@@ -22,13 +22,13 @@ export function DeclineReasonSheet({ title, onClose, onConfirm, pending = false 
   const [note, setNote] = useState('');
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px] sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Từ chối nhiệm vụ"
         onClick={(e) => e.stopPropagation()}
-        className="w-full rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl sm:pb-4"
+        className="w-full rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:max-w-lg sm:rounded-3xl sm:pb-4"
       >
         <div className="flex items-start gap-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-100">
@@ -192,13 +192,13 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
   const disabled = !title.trim() || save.isPending;
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px] sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Sửa nhiệm vụ"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl"
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:max-h-[85vh] sm:max-w-lg sm:rounded-3xl"
       >
         <div className="mb-3 flex items-start gap-2">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-water-50 text-water-700 ring-1 ring-water-100">
@@ -410,13 +410,13 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
   );
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px] sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Nhiệm vụ ${duty.title}`}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl"
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:max-h-[85vh] sm:max-w-lg sm:rounded-3xl"
       >
         <div className="mb-2 flex items-start gap-2">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${meta.tone}`}>{meta.label}</span>

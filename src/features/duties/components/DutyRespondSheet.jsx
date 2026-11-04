@@ -42,13 +42,13 @@ export function DutyRespondSheet({ duties, onClose }) {
   const toggle = (id) => setDeclined((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="fixed inset-0 z-[85] flex flex-col justify-end bg-slate-900/45 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-[85] flex flex-col justify-end bg-slate-900/45 backdrop-blur-[2px] sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Chọn nhận nhiệm vụ"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-cream-50 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl sm:pb-4"
+        className="flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-cream-50 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-2xl sm:max-h-[85vh] sm:max-w-lg sm:rounded-3xl sm:pb-4"
       >
         <div className="flex items-start gap-2 px-4 pt-4">
           <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-water-50 text-water-700 ring-1 ring-water-100">
