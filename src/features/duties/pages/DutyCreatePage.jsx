@@ -100,7 +100,7 @@ export function DutyCreatePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg pb-28">
+    <div className="mx-auto w-full max-w-lg pb-6">
       <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-cream-200 bg-cream-50/95 px-3 py-2.5 backdrop-blur">
         <button
           type="button"
@@ -219,25 +219,23 @@ export function DutyCreatePage() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-cream-200 bg-cream-50/95 px-3 py-2.5 pb-[calc(env(safe-area-inset-bottom)+10px)] backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200"
-          >
-            Huỷ
-          </button>
-          <button
-            type="button"
-            onClick={() => save.mutate()}
-            disabled={filled.length === 0 || save.isPending}
-            className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-water-700 text-sm font-bold text-white disabled:opacity-50"
-          >
-            <Send className="size-4" />
-            {save.isPending ? 'Đang gửi…' : filled.length > 1 ? `Giao ${filled.length} nhiệm vụ` : 'Giao nhiệm vụ'}
-          </button>
-        </div>
+      <div className="mt-3 flex items-center gap-2 px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200"
+        >
+          Huỷ
+        </button>
+        <button
+          type="button"
+          onClick={() => save.mutate()}
+          disabled={filled.length === 0 || save.isPending}
+          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-water-700 text-sm font-bold text-white disabled:opacity-50"
+        >
+          <Send className="size-4" />
+          {save.isPending ? 'Đang gửi…' : filled.length > 1 ? `Giao ${filled.length} nhiệm vụ` : 'Giao nhiệm vụ'}
+        </button>
       </div>
     </div>
   );

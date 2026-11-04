@@ -5,6 +5,7 @@ import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
 import { errorMessage } from '../../../services/apiClient';
 import { dutyService } from '../../../services/dutyService';
+import { DutyRespondSheet } from './DutyRespondSheet';
 import { DeclineReasonSheet } from './DutySheets';
 import { dueLabel } from './dutyStatus';
 
@@ -18,6 +19,7 @@ export function DutyAcceptOverlay() {
   const qc = useQueryClient();
   const [dismissed, setDismissed] = useState([]);
   const [declining, setDeclining] = useState(false);
+  const [picking, setPicking] = useState(false);
 
   const { data: mine = [] } = useQuery({
     queryKey: ['duties', 'mine'],
@@ -29,6 +31,7 @@ export function DutyAcceptOverlay() {
 
   const duty =
     mine.find((d) => d.needsAccept && d.status === 'open' && !dismissed.includes(d.id)) ?? null;
+  const pending = mine.filter((d) => d.needsAccept && d.status === 'open');
 
   // Server kêu lại mỗi phút → mở lại màn hình dù người dùng đã đóng trước đó.
   useEffect(() => {
@@ -79,7 +82,8 @@ export function DutyAcceptOverlay() {
       </button>
 
       <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-200">
-        <BellRing className="size-3.5" /> Nhiệm vụ đang chờ bạn nhận
+        <BellRing className="size-3.5" />
+        {pending.length > 1 ? `${pending.length} nhiệm vụ đang chờ bạn nhận` : 'Nhiệm vụ đang chờ bạn nhận'}
       </span>
 
       <Avatar url={duty.assignerAvatar} name={duty.assignerName} size="xl" />
@@ -116,6 +120,15 @@ export function DutyAcceptOverlay() {
         >
           <XCircle className="size-4" /> Từ chối nhiệm vụ
         </button>
+        {pending.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setPicking(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white/10 py-2.5 text-[13px] font-semibold text-cream-50 ring-1 ring-white/20 transition active:scale-[0.99]"
+          >
+            Chọn việc để nhận ({pending.length})
+          </button>
+        )}
       </div>
 
       <p className="max-w-xs text-[11px] text-cream-50/50">
@@ -128,6 +141,16 @@ export function DutyAcceptOverlay() {
           pending={decline.isPending}
           onClose={() => setDeclining(false)}
           onConfirm={(note) => decline.mutate({ id: duty.id, note })}
+        />
+      )}
+
+      {picking && (
+        <DutyRespondSheet
+          duties={pending}
+          onClose={() => {
+            setPicking(false);
+            setDismissed([]);
+          }}
         />
       )}
     </div>
