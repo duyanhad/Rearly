@@ -63,8 +63,10 @@ export function HabitTodayPanel({ kind }) {
     ? slots.filter((s) => logs.some((l) => l.mealSlot === s.id && l.status !== 'rejected')).length
     : 0;
   const litPercent = slots ? Math.round((reportedMain / slots.length) * 100) : percent;
+  // Avatar chỉ phản ứng với bữa chính / ca thuốc — bữa phụ & ăn vặt không làm sáng vật.
+  const eventLogs = slots ? logs.filter((l) => slots.some((s) => s.id === l.mealSlot)) : logs;
   // Avatar bạn tác động khi được cộng, avatar partner tác động khi bị từ chối.
-  const { pour, approve, spill } = useHabitEvents(logs);
+  const { pour, approve, spill } = useHabitEvents(eventLogs);
   const Icon = cfg.icon;
 
   return (

@@ -5,7 +5,7 @@ import { Avatar } from '../../../components/Avatar';
 import { useToast } from '../../../components/Toast';
 import { errorMessage } from '../../../services/apiClient';
 import { dutyService } from '../../../services/dutyService';
-import { DutyRespondSheet } from './DutyRespondSheet';
+import { DutyRespondBody } from './DutyRespondSheet';
 import { DeclineReasonSheet } from './DutySheets';
 import { dueLabel } from './dutyStatus';
 
@@ -19,7 +19,6 @@ export function DutyAcceptOverlay() {
   const qc = useQueryClient();
   const [dismissed, setDismissed] = useState([]);
   const [declining, setDeclining] = useState(false);
-  const [picking, setPicking] = useState(false);
 
   const { data: mine = [] } = useQuery({
     queryKey: ['duties', 'mine'],
@@ -32,6 +31,7 @@ export function DutyAcceptOverlay() {
   const duty =
     mine.find((d) => d.needsAccept && d.status === 'open' && !dismissed.includes(d.id)) ?? null;
   const pending = mine.filter((d) => d.needsAccept && d.status === 'open');
+  const multi = pending.length > 1;
 
   // Server kêu lại mỗi phút → mở lại màn hình dù người dùng đã đóng trước đó.
   useEffect(() => {
@@ -64,10 +64,9 @@ export function DutyAcceptOverlay() {
   });
 
   if (!duty) return null;
-
   return (
     <div
-      className="fixed inset-0 z-[96] flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-[#4a1520]/97 to-[#2b1a1e]/97 p-6 text-center text-cream-50 backdrop-blur sm:bg-slate-900/60 sm:backdrop-blur-sm"
+      className="fixed inset-0 z-[96] flex flex-col items-center justify-center gap-3 overflow-y-auto bg-gradient-to-b from-[#4a1520]/97 to-[#2b1a1e]/97 p-6 text-center text-cream-50 backdrop-blur sm:bg-slate-900/60 sm:backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={`Nhiệm vụ từ ${duty.assignerName}`}
@@ -81,60 +80,68 @@ export function DutyAcceptOverlay() {
         <X className="size-5" />
       </button>
 
-      <div className="flex w-full flex-col items-center gap-3 sm:max-w-md sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#4a1520] sm:to-[#2b1a1e] sm:p-6 sm:shadow-2xl sm:ring-1 sm:ring-white/15">
+      <div className="flex w-full flex-col items-center gap-3 sm:max-h-[86vh] sm:max-w-md sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#4a1520] sm:to-[#2b1a1e] sm:p-6 sm:shadow-2xl sm:ring-1 sm:ring-white/15">
         <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-200">
-        <BellRing className="size-3.5" />
-        {pending.length > 1 ? `${pending.length} nhiệm vụ đang chờ bạn nhận` : 'Nhiệm vụ đang chờ bạn nhận'}
-      </span>
-
-      <Avatar url={duty.assignerAvatar} name={duty.assignerName} size="xl" />
-      <div className="w-full max-w-xs">
-        <p className="text-xs text-cream-50/70">Nhiệm vụ từ</p>
-        <p className="text-2xl font-extrabold">{duty.assignerName}</p>
-        <p className="mt-1 line-clamp-2 text-base font-bold text-cream-50">“{duty.title}”</p>
-        {duty.note && <p className="mt-1 line-clamp-2 text-[11px] text-cream-50/60">{duty.note}</p>}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-cream-50/85">
-          <CalendarClock className="size-3" /> Bắt đầu {dueLabel(duty.startsAtUtc)}
+          <BellRing className="size-3.5" />
+          {multi ? `${pending.length} nhiệm vụ đang chờ bạn nhận` : 'Nhiệm vụ đang chờ bạn nhận'}
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-cream-50/85">
-          <Flag className="size-3" /> Hạn {dueLabel(duty.dueAtUtc)}
-        </span>
-      </div>
 
-      <div className="mt-1 w-full max-w-xs space-y-2">
-        <button
-          type="button"
-          onClick={() => accept.mutate(duty.id)}
-          disabled={accept.isPending}
-          className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-3 text-sm font-bold text-water-700 shadow-lg transition active:scale-[0.99] disabled:opacity-60"
-        >
-          <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeclining(true)}
-          disabled={decline.isPending}
-          className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white/15 py-2.5 text-sm font-semibold text-cream-50 ring-1 ring-white/25 transition active:scale-[0.99] disabled:opacity-60"
-        >
-          <XCircle className="size-4" /> Từ chối nhiệm vụ
-        </button>
-        {pending.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setPicking(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white/10 py-2.5 text-[13px] font-semibold text-cream-50 ring-1 ring-white/20 transition active:scale-[0.99]"
-          >
-            Chọn việc để nhận ({pending.length})
-          </button>
+        {multi ? (
+          <>
+            <div className="flex items-center gap-2">
+              <Avatar url={duty.assignerAvatar} name={duty.assignerName} size="sm" />
+              <p className="text-sm font-semibold text-cream-50">
+                Từ <span className="font-extrabold">{duty.assignerName}</span>
+              </p>
+            </div>
+
+            <div className="flex min-h-0 w-full flex-1 flex-col rounded-2xl bg-cream-50 p-2 text-left text-slate-800 sm:p-3">
+              <DutyRespondBody duties={pending} onDone={() => setDismissed([])} />
+            </div>
+          </>
+        ) : (
+          <>
+            <Avatar url={duty.assignerAvatar} name={duty.assignerName} size="xl" />
+            <div className="w-full max-w-xs">
+              <p className="text-xs text-cream-50/70">Nhiệm vụ từ</p>
+              <p className="text-2xl font-extrabold">{duty.assignerName}</p>
+              <p className="mt-1 line-clamp-2 text-base font-bold text-cream-50">“{duty.title}”</p>
+              {duty.note && <p className="mt-1 line-clamp-2 text-[11px] text-cream-50/60">{duty.note}</p>}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-cream-50/85">
+                <CalendarClock className="size-3" /> Bắt đầu {dueLabel(duty.startsAtUtc)}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-cream-50/85">
+                <Flag className="size-3" /> Hạn {dueLabel(duty.dueAtUtc)}
+              </span>
+            </div>
+
+            <div className="mt-1 w-full max-w-xs space-y-2">
+              <button
+                type="button"
+                onClick={() => accept.mutate(duty.id)}
+                disabled={accept.isPending}
+                className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-3 text-sm font-bold text-water-700 shadow-lg transition active:scale-[0.99] disabled:opacity-60"
+              >
+                <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeclining(true)}
+                disabled={decline.isPending}
+                className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white/15 py-2.5 text-sm font-semibold text-cream-50 ring-1 ring-white/25 transition active:scale-[0.99] disabled:opacity-60"
+              >
+                <XCircle className="size-4" /> Từ chối nhiệm vụ
+              </button>
+            </div>
+
+            <p className="max-w-xs text-[11px] text-cream-50/50">
+              Màn hình này sẽ kêu lại mỗi phút cho tới khi bạn nhận hoặc từ chối.
+            </p>
+          </>
         )}
-      </div>
-
-      <p className="max-w-xs text-[11px] text-cream-50/50">
-        Màn hình này sẽ kêu lại mỗi phút cho tới khi bạn nhận hoặc từ chối.
-      </p>
       </div>
 
       {declining && (
@@ -143,16 +150,6 @@ export function DutyAcceptOverlay() {
           pending={decline.isPending}
           onClose={() => setDeclining(false)}
           onConfirm={(note) => decline.mutate({ id: duty.id, note })}
-        />
-      )}
-
-      {picking && (
-        <DutyRespondSheet
-          duties={pending}
-          onClose={() => {
-            setPicking(false);
-            setDismissed([]);
-          }}
         />
       )}
     </div>
