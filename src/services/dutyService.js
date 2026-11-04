@@ -25,6 +25,10 @@ export const dutyService = {
   remove: (id) => api.delete(`/api/duties/${id}`),
   /** Người nhận bấm "đã nhận nhiệm vụ" → thôi kêu lặp. */
   accept: (id) => api.post(`/api/duties/${id}/accept`),
+  /** Người nhận từ chối nhiệm vụ (kèm lý do không bắt buộc). */
+  decline: (id, note) => api.post(`/api/duties/${id}/decline`, { note: note ?? '' }),
+  /** Thu hồi báo cáo vừa gửi để sửa lại (người giao thôi thấy bản đó). */
+  withdraw: (id) => api.post(`/api/duties/${id}/withdraw`),
 
   report: ({ id, note, text, files, voiceDurationMs }) => {
     const form = new FormData();

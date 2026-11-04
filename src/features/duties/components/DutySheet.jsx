@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Plus, X } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, ClipboardList, Plus, X, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar } from '../../../components/Avatar';
 import { DearlyLoader } from '../../../components/DearlyLoader';
+import { useToast } from '../../../components/Toast';
+import { errorMessage } from '../../../services/apiClient';
 import { dutyService } from '../../../services/dutyService';
 import { socialService } from '../../../services/socialService';
 import { DutyCreateSheet, DutyDetailSheet } from './DutySheets';
@@ -34,29 +36,78 @@ export function useDuties() {
 }
 
 export function DutyRow({ duty, onOpen }) {
+  const toast = useToast();
+  const qc = useQueryClient();
   const meta = statusMeta(duty);
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ['duties'] });
+  const accept = useMutation({
+    mutationFn: () => dutyService.accept(duty.id),
+    onSuccess: async () => {
+      await refresh();
+      toast.show('Đã nhận nhiệm vụ', 'Hệ thống thôi nhắc và báo cho người giao.');
+    },
+    onError: (err) => toast.show('Chưa nhận được', errorMessage(err)),
+  });
+  const decline = useMutation({
+    mutationFn: (note) => dutyService.decline(duty.id, note),
+    onSuccess: async () => {
+      await refresh();
+      toast.show('Đã từ chối nhiệm vụ', 'Người giao sẽ nhận thông báo.');
+    },
+    onError: (err) => toast.show('Chưa từ chối được', errorMessage(err)),
+  });
+
+  const quick = duty.needsAccept && !duty.mine;
+
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(duty.id)}
-      className="flex w-full items-start gap-2.5 rounded-2xl bg-white p-3 text-left shadow-sm ring-1 ring-slate-100 transition active:scale-[0.99]"
-    >
-      <Avatar
-        url={duty.mine ? duty.assigneeAvatar : duty.assignerAvatar}
-        name={duty.mine ? duty.assigneeName : duty.assignerName}
-        size="sm"
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-1.5">
-          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{duty.title}</p>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${meta.tone}`}>{meta.label}</span>
+    <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100">
+      <button
+        type="button"
+        onClick={() => onOpen(duty.id)}
+        className="flex w-full items-start gap-2.5 text-left transition active:scale-[0.99]"
+      >
+        <Avatar
+          url={duty.mine ? duty.assigneeAvatar : duty.assignerAvatar}
+          name={duty.mine ? duty.assigneeName : duty.assignerName}
+          size="sm"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-1.5">
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{duty.title}</p>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${meta.tone}`}>{meta.label}</span>
+          </div>
+          <p className="mt-0.5 truncate text-[11px] text-slate-500">
+            {duty.mine ? `Giao cho ${duty.assigneeName}` : `Từ ${duty.assignerName}`} ·{' '}
+            {duty.status === 'approved' || duty.status === 'declined' ? 'đã xong' : dueCountdown(duty.dueAtUtc)}
+          </p>
         </div>
-        <p className="mt-0.5 truncate text-[11px] text-slate-500">
-          {duty.mine ? `Giao cho ${duty.assigneeName}` : `Từ ${duty.assignerName}`} ·{' '}
-          {duty.status === 'approved' ? 'đã xong' : dueCountdown(duty.dueAtUtc)}
-        </p>
-      </div>
-    </button>
+      </button>
+
+      {quick && (
+        <div className="mt-2 flex gap-1.5">
+          <button
+            type="button"
+            onClick={() => accept.mutate()}
+            disabled={accept.isPending || decline.isPending}
+            className="flex min-h-9 flex-1 items-center justify-center gap-1 rounded-full bg-water-700 text-[11px] font-bold text-white disabled:opacity-50"
+          >
+            <Check className="size-3.5" /> {accept.isPending ? 'Đang nhận…' : 'Nhận việc'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const note = window.prompt('Từ chối nhiệm vụ này? Ghi lý do (không bắt buộc):', '');
+              if (note !== null) decline.mutate(note);
+            }}
+            disabled={accept.isPending || decline.isPending}
+            className="flex min-h-9 items-center justify-center gap-1 rounded-full bg-white px-3 text-[11px] font-semibold text-rose-600 ring-1 ring-rose-200 disabled:opacity-50"
+          >
+            <XCircle className="size-3.5" /> Từ chối
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

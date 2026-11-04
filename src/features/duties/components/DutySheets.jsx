@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BellRing, CalendarClock, Check, ClipboardList, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
+import { BellRing, Check, ClipboardList, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
@@ -20,18 +20,26 @@ const toLocalInput = (iso) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-/** Bảng "giờ bắt đầu / hạn" có nhãn rõ ràng để không bị lẫn hai mốc. */
+/** Ô chọn ngày-giờ: hiện gọn "HH:mm · dd/MM" và mở bộ chọn gốc khi bấm (tránh chữ tràn như input gốc). */
 function TimeField({ label, hint, value, onChange }) {
+  const label2 = (() => {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Chọn thời gian';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())} · ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  })();
   return (
-    <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+    <label className="relative block min-w-0 rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm focus-within:border-water-400 focus-within:ring-4 focus-within:ring-water-100">
+      <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="mt-0.5 block truncate text-[15px] font-bold tabular-nums text-slate-800">{label2}</span>
+      {hint && <span className="block truncate text-[10px] text-slate-400">{hint}</span>}
       <input
         type="datetime-local"
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-water-400"
+        aria-label={label}
+        className="absolute inset-0 size-full cursor-pointer opacity-0"
       />
-      {hint && <span className="mt-0.5 block text-[10px] text-slate-400">{hint}</span>}
     </label>
   );
 }
@@ -142,7 +150,7 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
 
         <div className="mt-2 grid grid-cols-2 gap-2">
           <TimeField label="Giờ bắt đầu" value={start} onChange={(e) => setStart(e.target.value)} />
-          <TimeField label="Hạn báo cáo" hint="phải sau giờ bắt đầu" value={due} onChange={(e) => setDue(e.target.value)} />
+          <TimeField label="Hạn báo cáo" hint="sau giờ bắt đầu" value={due} onChange={(e) => setDue(e.target.value)} />
         </div>
 
         <label className="mt-2 block">
@@ -250,22 +258,48 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
     onError: (err) => toast.show('Chưa nhận được', errorMessage(err)),
   });
 
+  const decline = useMutation({
+    mutationFn: (note) => dutyService.decline(duty.id, note),
+    onSuccess: async () => {
+      await refresh();
+      toast.show('Đã từ chối nhiệm vụ', 'Người giao sẽ nhận thông báo.');
+      onClose();
+    },
+    onError: (err) => toast.show('Chưa từ chối được', errorMessage(err)),
+  });
+
+  const withdraw = useMutation({
+    mutationFn: () => dutyService.withdraw(duty.id),
+    onSuccess: async () => {
+      await refresh();
+      setReport(emptyMedia);
+      setReportNote('');
+      toast.show('Đã thu hồi báo cáo', 'Sửa lại rồi gửi — người giao sẽ nhận bản mới.');
+    },
+    onError: (err) => toast.show('Không sửa được', errorMessage(err)),
+  });
+
   const assignMedia = duty.media.filter((m) => m.side === 'assign');
   const reports = duty.media.filter((m) => m.side === 'report');
   const attempts = [...new Set(reports.map((m) => m.attempt))].sort((a, b) => b - a);
-  const canReport = !duty.mine && duty.status !== 'approved' && !duty.needsAccept;  const canReview = duty.mine && duty.status === 'submitted';
+  const sentMode = !duty.mine && duty.status === 'submitted';
+  const canReport = !duty.mine && (duty.status === 'open' || duty.status === 'rejected') && !duty.needsAccept;
+  const canReview = duty.mine && duty.status === 'submitted';
 
   const mediaBlock = (items) => (
-    <div className="mt-1.5 space-y-1.5">
+    <div className="space-y-1.5">
       {items
         .filter((m) => m.kind === 'text')
         .map((m) => (
-          <p key={m.id} className="rounded-xl bg-white px-2.5 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
+          <p
+            key={m.id}
+            className="whitespace-pre-wrap rounded-xl rounded-tl-sm bg-cream-50 px-3 py-2 text-[13px] leading-snug text-slate-800 ring-1 ring-slate-200/70"
+          >
             {m.text}
           </p>
         ))}
       {items.filter((m) => m.kind === 'image').length > 0 && (
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className={`grid gap-1.5 ${items.filter((m) => m.kind === 'image').length === 1 ? 'grid-cols-2' : 'grid-cols-3'}`}>
           {items
             .filter((m) => m.kind === 'image')
             .map((m) => (
@@ -273,7 +307,8 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
                 key={m.id}
                 type="button"
                 onClick={() => setZoom(dutyService.mediaUrl(m.url))}
-                className="aspect-square overflow-hidden rounded-xl bg-slate-100"
+                aria-label="Xem ảnh đính kèm"
+                className="aspect-square overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200/70 transition active:scale-[0.98]"
               >
                 <img src={dutyService.mediaUrl(m.url)} alt="Ảnh đính kèm" className="size-full object-cover" loading="lazy" />
               </button>
@@ -331,14 +366,27 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
           <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
             <p className="text-[12px] font-semibold text-amber-800">Bạn chưa nhận nhiệm vụ này</p>
             <p className="mt-0.5 text-[11px] text-amber-700">App sẽ nhắc liên tục cho tới khi bạn bấm nhận.</p>
-            <button
-              type="button"
-              onClick={() => accept.mutate()}
-              disabled={accept.isPending}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-amber-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-            >
-              <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
-            </button>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => accept.mutate()}
+                disabled={accept.isPending}
+                className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-amber-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              >
+                <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const note = window.prompt('Từ chối nhiệm vụ này? Ghi lý do (không bắt buộc):', '');
+                  if (note !== null) decline.mutate(note);
+                }}
+                disabled={decline.isPending}
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-white px-3 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-200 disabled:opacity-50"
+              >
+                <XCircle className="size-4" /> Từ chối
+              </button>
+            </div>
           </div>
         )}
 
@@ -358,25 +406,66 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
         {attempts.length > 0 && (
           <div className="mt-3 space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Báo cáo ({attempts.length} lần)
+              Báo cáo · {attempts.length} lần
             </p>
-            {attempts.map((attempt) => (
-              <div key={attempt} className="rounded-xl bg-white p-2 ring-1 ring-slate-100">
-                <p className="text-[11px] font-semibold text-slate-600">
-                  Lần {attempt}
-                  {attempt === attempts[0] && duty.submittedAtUtc ? ' · mới nhất' : ''}
-                  {attempt === attempts[0] && duty.submittedAtUtc && new Date(duty.submittedAtUtc) > new Date(duty.dueAtUtc)
-                    ? ' · báo cáo muộn'
-                    : ''}
-                </p>
-                {mediaBlock(reports.filter((m) => m.attempt === attempt))}
-              </div>
-            ))}
+            {attempts.map((attempt, index) => {
+              const latest = index === 0;
+              const late = latest && duty.submittedAtUtc && new Date(duty.submittedAtUtc) > new Date(duty.dueAtUtc);
+              return (
+                <div
+                  key={attempt}
+                  className={`rounded-2xl border p-2.5 ${
+                    latest ? 'border-water-200 bg-white shadow-sm' : 'border-slate-200 bg-white/60'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-1.5">
+                    <span
+                      className={`grid size-5 place-items-center rounded-full text-[10px] font-bold ${
+                        latest ? 'bg-water-600 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {attempt}
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700">Lần {attempt}</span>
+                    {latest && (
+                      <span className="rounded-full bg-water-50 px-1.5 py-0.5 text-[9px] font-bold text-water-700 ring-1 ring-water-200">
+                        Mới nhất
+                      </span>
+                    )}
+                    {late && (
+                      <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 ring-1 ring-amber-200">
+                        Muộn
+                      </span>
+                    )}
+                  </div>
+                  {mediaBlock(reports.filter((m) => m.attempt === attempt))}
+                </div>
+              );
+            })}
           </div>
         )}
 
         {duty.reviewNote && duty.status === 'rejected' && (
           <p className="mt-2 rounded-xl bg-rose-50 px-2.5 py-2 text-[12px] text-rose-700">Lý do trả lại: {duty.reviewNote}</p>
+        )}
+
+        {sentMode && (
+          <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-2.5">
+            <p className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-800">
+              <Check className="size-4" /> Đã gửi báo cáo — đang chờ người giao duyệt
+            </p>
+            <p className="mt-0.5 text-[11px] text-emerald-700">
+              Muốn sửa? Bấm nút dưới để thu hồi; người giao sẽ không thấy bản này nữa cho tới khi bạn gửi lại.
+            </p>
+            <button
+              type="button"
+              onClick={() => withdraw.mutate()}
+              disabled={withdraw.isPending}
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-white py-2.5 text-sm font-bold text-emerald-800 ring-1 ring-emerald-300 disabled:opacity-50"
+            >
+              <Pencil className="size-4" /> {withdraw.isPending ? 'Đang mở lại…' : 'Đã gửi · Bấm để sửa'}
+            </button>
+          </div>
         )}
 
         {canReport && (
