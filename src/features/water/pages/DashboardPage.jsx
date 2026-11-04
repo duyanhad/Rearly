@@ -15,7 +15,6 @@ import { useLiquidColor } from '../hooks/useLiquidColor';
 import { AddWaterModal } from '../components/AddWaterModal';
 import { GoalCelebration } from '../components/GoalCelebration';
 import { LogCarousel } from '../components/LogCarousel';
-import { DutyTodayCard } from '../../duties/components/DutyTodayCard';
 import { WaterBar } from '../../../components/WaterBar';
 import { accent, shade } from '../../../utils/color';
 import { readLastAction, saveLastAction } from '../../../utils/lastAction';
@@ -325,8 +324,6 @@ export function DashboardPage() {
           </div>
         </section>
       </div>
-
-      <DutyTodayCard />
 
       <section className="rounded-2xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 font-semibold">Nhật ký hôm nay</h2>
