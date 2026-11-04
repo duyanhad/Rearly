@@ -143,7 +143,7 @@ export function AdminNudgeVideos() {
                           />
                         ) : (
                           <video
-                            src={nudgeVideoService.url(v.url)}
+                            src={`${nudgeVideoService.url(v.url)}#t=0.2`}
                             className={`aspect-video w-full bg-slate-900 object-cover ${v.isActive ? '' : 'opacity-50'}`}
                             muted
                             loop
