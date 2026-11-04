@@ -73,7 +73,11 @@ export function AppLayout() {
     '/friends': followRequests.length
   };
   return <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-30 px-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-1 sm:px-3">
+      <header
+        className={`sticky top-0 z-30 px-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-1 transition-colors duration-300 sm:px-3 ${
+          scrolled ? 'border-b border-[#f0e4da] bg-[#fbf6f1]/97 backdrop-blur-md' : 'border-b border-transparent'
+        }`}
+      >
         {/* Thanh nổi bo tròn 4 góc (2 góc trên sát mép màn hình) — không còn dải phẳng chạy hết chiều ngang */}
         <div
           className={`mx-auto flex max-w-5xl items-center gap-2 rounded-2xl border border-white/70 bg-gradient-to-b from-white/95 to-white/80 px-3 py-2 backdrop-blur-md transition-shadow duration-300 ${
