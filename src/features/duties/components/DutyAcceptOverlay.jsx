@@ -67,7 +67,7 @@ export function DutyAcceptOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[96] flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-[#4a1520]/97 to-[#2b1a1e]/97 p-6 text-center text-cream-50 backdrop-blur"
+      className="fixed inset-0 z-[96] flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-[#4a1520]/97 to-[#2b1a1e]/97 p-6 text-center text-cream-50 backdrop-blur sm:bg-slate-900/60 sm:backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={`Nhiệm vụ từ ${duty.assignerName}`}
@@ -81,7 +81,8 @@ export function DutyAcceptOverlay() {
         <X className="size-5" />
       </button>
 
-      <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-200">
+      <div className="flex w-full flex-col items-center gap-3 sm:max-w-md sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#4a1520] sm:to-[#2b1a1e] sm:p-6 sm:shadow-2xl">
+        <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-200">
         <BellRing className="size-3.5" />
         {pending.length > 1 ? `${pending.length} nhiệm vụ đang chờ bạn nhận` : 'Nhiệm vụ đang chờ bạn nhận'}
       </span>
@@ -134,6 +135,7 @@ export function DutyAcceptOverlay() {
       <p className="max-w-xs text-[11px] text-cream-50/50">
         Màn hình này sẽ kêu lại mỗi phút cho tới khi bạn nhận hoặc từ chối.
       </p>
+      </div>
 
       {declining && (
         <DeclineReasonSheet
