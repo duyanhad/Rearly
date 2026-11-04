@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BellRing, Check, ClipboardList, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
+import { BellRing, CalendarClock, Check, ClipboardList, Flag, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
@@ -11,6 +11,87 @@ import { DutyMediaPicker } from './DutyMediaPicker';
 import { dueLabel, statusMeta } from './dutyStatus';
 
 const emptyMedia = { text: '', files: [], voice: null };
+
+const QUICK_REASONS = ['Bận việc đột xuất', 'Không kịp trong giờ này', 'Không phù hợp với mình'];
+
+/**
+ * Hộp thoại nhập lý do từ chối nhiệm vụ (thay cho prompt mặc định của trình duyệt).
+ * Dùng chung cho thẻ nhiệm vụ ở màn chính và trang chi tiết.
+ */
+export function DeclineReasonSheet({ title, onClose, onConfirm, pending = false }) {
+  const [note, setNote] = useState('');
+
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Từ chối nhiệm vụ"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full rounded-t-3xl bg-cream-50 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl sm:pb-4"
+      >
+        <div className="flex items-start gap-2">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-100">
+            <XCircle className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-900">Từ chối nhiệm vụ</p>
+            <p className="truncate text-[11px] text-slate-500">{title}</p>
+          </div>
+          <button onClick={onClose} aria-label="Đóng" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {QUICK_REASONS.map((reason) => {
+            const active = note === reason;
+            return (
+              <button
+                key={reason}
+                type="button"
+                onClick={() => setNote(active ? '' : reason)}
+                className={`rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                  active ? 'bg-rose-600 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {reason}
+              </button>
+            );
+          })}
+        </div>
+
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          maxLength={300}
+          placeholder="Lý do khác (không bắt buộc)…"
+          className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-water-400"
+        />
+
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-white py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200"
+          >
+            Giữ lại
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(note.trim())}
+            disabled={pending}
+            className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-rose-600 py-3 text-sm font-bold text-white disabled:opacity-50"
+          >
+            <XCircle className="size-4" /> {pending ? 'Đang gửi…' : 'Từ chối'}
+          </button>
+        </div>
+        <p className="mt-2 text-center text-[10px] text-slate-400">Người giao sẽ nhận thông báo kèm lý do này.</p>
+      </div>
+    </div>
+  );
+}
 
 const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
 
@@ -200,6 +281,7 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
   const [reportNote, setReportNote] = useState('');
   const [reviewNote, setReviewNote] = useState('');
   const [zoom, setZoom] = useState(null);
+  const [declineOpen, setDeclineOpen] = useState(false);
   const meta = statusMeta(duty);
 
   const refresh = async () => {
@@ -343,21 +425,31 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
         <h2 className="text-base font-bold leading-snug text-slate-900">{duty.title}</h2>
         {duty.note && <p className="mt-1 text-sm text-slate-600">{duty.note}</p>}
 
-        <div className="mt-2 flex items-center gap-2 rounded-xl bg-white p-2 ring-1 ring-slate-100">
-          <Avatar
-            url={duty.mine ? duty.assigneeAvatar : duty.assignerAvatar}
-            name={duty.mine ? duty.assigneeName : duty.assignerName}
-            size="sm"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[12px] font-semibold text-slate-800">
-              {duty.mine ? `Bạn giao cho ${duty.assigneeName}` : `${duty.assignerName} giao cho bạn`}
-            </p>
-            <p className="truncate text-[11px] text-slate-500">
-              Bắt đầu {dueLabel(duty.startsAtUtc)} · hạn {dueLabel(duty.dueAtUtc)}
-            </p>
+        <div className="mt-2 rounded-2xl bg-white p-2.5 ring-1 ring-slate-100">
+          <div className="flex items-center gap-2">
+            <Avatar
+              url={duty.mine ? duty.assigneeAvatar : duty.assignerAvatar}
+              name={duty.mine ? duty.assigneeName : duty.assignerName}
+              size="sm"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] font-semibold text-slate-800">
+                {duty.mine ? `Bạn giao cho ${duty.assigneeName}` : `${duty.assignerName} giao cho bạn`}
+              </p>
+              <p className="truncate text-[10px] text-slate-400">{duty.mine ? 'Người nhận' : 'Người giao'}</p>
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-1 text-[10px] font-semibold text-sky-700">
+              <CalendarClock className="size-3" /> Bắt đầu {dueLabel(duty.startsAtUtc)}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700">
+              <Flag className="size-3" /> Hạn {dueLabel(duty.dueAtUtc)}
+            </span>
             {duty.remindBeforeMin > 0 && (
-              <p className="truncate text-[10px] text-slate-400">Nhắc trước {duty.remindBeforeMin} phút</p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                <BellRing className="size-3" /> Nhắc trước {duty.remindBeforeMin}′
+              </span>
             )}
           </div>
         </div>
@@ -377,10 +469,7 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  const note = window.prompt('Từ chối nhiệm vụ này? Ghi lý do (không bắt buộc):', '');
-                  if (note !== null) decline.mutate(note);
-                }}
+                onClick={() => setDeclineOpen(true)}
                 disabled={decline.isPending}
                 className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-white px-3 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-200 disabled:opacity-50"
               >
@@ -547,6 +636,15 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
       </div>
 
       {zoom && <ImageLightbox src={zoom} alt={duty.title} onClose={() => setZoom(null)} />}
+
+      {declineOpen && (
+        <DeclineReasonSheet
+          title={duty.title}
+          pending={decline.isPending}
+          onClose={() => setDeclineOpen(false)}
+          onConfirm={(note) => decline.mutate(note)}
+        />
+      )}
     </div>
   );
 }
