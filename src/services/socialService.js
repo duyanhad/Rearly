@@ -7,6 +7,8 @@ export const socialService = {
   /** Trang cá nhân người khác: chuỗi thành tựu + lịch tháng (bạn bè chỉ thấy chấm). */
   getFriendOverview: (userId, { year, month }) =>
     api.get(`/api/social/users/${userId}/overview`, { params: { year, month } }),
+  /** Chi tiết một ngày của người khác (chỉ partner) — giống trang Lịch. */
+  getFriendDay: (userId, date) => api.get(`/api/social/users/${userId}/day/${date}`),
   getFollowers: () => api.get('/api/social/followers'),
   getFollowing: () => api.get('/api/social/following'),
   getFollowRequests: () => api.get('/api/social/follow-requests'),

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BookOpen, ChevronLeft, ChevronRight, Droplet, Flame, Lock, Moon, Pill, Scale, Soup } from 'lucide-react';
 import { DearlyLoader } from '../../../components/DearlyLoader';
 import { socialService } from '../../../services/socialService';
+import { LogCarousel } from '../../water/components/LogCarousel';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -42,6 +43,13 @@ export function FriendActivityCard({ userId }) {
   const { data, isLoading } = useQuery({
     queryKey: ['friend-overview', userId, year, month],
     queryFn: async () => (await socialService.getFriendOverview(userId, { year, month })).data,
+  });
+
+  // Chi tiết ngày giống trang Lịch: chỉ gọi khi người xem là partner.
+  const { data: day, isLoading: dayLoading } = useQuery({
+    queryKey: ['friend-day', userId, selected],
+    enabled: Boolean(selected) && Boolean(data?.isPartner),
+    queryFn: async () => (await socialService.getFriendDay(userId, selected)).data,
   });
 
   const shift = (delta) => {
@@ -180,6 +188,21 @@ export function FriendActivityCard({ userId }) {
                 </div>
               );
             })}
+
+            {/* Nhật ký nước của ngày đó — cùng kiểu với trang Lịch (có ảnh minh chứng). */}
+            {dayLoading ? (
+              <DearlyLoader size="sm" />
+            ) : day && day.logs?.length > 0 ? (
+              <div className="pt-2">
+                <p className="mb-2 text-[12px] text-slate-600">
+                  Tổng {day.totalDrankMl} / {day.targetMl} ml{' '}
+                  {day.isCompleted && <span className="font-medium text-emerald-600">· Đạt mục tiêu</span>}
+                </p>
+                <LogCarousel logs={day.logs} />
+              </div>
+            ) : (
+              <p className="pt-1 text-[11px] text-slate-400">Không có lần uống nước nào ngày này.</p>
+            )}
           </div>
         ) : selected ? (
           <p className="mt-3 text-center text-[12px] text-slate-500">Ngày này không có ghi nhận nào.</p>

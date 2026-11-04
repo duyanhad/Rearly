@@ -8,7 +8,6 @@ import { FriendActivityCard } from '../components/FriendActivityCard';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { socialService } from '../../../services/socialService';
 import { useToast } from '../../../components/Toast';
-import { timeLabel } from '../../../utils/format';
 
 /** Trang cá nhân của một người bạn: ảnh đại diện phóng to được, tiến độ nước hôm nay và ảnh mới duyệt. */
 export function FriendProfilePage() {
@@ -21,10 +20,7 @@ export function FriendProfilePage() {
     queryKey: ['friends'],
     queryFn: async () => (await socialService.getFriends()).data,
   });
-  const { data: feed = [] } = useQuery({
-    queryKey: ['feed'],
-    queryFn: async () => (await socialService.getFeed()).data,
-  });
+
 
   const nav = useNavigate();
   const unfriend = useMutation({
@@ -46,7 +42,6 @@ export function FriendProfilePage() {
   });
 
   const friend = friends.find((f) => f.id === id);
-  const item = feed.find((f) => f.userId === id);
 
   if (!friend) {
     return (
@@ -134,23 +129,6 @@ export function FriendProfilePage() {
       </section>
 
       <FriendActivityCard userId={friend.id} />
-
-      {item?.latestImageUrl && (
-        <section className="rounded-2xl bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-semibold text-slate-700">Ảnh gần nhất được duyệt</h2>
-          <button onClick={() => setZoom(mediaUrl(item.latestImageUrl))} className="block w-full" aria-label="Phóng to ảnh">
-            <img
-              src={mediaUrl(item.latestImageUrl)}
-              alt={`Ảnh của ${friend.fullName}`}
-              loading="lazy"
-              decoding="async"
-              className="max-h-72 w-full rounded-2xl object-cover ring-1 ring-slate-100 transition hover:scale-[1.01]"
-            />
-          </button>
-          {item.note && <p className="mt-1.5 text-xs text-slate-500">{item.note}</p>}
-          {item.logTime && <p className="mt-0.5 text-[11px] text-slate-400">{timeLabel(item.logTime)}</p>}
-        </section>
-      )}
 
       {zoom && <ImageLightbox src={zoom} alt={friend.fullName} onClose={() => setZoom(null)} />}
     </div>
