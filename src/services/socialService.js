@@ -4,6 +4,9 @@ import api from './apiClient';
 export const socialService = {
   getFeed: () => api.get('/api/social/feed'),
   getFriends: () => api.get('/api/social/friends'),
+  /** Trang cá nhân người khác: chuỗi thành tựu + lịch tháng (bạn bè chỉ thấy chấm). */
+  getFriendOverview: (userId, { year, month }) =>
+    api.get(`/api/social/users/${userId}/overview`, { params: { year, month } }),
   getFollowers: () => api.get('/api/social/followers'),
   getFollowing: () => api.get('/api/social/following'),
   getFollowRequests: () => api.get('/api/social/follow-requests'),

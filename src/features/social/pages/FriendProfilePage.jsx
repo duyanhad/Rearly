@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { BellRing, ChevronLeft, Droplets, MessageCircle, ShieldCheck, UserMinus } from 'lucide-react';
-import { DearlyLoader } from '../../../components/DearlyLoader';
+import { BellRing, ChevronLeft, MessageCircle, ShieldCheck, UserMinus } from 'lucide-react';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { Avatar } from '../../../components/Avatar';
-import { WaterBar } from '../../../components/WaterBar';
+import { FriendActivityCard } from '../components/FriendActivityCard';
 import { errorMessage, mediaUrl } from '../../../services/apiClient';
 import { socialService } from '../../../services/socialService';
 import { useToast } from '../../../components/Toast';
@@ -134,27 +133,7 @@ export function FriendProfilePage() {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-4 shadow-sm">
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-          <Droplets className="size-4 text-water-600" /> Hôm nay
-        </h2>
-        {!item ? (
-          <DearlyLoader size="sm" />
-        ) : (
-          <>
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-extrabold tabular-nums text-water-700">{item.percent}%</span>
-              <span className="text-xs tabular-nums text-slate-500">
-                {item.totalDrankMl} / {item.targetMl} ml
-              </span>
-            </div>
-            <WaterBar percent={item.percent} height="h-2" showFlames={false} />
-            {item.isCompleted && (
-              <p className="mt-1.5 text-xs font-semibold text-emerald-600">Đã đạt mục tiêu hôm nay 🎉</p>
-            )}
-          </>
-        )}
-      </section>
+      <FriendActivityCard userId={friend.id} />
 
       {item?.latestImageUrl && (
         <section className="rounded-2xl bg-white p-4 shadow-sm">
