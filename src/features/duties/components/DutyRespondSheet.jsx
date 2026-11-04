@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, ClipboardList, X, XCircle } from 'lucide-react';
+import { Check, ClipboardList, Clock3, X, XCircle } from 'lucide-react';
 import { useToast } from '../../../components/Toast';
 import { errorMessage } from '../../../services/apiClient';
 import { dutyService } from '../../../services/dutyService';
@@ -8,10 +8,11 @@ import { DUTY_QUICK_REASONS } from './DutySheets';
 import { dueLabel } from './dutyStatus';
 
 /**
- * Chọn nhận / từ chối từng việc trong lô (thân dùng chung): mặc định tích hết,
- * bỏ tích = từ chối (lý do dùng chung + ghi chú riêng từng việc), rồi xác nhận một lần.
+ * Chọn nhận / từ chối từng việc trong lô (thân dùng chung): mặc định nhận hết,
+ * bấm vào việc để đổi sang từ chối (lý do chung + ghi chú riêng), rồi xác nhận một lần.
+ * `flush` = cha đã có padding ngang (màn kêu nhiệm vụ), khỏi cộng thêm.
  */
-export function DutyRespondBody({ duties, onDone }) {
+export function DutyRespondBody({ duties, onDone, flush = false }) {
   const toast = useToast();
   const qc = useQueryClient();
   const [declined, setDeclined] = useState(() => ({}));
@@ -43,64 +44,85 @@ export function DutyRespondBody({ duties, onDone }) {
 
   return (
     <>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3 sm:px-0 sm:py-0">
+      <div
+        className={`min-h-0 flex-1 space-y-1.5 overflow-y-auto ${flush ? '' : 'px-4 py-3 sm:px-0 sm:py-0'}`}
+      >
         {duties.map((duty) => {
           const isDeclined = Boolean(declined[duty.id]);
           return (
             <div
               key={duty.id}
-              className={`rounded-2xl p-2.5 ring-1 transition ${
-                isDeclined ? 'bg-rose-50/70 ring-rose-200' : 'bg-white ring-slate-100'
+              className={`overflow-hidden rounded-xl ring-1 transition ${
+                isDeclined ? 'bg-rose-50/80 ring-rose-200' : 'bg-white ring-slate-200/80'
               }`}
             >
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-bold text-slate-800">{duty.title}</p>
-                  <p className="mt-0.5 truncate text-[11px] text-slate-500">
-                    {dueLabel(duty.startsAtUtc)} → {dueLabel(duty.dueAtUtc)}
-                  </p>
-                  {duty.note && <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">{duty.note}</p>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggle(duty.id)}
-                  aria-label={`${isDeclined ? 'Nhận' : 'Từ chối'} ${duty.title}`}
-                  aria-pressed={!isDeclined}
-                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition ${
-                    isDeclined ? 'bg-white text-slate-500 ring-1 ring-slate-200' : 'bg-water-700 text-white'
+              <button
+                type="button"
+                onClick={() => toggle(duty.id)}
+                aria-pressed={!isDeclined}
+                aria-label={`${isDeclined ? 'Nhận' : 'Từ chối'} ${duty.title}`}
+                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition active:scale-[0.995]"
+              >
+                <span
+                  className={`mt-0.5 grid size-[19px] shrink-0 place-items-center rounded-md border transition ${
+                    isDeclined ? 'border-slate-300 bg-white text-slate-300' : 'border-water-700 bg-water-700 text-white'
                   }`}
                 >
-                  {isDeclined ? <XCircle className="size-3.5" /> : <Check className="size-3.5" />}
+                  {isDeclined ? <X className="size-3" /> : <Check className="size-3.5" strokeWidth={3} />}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`block truncate text-[13px] font-bold ${
+                      isDeclined ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-800'
+                    }`}
+                  >
+                    {duty.title}
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
+                    <Clock3 className="size-3 shrink-0" />
+                    {dueLabel(duty.startsAtUtc)} <span className="text-slate-300">→</span> {dueLabel(duty.dueAtUtc)}
+                  </span>
+                  {duty.note && <span className="mt-0.5 line-clamp-1 block text-[11px] text-slate-400">{duty.note}</span>}
+                </span>
+
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    isDeclined ? 'bg-rose-100 text-rose-700' : 'bg-water-50 text-water-700'
+                  }`}
+                >
                   {isDeclined ? 'Từ chối' : 'Nhận'}
-                </button>
-              </div>
+                </span>
+              </button>
 
               {isDeclined && (
-                <input
-                  value={notes[duty.id] ?? ''}
-                  onChange={(e) => setNotes((prev) => ({ ...prev, [duty.id]: e.target.value }))}
-                  maxLength={200}
-                  placeholder="Ghi chú riêng cho việc này (không bắt buộc)"
-                  className="mt-2 w-full rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[12px] text-slate-800 outline-none focus:border-rose-400"
-                />
+                <div className="border-t border-rose-200/70 px-3 py-2">
+                  <input
+                    value={notes[duty.id] ?? ''}
+                    onChange={(e) => setNotes((prev) => ({ ...prev, [duty.id]: e.target.value }))}
+                    maxLength={200}
+                    placeholder="Ghi chú riêng cho việc này…"
+                    className="w-full rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[12px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-rose-400"
+                  />
+                </div>
               )}
             </div>
           );
         })}
 
         {declinedIds.length > 0 && (
-          <div className="rounded-2xl bg-white p-2.5 ring-1 ring-slate-100">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Lý do từ chối ({declinedIds.length} việc)
+          <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200/80">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-rose-600">
+              <XCircle className="size-3.5" /> Lý do từ chối · {declinedIds.length} việc
             </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {DUTY_QUICK_REASONS.map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setReason(reason === r ? '' : r)}
                   className={`rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition ${
-                    reason === r ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600'
+                    reason === r ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {r}
@@ -112,17 +134,17 @@ export function DutyRespondBody({ duties, onDone }) {
               onChange={(e) => setReason(e.target.value)}
               maxLength={300}
               placeholder="Lý do khác (không bắt buộc)…"
-              className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[12px] text-slate-800 outline-none focus:border-water-400"
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50/60 px-2.5 py-2 text-[12px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-water-400 focus:bg-white"
             />
           </div>
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 px-4 pt-2 sm:px-0">
+      <div className={`flex shrink-0 items-center gap-2 pt-3 ${flush ? '' : 'px-4 sm:px-0'}`}>
         <button
           type="button"
           onClick={onDone}
-          className="flex min-h-11 items-center justify-center rounded-full bg-white px-4 text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200"
+          className="min-h-11 shrink-0 rounded-full px-3 text-[12px] font-semibold text-slate-500 transition hover:bg-slate-100"
         >
           Để sau
         </button>
@@ -130,7 +152,7 @@ export function DutyRespondBody({ duties, onDone }) {
           type="button"
           onClick={() => save.mutate()}
           disabled={save.isPending || duties.length === 0}
-          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-water-700 text-sm font-bold text-white disabled:opacity-50"
+          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-water-700 text-sm font-bold text-white shadow-sm transition disabled:opacity-50"
         >
           <Check className="size-4" />
           {save.isPending

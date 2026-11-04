@@ -95,8 +95,8 @@ export function DutyAcceptOverlay() {
               </p>
             </div>
 
-            <div className="flex min-h-0 w-full flex-1 flex-col rounded-2xl bg-cream-50 p-2 text-left text-slate-800 sm:p-3">
-              <DutyRespondBody duties={pending} onDone={() => setDismissed([])} />
+            <div className="flex min-h-0 w-full flex-1 flex-col rounded-2xl bg-cream-50 p-2.5 text-left text-slate-800 shadow-inner sm:p-3">
+              <DutyRespondBody duties={pending} onDone={() => setDismissed([])} flush />
             </div>
           </>
         ) : (
