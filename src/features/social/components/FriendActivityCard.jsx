@@ -192,7 +192,7 @@ export function FriendActivityCard({ userId }) {
             {/* Nhật ký nước của ngày đó — cùng kiểu với trang Lịch (có ảnh minh chứng). */}
             {dayLoading ? (
               <DearlyLoader size="sm" />
-            ) : day && day.logs?.length > 0 ? (
+            ) : day?.logs?.length > 0 ? (
               <div className="pt-2">
                 <p className="mb-2 text-[12px] text-slate-600">
                   Tổng {day.totalDrankMl} / {day.targetMl} ml{' '}
@@ -200,9 +200,7 @@ export function FriendActivityCard({ userId }) {
                 </p>
                 <LogCarousel logs={day.logs} />
               </div>
-            ) : (
-              <p className="pt-1 text-[11px] text-slate-400">Không có lần uống nước nào ngày này.</p>
-            )}
+            ) : null}
           </div>
         ) : selected ? (
           <p className="mt-3 text-center text-[12px] text-slate-500">Ngày này không có ghi nhận nào.</p>
