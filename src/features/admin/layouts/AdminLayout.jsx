@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Film, GalleryVerticalEnd, LayoutDashboard, LogOut, Megaphone, ScrollText, Users } from 'lucide-react';
+import { Film, GalleryVerticalEnd, LayoutDashboard, LogOut, Megaphone, ScrollText, Sparkles, Users } from 'lucide-react';
 import { useAuth } from '../../../context/AuthProvider';
 import { DearlyMark } from '../../../components/DearlyLogo';
 const nav = [{
@@ -22,6 +22,7 @@ const nav = [{
 }, {
   to: '/admin/eras',
   label: 'Kỷ nguyên',
+  icon: Sparkles
 },
 {
   to: '/admin/cups',
@@ -65,7 +66,7 @@ export function AdminLayout() {
         }) => <NavLink key={to} to={to} end={end} className={({
           isActive
         }) => `flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-cream-200 text-water-800 shadow-sm' : 'text-cream-100/80 hover:bg-water-700 hover:text-white'}`}>
-              <Icon className="size-4" />
+              {Icon && <Icon className="size-4" />}
               {label}
             </NavLink>)}
         </nav>
