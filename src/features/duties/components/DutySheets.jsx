@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { BellRing, CalendarClock, Check, ClipboardList, Flag, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
@@ -103,25 +103,51 @@ const toLocalInput = (iso) => {
 
 /** Ô chọn ngày-giờ: hiện gọn "HH:mm · dd/MM" và mở bộ chọn gốc khi bấm (tránh chữ tràn như input gốc). */
 function TimeField({ label, hint, value, onChange }) {
+  const inputRef = useRef(null);
   const label2 = (() => {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return 'Chọn thời gian';
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(d.getHours())}:${pad(d.getMinutes())} · ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
   })();
+
+  // Trên máy tính bấm vào ô trong suốt không tự mở lịch -> gọi showPicker() trong cú bấm.
+  const open = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    try {
+      if (typeof el.showPicker === 'function') el.showPicker();
+      else el.focus();
+    } catch {
+      el.focus();
+    }
+  };
+
   return (
-    <label className="relative block min-w-0 rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm focus-within:border-water-400 focus-within:ring-4 focus-within:ring-water-100">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      }}
+      className="relative block min-w-0 cursor-pointer rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm focus-within:border-water-400 focus-within:ring-4 focus-within:ring-water-100"
+    >
       <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
       <span className="mt-0.5 block truncate text-[15px] font-bold tabular-nums text-slate-800">{label2}</span>
       {hint && <span className="block truncate text-[10px] text-slate-400">{hint}</span>}
       <input
+        ref={inputRef}
         type="datetime-local"
         value={value}
         onChange={onChange}
         aria-label={label}
         className="absolute inset-0 size-full cursor-pointer opacity-0"
       />
-    </label>
+    </div>
   );
 }
 
