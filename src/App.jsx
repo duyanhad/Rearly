@@ -30,6 +30,7 @@ const AdminBroadcast = lazy(() => import('./features/admin/pages/AdminBroadcast'
 const AdminLogs = lazy(() => import('./features/admin/pages/AdminLogs').then((m) => ({ default: m.AdminLogs })));
 const AdminEras = lazy(() => import('./features/admin/pages/AdminEras').then((m) => ({ default: m.AdminEras })));
 const AdminCups = lazy(() => import('./features/admin/pages/AdminCups').then((m) => ({ default: m.AdminCups })));
+const AdminNudgeVideos = lazy(() => import('./features/admin/pages/AdminNudgeVideos').then((m) => ({ default: m.AdminNudgeVideos })));
 function Loading() {
   return <DearlyLoader full />;
 }
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="logs" element={<AdminLogs />} />
           <Route path="eras" element={<AdminEras />} />
           <Route path="cups" element={<AdminCups />} />
+            <Route path="nudge-videos" element={<AdminNudgeVideos />} />
         </Route>
 
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>

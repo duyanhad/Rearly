@@ -470,7 +470,7 @@ export function ChatPanel({ compact = false }) {
   // Chuông trong hội thoại: chọn loại nhắc (nước/bữa ăn/thuốc…) + lời nhắn, gửi realtime/push.
   const [nudgeOpen, setNudgeOpen] = useState(false);
   const nudge = useMutation({
-    mutationFn: async ({ userId, kind, message }) => socialService.nudge(userId, { kind, message }),
+    mutationFn: async ({ userId, kind, message, sendVideo }) => socialService.nudge(userId, { kind, message, sendVideo }),
     onSuccess: () => {
       setNudgeOpen(false);
       toast.show('Đã gửi nhắc nhở', `${active?.name ?? 'Bạn ấy'} sẽ nhận thông báo ngay.`);
@@ -710,7 +710,7 @@ export function ChatPanel({ compact = false }) {
           name={active.name}
           sending={nudge.isPending}
           onClose={() => setNudgeOpen(false)}
-          onSend={({ kind, message }) => nudge.mutate({ userId: active.userId, kind, message })}
+          onSend={({ kind, message, sendVideo }) => nudge.mutate({ userId: active.userId, kind, message, sendVideo })}
         />
       )}
       {zoom && <ImageLightbox src={mediaUrl(zoom)} alt="Ảnh trong chat" onClose={() => setZoom(null)} />}

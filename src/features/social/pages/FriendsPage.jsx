@@ -103,7 +103,7 @@ export function FriendsPage() {
   // Chuông: mở popup chọn nhu cầu + lời nhắn (giống Kênh partner).
   const [nudgeTarget, setNudgeTarget] = useState(null);
   const nudge = useMutation({
-    mutationFn: async ({ id, kind, message }) => socialService.nudge(id, { kind, message }),
+    mutationFn: async ({ id, kind, message, sendVideo }) => socialService.nudge(id, { kind, message, sendVideo }),
     onSuccess: () => {
       toast.show('Đã gửi nhắc nhở', `${nudgeTarget?.nickname || nudgeTarget?.fullName || 'Bạn'} sẽ nhận thông báo ngay.`);
       setNudgeTarget(null);
@@ -281,7 +281,7 @@ export function FriendsPage() {
           name={nudgeTarget.nickname || nudgeTarget.fullName}
           sending={nudge.isPending}
           onClose={() => setNudgeTarget(null)}
-          onSend={({ kind, message }) => nudge.mutate({ id: nudgeTarget.id, kind, message })}
+          onSend={({ kind, message, sendVideo }) => nudge.mutate({ id: nudgeTarget.id, kind, message, sendVideo })}
         />
       )}
     </div>;

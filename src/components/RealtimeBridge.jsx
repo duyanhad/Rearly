@@ -60,6 +60,12 @@ export function RealtimeBridge() {
     // Người khác nhắc uống nước (chuông): banner + rung + tiếng bíp.
     const onNudge = (payload) =>
       void syncThen(['notifications', 'pending-proofs', 'today'], () => {
+        if (payload?.videoUrl) {
+          // Nhắc kèm video: mở màn phát video thay vì chỉ hiện toast.
+          window.dispatchEvent(new CustomEvent('dearly:nudge-video', { detail: payload }));
+          vibrate('normal');
+          return;
+        }
         toast.show(payload.title ?? 'Nhắc uống nước', payload.message);
         vibrate('normal');
         playChime('normal');

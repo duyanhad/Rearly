@@ -18,6 +18,7 @@ import { HabitAlarmOverlay } from '../features/settings/components/HabitAlarmOve
 import { SleepAlarmOverlay } from '../features/settings/components/SleepAlarmOverlay';
 import { VoiceNoteOverlay } from '../features/voice/components/VoiceNoteOverlay';
 import { DutyAcceptOverlay } from '../features/duties/components/DutyAcceptOverlay';
+import { NudgeVideoOverlay } from '../features/social/components/NudgeVideoOverlay';
 const links = [{
   to: '/',
   label: 'Hôm nay',
@@ -168,6 +169,7 @@ export function AppLayout() {
       <HabitAlarmOverlay />
       <VoiceNoteOverlay />
       <DutyAcceptOverlay />
+      <NudgeVideoOverlay />
       {dutyOpen && <DutySheet onClose={() => setDutyOpen(false)} />}
     </div>;
 }

@@ -304,7 +304,7 @@ export function PartnerPage() {
   const [nudgeTarget, setNudgeTarget] = useState(null);
   const [nudgeOpen, setNudgeOpen] = useState(false);
   const nudge = useMutation({
-    mutationFn: async ({ userId, kind, message }) => socialService.nudge(userId, { kind, message }),
+    mutationFn: async ({ userId, kind, message, sendVideo }) => socialService.nudge(userId, { kind, message, sendVideo }),
     onSuccess: () => {
       setNudgeOpen(false);
       toast.show('Đã gửi nhắc nhở', `${nudgeTarget ? displayName(nudgeTarget) : 'Khách'} sẽ nhận thông báo ngay.`);
@@ -413,7 +413,7 @@ export function PartnerPage() {
         name={displayName(nudgeTarget)}
         sending={nudge.isPending}
         onClose={() => setNudgeOpen(false)}
-        onSend={({ kind, message }) => nudge.mutate({ userId: nudgeTarget.id, kind, message })}
+        onSend={({ kind, message, sendVideo }) => nudge.mutate({ userId: nudgeTarget.id, kind, message, sendVideo })}
       />
     ) : null;
 

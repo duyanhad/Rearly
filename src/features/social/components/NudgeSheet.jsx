@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { BellRing, Send, X } from 'lucide-react';
+import { nudgeVideoService } from '../../../services/nudgeVideoService';
 
 // Chọn nhắc nhu cầu nào (kèm lời nhắn) — dùng chung cho chat và trang Bạn/Partner.
 const KINDS = [
@@ -14,6 +16,21 @@ const KINDS = [
 export function NudgeSheet({ name, onClose, onSend, sending }) {
   const [kind, setKind] = useState('water');
   const [message, setMessage] = useState('');
+  const [withVideo, setWithVideo] = useState(false);
+
+  const { data: videos = [] } = useQuery({
+    queryKey: ['nudge-videos'],
+    queryFn: async () => (await nudgeVideoService.list()).data,
+    staleTime: 5 * 60_000,
+  });
+
+  // Mỗi nhu cầu có thể có nhiều video → chọn ngẫu nhiên một cái để xem trước; đổi nhu cầu là đổi video.
+  const [preview, setPreview] = useState(null);
+  useEffect(() => {
+    const pool = videos.filter((v) => v.kind === kind);
+    setPreview(pool.length ? pool[Math.floor(Math.random() * pool.length)].url : null);
+    setWithVideo(false);
+  }, [kind, videos]);
 
   return (
     <div className="fixed inset-0 z-[85] flex items-end justify-center bg-slate-900/45 backdrop-blur-sm sm:items-center sm:p-4">
@@ -61,12 +78,46 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
           />
         </label>
 
+        {preview && (
+          <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
+            <div className="flex items-center gap-2">
+              <video
+                src={nudgeVideoService.url(preview)}
+                className={`size-14 shrink-0 rounded-lg bg-slate-900 object-cover ${withVideo ? '' : 'opacity-40'}`}
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-slate-800">Kèm video ngắn</p>
+                <p className="text-[11px] text-slate-500">Video của nhu cầu đang chọn, gửi kèm khi người kia mở app.</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={withVideo}
+                onClick={() => setWithVideo((v) => !v)}
+                aria-label="Gửi kèm video"
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${withVideo ? 'bg-water-600' : 'bg-slate-300'}`}
+              >
+                <span
+                  className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${withVideo ? 'left-[22px]' : 'left-0.5'}`}
+                />
+              </button>
+            </div>
+            <p className="mt-1 text-[10px] text-slate-400">
+              {withVideo ? 'Sẽ gửi kèm video này' : 'Không gửi video — chỉ gửi lời nhắc như thường'}
+            </p>
+          </div>
+        )}
+
         <button
-          onClick={() => onSend?.({ kind, message: message.trim() })}
+          onClick={() => onSend?.({ kind, message: message.trim(), sendVideo: Boolean(preview) && withVideo })}
           disabled={sending}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-water-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-water-700 disabled:opacity-60"
         >
-          <Send className="size-4" /> {sending ? 'Đang gửi…' : 'Gửi nhắc nhở'}
+          <Send className="size-4" /> {sending ? 'Đang gửi…' : withVideo && preview ? 'Gửi nhắc + video' : 'Gửi nhắc nhở'}
         </button>
       </div>
     </div>

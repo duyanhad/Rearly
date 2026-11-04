@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { GalleryVerticalEnd, LayoutDashboard, LogOut, Megaphone, ScrollText, Users } from 'lucide-react';
+import { Film, GalleryVerticalEnd, LayoutDashboard, LogOut, Megaphone, ScrollText, Users } from 'lucide-react';
 import { useAuth } from '../../../context/AuthProvider';
 import { DearlyMark } from '../../../components/DearlyLogo';
 const nav = [{
@@ -27,6 +27,10 @@ const nav = [{
   to: '/admin/cups',
   label: 'Loại cốc',
   icon: GalleryVerticalEnd
+}, {
+  to: '/admin/nudge-videos',
+  label: 'Video nhắc',
+  icon: Film
 }];
 
 /** Admin lives in its own shell: dark sidebar, no user navigation, no 3D. */
