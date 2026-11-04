@@ -28,11 +28,22 @@ export function NudgeVideoOverlay() {
   const [current, setCurrent] = useState(null);
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(false);
+  const isGif = nudgeVideoService.isGif(current?.videoUrl);
 
-  // Có tiếng: thử phát kèm âm thanh trước, trình duyệt chặn thì tạm tắt tiếng + hiện nút bật.
+  // Video phải có tiếng: thử phát kèm âm thanh ngay; nếu trình duyệt chặn thì tạm tắt tiếng
+  // rồi tự bật tiếng lại ở lần chạm/phím đầu tiên của người dùng (không cần bấm nút riêng).
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !current) return;
+    if (!v || !current || isGif) return;
+
+    const unmute = () => {
+      const el = videoRef.current;
+      if (!el) return;
+      el.muted = false;
+      setMuted(false);
+      void el.play().catch(() => {});
+    };
+
     v.muted = false;
     v.play()
       .then(() => setMuted(false))
@@ -40,8 +51,17 @@ export function NudgeVideoOverlay() {
         v.muted = true;
         setMuted(true);
         void v.play().catch(() => {});
+        document.addEventListener('pointerdown', unmute, { once: true });
+        document.addEventListener('keydown', unmute, { once: true });
+        document.addEventListener('touchstart', unmute, { once: true });
       });
-  }, [current]);
+
+    return () => {
+      document.removeEventListener('pointerdown', unmute);
+      document.removeEventListener('keydown', unmute);
+      document.removeEventListener('touchstart', unmute);
+    };
+  }, [current, isGif]);
 
   // Mở app: tìm nhắc kèm video chưa đọc, chưa từng phát.
   const { data: notifications = [] } = useQuery({
@@ -71,6 +91,7 @@ export function NudgeVideoOverlay() {
 
   if (!current) return null;
 
+
   const close = async () => {
     if (current.id) {
       markSeen(current.id);
@@ -93,14 +114,22 @@ export function NudgeVideoOverlay() {
         className="w-full max-w-md overflow-hidden rounded-3xl bg-cream-50 shadow-2xl"
       >
         <div className="relative">
-          <video
-            ref={videoRef}
-            src={nudgeVideoService.url(current.videoUrl)}
-            className="max-h-[62vh] w-full bg-slate-900 object-cover"
-            autoPlay
-            loop
-            playsInline
-          />
+          {isGif ? (
+            <img
+              src={nudgeVideoService.url(current.videoUrl)}
+              alt={current.title ?? 'Nhắc nhở'}
+              className="max-h-[62vh] w-full bg-slate-900 object-cover"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={nudgeVideoService.url(current.videoUrl)}
+              className="max-h-[62vh] w-full bg-slate-900 object-cover"
+              autoPlay
+              loop
+              playsInline
+            />
+          )}
           <button
             type="button"
             onClick={close}
@@ -109,21 +138,22 @@ export function NudgeVideoOverlay() {
           >
             <X className="size-4" />
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              const v = videoRef.current;
-              if (!v) return;
-              v.muted = !v.muted;
-              setMuted(v.muted);
-              if (!v.muted) void v.play().catch(() => {});
-            }}
-            aria-label={muted ? 'Bật tiếng' : 'Tắt tiếng'}
-            className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-slate-900/55 px-2.5 py-1.5 text-[11px] font-semibold text-white backdrop-blur"
-          >
-            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-            {muted ? 'Bật tiếng' : 'Tắt tiếng'}
-          </button>
+          {!isGif && (
+            <button
+              type="button"
+              onClick={() => {
+                const v = videoRef.current;
+                if (!v) return;
+                v.muted = !v.muted;
+                setMuted(v.muted);
+                if (!v.muted) void v.play().catch(() => {});
+              }}
+              aria-label={muted ? 'Bật tiếng' : 'Tắt tiếng'}
+              className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+            >
+              {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+            </button>
+          )}
         </div>
 
         <div className="p-4 text-center">

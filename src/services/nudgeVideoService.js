@@ -17,6 +17,8 @@ export const nudgeVideoService = {
   toggle: (id) => api.post(`/api/admin/nudge-videos/${id}/toggle`),
   remove: (id) => api.delete(`/api/admin/nudge-videos/${id}`),
   url: (path) => mediaUrl(path),
+  /** GIF phải hiển thị bằng <img> (trình duyệt không phát GIF trong <video>). */
+  isGif: (path) => /\.gif($|\?)/i.test(path ?? ''),
 };
 
 export default nudgeVideoService;

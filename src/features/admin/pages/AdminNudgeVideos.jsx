@@ -128,13 +128,21 @@ export function AdminNudgeVideos() {
                         v.isActive ? 'bg-slate-50 ring-slate-200' : 'bg-slate-100/60 ring-slate-200 opacity-70'
                       }`}
                     >
-                      <video
-                        src={nudgeVideoService.url(v.url)}
-                        className="size-16 shrink-0 rounded-lg bg-slate-900 object-cover"
-                        muted
-                        loop
-                        playsInline
-                      />
+                      {nudgeVideoService.isGif(v.url) ? (
+                        <img
+                          src={nudgeVideoService.url(v.url)}
+                          alt={v.label || 'Video nhắc'}
+                          className="size-16 shrink-0 rounded-lg bg-slate-900 object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={nudgeVideoService.url(v.url)}
+                          className="size-16 shrink-0 rounded-lg bg-slate-900 object-cover"
+                          muted
+                          loop
+                          playsInline
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1 truncate text-[12px] font-semibold text-slate-800">
                           <Film className="size-3 shrink-0 text-slate-400" />

@@ -19,6 +19,7 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
   const [withVideo, setWithVideo] = useState(false);
   const previewRef = useRef(null);
   const [previewMuted, setPreviewMuted] = useState(true);
+  const sentRef = useRef(false);
 
   const { data: videos = [] } = useQuery({
     queryKey: ['nudge-videos'],
@@ -83,30 +84,41 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
         {preview && (
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
             <div className="relative">
-              <video
-                ref={previewRef}
-                src={nudgeVideoService.url(preview)}
-                className={`w-full rounded-lg bg-slate-900 object-cover transition ${withVideo ? '' : 'opacity-50'}`}
-                style={{ maxHeight: '32vh' }}
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const v = previewRef.current;
-                  if (!v) return;
-                  v.muted = !v.muted;
-                  setPreviewMuted(v.muted);
-                  if (!v.muted) void v.play().catch(() => {});
-                }}
-                aria-label={previewMuted ? 'Bật tiếng' : 'Tắt tiếng'}
-                className="absolute bottom-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-slate-900/55 text-white backdrop-blur"
-              >
-                {previewMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-              </button>
+              {nudgeVideoService.isGif(preview) ? (
+                <img
+                  src={nudgeVideoService.url(preview)}
+                  alt="Xem trước video nhắc"
+                  className={`w-full rounded-lg bg-slate-900 object-cover transition ${withVideo ? '' : 'opacity-50'}`}
+                  style={{ maxHeight: '32vh' }}
+                />
+              ) : (
+                <video
+                  ref={previewRef}
+                  src={nudgeVideoService.url(preview)}
+                  className={`w-full rounded-lg bg-slate-900 object-cover transition ${withVideo ? '' : 'opacity-50'}`}
+                  style={{ maxHeight: '32vh' }}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              )}
+              {!nudgeVideoService.isGif(preview) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = previewRef.current;
+                    if (!v) return;
+                    v.muted = !v.muted;
+                    setPreviewMuted(v.muted);
+                    if (!v.muted) void v.play().catch(() => {});
+                  }}
+                  aria-label={previewMuted ? 'Bật tiếng' : 'Tắt tiếng'}
+                  className="absolute bottom-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                >
+                  {previewMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                </button>
+              )}
             </div>
 
             <div className="mt-2 flex items-center gap-2">
@@ -133,7 +145,12 @@ export function NudgeSheet({ name, onClose, onSend, sending }) {
         )}
 
         <button
-          onClick={() => onSend?.({ kind, message: message.trim(), sendVideo: Boolean(preview) && withVideo })}
+          onClick={() => {
+            // Chặn bấm liên tục: mỗi lần mở hộp chỉ gửi một lần.
+            if (sending || sentRef.current) return;
+            sentRef.current = true;
+            onSend?.({ kind, message: message.trim(), sendVideo: Boolean(preview) && withVideo });
+          }}
           disabled={sending}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-water-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-water-700 disabled:opacity-60"
         >
