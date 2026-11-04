@@ -88,7 +88,12 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[70] flex flex-col justify-end bg-slate-900/40 backdrop-blur-[2px]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
