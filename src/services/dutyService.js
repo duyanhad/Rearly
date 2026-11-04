@@ -22,6 +22,19 @@ export const dutyService = {
   },
 
   update: (id, payload) => api.put(`/api/duties/${id}`, payload),
+  /** Giao nhiều nhiệm vụ một lần: dùng chung giờ bắt đầu / nhắc trước / hạn và nội dung kèm. */
+  createMany: ({ titles, note, startsAtUtc, remindBeforeMin, dueAtUtc, text, files, voiceDurationMs }) => {
+    const form = new FormData();
+    (titles ?? []).forEach((t) => form.append('titles', t));
+    form.append('note', note ?? '');
+    form.append('startsAtUtc', new Date(startsAtUtc).toISOString());
+    form.append('remindBeforeMin', String(remindBeforeMin ?? 10));
+    form.append('dueAtUtc', new Date(dueAtUtc).toISOString());
+    if (text) form.append('text', text);
+    if (voiceDurationMs) form.append('voiceDurationMs', String(voiceDurationMs));
+    (files ?? []).forEach((file) => form.append('files', file));
+    return api.post('/api/duties/batch', form);
+  },
   remove: (id) => api.delete(`/api/duties/${id}`),
   /** Người nhận bấm "đã nhận nhiệm vụ" → thôi kêu lặp. */
   accept: (id) => api.post(`/api/duties/${id}/accept`),
