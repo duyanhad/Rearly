@@ -219,7 +219,7 @@ export function DutyCreatePage() {
         )}
       </div>
 
-      <div className="mt-3 flex items-center gap-2 px-3 pb-2">
+      <div className="mt-3 flex items-center gap-2 px-3 pb-2 pr-16 sm:pr-3">
         <button
           type="button"
           onClick={() => navigate(-1)}
