@@ -6,6 +6,7 @@ export function statusMeta(duty) {
     return { label: 'Chờ duyệt', tone: 'bg-amber-50 text-amber-700 ring-amber-200' };
   if (duty.status === 'rejected')
     return { label: 'Chưa đạt · làm lại', tone: 'bg-rose-50 text-rose-700 ring-rose-200' };
+  if (duty.needsAccept) return { label: 'Chờ nhận việc', tone: 'bg-violet-50 text-violet-700 ring-violet-200' };
   if (duty.overdue) return { label: 'Quá hạn', tone: 'bg-rose-50 text-rose-700 ring-rose-200' };
   return { label: 'Chờ báo cáo', tone: 'bg-water-50 text-water-700 ring-water-200' };
 }

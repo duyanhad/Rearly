@@ -6,6 +6,7 @@ import { RadialMenu } from './RadialMenu';
 import { m } from 'framer-motion';
 import { QuickReportSheet } from '../components/QuickReportSheet';
 import { VoiceNoteSheet } from '../features/voice/components/VoiceNoteSheet';
+import { DutySheet } from '../features/duties/components/DutySheet';
 import { mediaUrl } from '../services/apiClient';
 import { socialService } from '../services/socialService';
 const tabs = [{
@@ -29,6 +30,7 @@ export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [dutyOpen, setDutyOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -77,7 +79,7 @@ export function BottomNav() {
     icon: ClipboardList,
     onClick: () => {
       setMenuOpen(false);
-      navigate('/duties');
+      setDutyOpen(true);
     }
   }];
   return <>
@@ -99,6 +101,7 @@ export function BottomNav() {
 
       {reportOpen && <QuickReportSheet onClose={() => setReportOpen(false)} />}
       {voiceOpen && <VoiceNoteSheet onClose={() => setVoiceOpen(false)} />}
+      {dutyOpen && <DutySheet onClose={() => setDutyOpen(false)} />}
     </>;
 }
 function TabItem({

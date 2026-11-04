@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CalendarClock, Check, ClipboardList, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
+import { BellRing, CalendarClock, Check, ClipboardList, Pencil, Send, Trash2, X, XCircle } from 'lucide-react';
 import { Avatar } from '../../../components/Avatar';
 import { ImageLightbox } from '../../../components/ImageLightbox';
 import { useToast } from '../../../components/Toast';
@@ -12,9 +12,33 @@ import { dueLabel, statusMeta } from './dutyStatus';
 
 const emptyMedia = { text: '', files: [], voice: null };
 
+const REMIND_OPTIONS = [0, 5, 10, 15, 30, 60];
+
+const toLocalInput = (iso) => {
+  const d = iso ? new Date(iso) : new Date(Date.now() + 3600_000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/** Bảng "giờ bắt đầu / hạn" có nhãn rõ ràng để không bị lẫn hai mốc. */
+function TimeField({ label, hint, value, onChange }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-water-400"
+      />
+      {hint && <span className="mt-0.5 block text-[10px] text-slate-400">{hint}</span>}
+    </label>
+  );
+}
+
 /**
- * Tạo nhiệm vụ mới (người giao): tên, mô tả, hạn báo cáo và nội dung gửi kèm tuỳ chọn.
- * `duty` có giá trị = đang sửa nhiệm vụ đã giao (chỉ đổi tên/mô tả/hạn).
+ * Tạo nhiệm vụ mới (người giao): tên, mô tả, giờ bắt đầu, nhắc trước, hạn báo cáo và nội dung kèm.
+ * `duty` có giá trị = đang sửa nhiệm vụ đã giao (chỉ đổi thông tin, không đổi tệp đính kèm).
  */
 export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
   const toast = useToast();
@@ -23,23 +47,29 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
 
   const [title, setTitle] = useState(duty?.title ?? '');
   const [note, setNote] = useState(duty?.note ?? '');
-  const [due, setDue] = useState(() => {
-    const base = duty?.dueAtUtc ? new Date(duty.dueAtUtc) : new Date(Date.now() + 2 * 3600_000);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}T${pad(base.getHours())}:${pad(base.getMinutes())}`;
-  });
+  const [start, setStart] = useState(() => toLocalInput(duty?.startsAtUtc));
+  const [remindBeforeMin, setRemindBeforeMin] = useState(duty?.remindBeforeMin ?? 10);
+  const [due, setDue] = useState(() => toLocalInput(duty?.dueAtUtc ?? new Date(Date.now() + 3 * 3600_000).toISOString()));
   const [media, setMedia] = useState(emptyMedia);
 
   const save = useMutation({
     mutationFn: async () => {
       if (editing) {
-        return dutyService.update(duty.id, { title: title.trim(), note, dueAtUtc: new Date(due).toISOString() });
+        return dutyService.update(duty.id, {
+          title: title.trim(),
+          note,
+          startsAtUtc: new Date(start).toISOString(),
+          remindBeforeMin,
+          dueAtUtc: new Date(due).toISOString(),
+        });
       }
       const files = [...media.files];
       if (media.voice) files.push(new File([media.voice.blob], `voice-${Date.now()}.webm`, { type: media.voice.blob.type }));
       return dutyService.create({
         title: title.trim(),
         note,
+        startsAtUtc: new Date(start).toISOString(),
+        remindBeforeMin,
         dueAtUtc: new Date(due).toISOString(),
         text: media.text,
         files,
@@ -48,7 +78,7 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
     },
     onSuccess: async (res) => {
       await qc.invalidateQueries({ queryKey: ['duties'] });
-      toast.show(editing ? 'Đã cập nhật nhiệm vụ' : 'Đã giao nhiệm vụ', editing ? '' : 'Người kia nhận thông báo ngay.');
+      toast.show(editing ? 'Đã cập nhật nhiệm vụ' : 'Đã giao nhiệm vụ', editing ? '' : 'Người kia được báo tới khi bấm nhận.');
       onSaved?.(res.data);
       onClose();
     },
@@ -110,16 +140,26 @@ export function DutyCreateSheet({ partner, duty, onClose, onSaved }) {
           />
         </label>
 
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <TimeField label="Giờ bắt đầu" value={start} onChange={(e) => setStart(e.target.value)} />
+          <TimeField label="Hạn báo cáo" hint="phải sau giờ bắt đầu" value={due} onChange={(e) => setDue(e.target.value)} />
+        </div>
+
         <label className="mt-2 block">
           <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <CalendarClock className="size-3.5" /> Hạn báo cáo
+            <BellRing className="size-3.5" /> Nhắc trước giờ bắt đầu
           </span>
-          <input
-            type="datetime-local"
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
+          <select
+            value={remindBeforeMin}
+            onChange={(e) => setRemindBeforeMin(Number(e.target.value))}
             className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-water-400"
-          />
+          >
+            {REMIND_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {m === 0 ? 'Không nhắc sớm' : `${m} phút trước`}
+              </option>
+            ))}
+          </select>
         </label>
 
         {!editing && (
@@ -200,10 +240,20 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
     onError: (err) => toast.show('Không xoá được', errorMessage(err)),
   });
 
+  const accept = useMutation({
+    mutationFn: () => dutyService.accept(duty.id),
+    onSuccess: async () => {
+      await refresh();
+      toast.show('Đã nhận nhiệm vụ', 'Hệ thống thôi nhắc và báo cho người giao.');
+      onClose();
+    },
+    onError: (err) => toast.show('Chưa nhận được', errorMessage(err)),
+  });
+
   const assignMedia = duty.media.filter((m) => m.side === 'assign');
   const reports = duty.media.filter((m) => m.side === 'report');
   const attempts = [...new Set(reports.map((m) => m.attempt))].sort((a, b) => b - a);
-  const canReport = !duty.mine && duty.status !== 'approved';
+  const canReport = !duty.mine && duty.status !== 'approved' && !duty.needsAccept;
   const canReview = duty.mine && duty.status === 'submitted';
 
   const mediaBlock = (items) => (
@@ -269,9 +319,31 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
             <p className="truncate text-[12px] font-semibold text-slate-800">
               {duty.mine ? `Bạn giao cho ${duty.assigneeName}` : `${duty.assignerName} giao cho bạn`}
             </p>
-            <p className="truncate text-[11px] text-slate-500">Hạn {dueLabel(duty.dueAtUtc)}</p>
+            <p className="truncate text-[11px] text-slate-500">
+              Bắt đầu {dueLabel(duty.startsAtUtc)} · hạn {dueLabel(duty.dueAtUtc)}
+            </p>
+            {duty.remindBeforeMin > 0 && (
+              <p className="truncate text-[10px] text-slate-400">Nhắc trước {duty.remindBeforeMin} phút</p>
+            )}
           </div>
         </div>
+
+        {duty.needsAccept && (
+          <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+            <p className="text-[12px] font-semibold text-amber-800">Bạn chưa nhận nhiệm vụ này</p>
+            <p className="mt-0.5 text-[11px] text-amber-700">
+              App sẽ nhắc liên tục cho tới khi bạn bấm nhận.
+            </p>
+            <button
+              type="button"
+              onClick={() => accept.mutate()}
+              disabled={accept.isPending}
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-amber-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
+            </button>
+          </div>
+        )}
 
         {assignMedia.length > 0 && (
           <div className="mt-3">

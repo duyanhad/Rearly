@@ -8,10 +8,12 @@ export const dutyService = {
   list: (box = 'mine') => api.get('/api/duties', { params: { box } }),
   detail: (id) => api.get(`/api/duties/${id}`),
 
-  create: ({ title, note, dueAtUtc, text, files, voiceDurationMs }) => {
+  create: ({ title, note, startsAtUtc, remindBeforeMin, dueAtUtc, text, files, voiceDurationMs }) => {
     const form = new FormData();
     form.append('title', title);
     form.append('note', note ?? '');
+    form.append('startsAtUtc', new Date(startsAtUtc).toISOString());
+    form.append('remindBeforeMin', String(remindBeforeMin ?? 10));
     form.append('dueAtUtc', new Date(dueAtUtc).toISOString());
     if (text) form.append('text', text);
     if (voiceDurationMs) form.append('voiceDurationMs', String(voiceDurationMs));
@@ -21,6 +23,8 @@ export const dutyService = {
 
   update: (id, payload) => api.put(`/api/duties/${id}`, payload),
   remove: (id) => api.delete(`/api/duties/${id}`),
+  /** Người nhận bấm "đã nhận nhiệm vụ" → thôi kêu lặp. */
+  accept: (id) => api.post(`/api/duties/${id}/accept`),
 
   report: ({ id, note, text, files, voiceDurationMs }) => {
     const form = new FormData();

@@ -203,6 +203,19 @@ export function RealtimeBridge() {
       void queryClient.invalidateQueries({ queryKey: ['duties'] });
     };
     connection.on('ReceiveDuty', onDuty);
+
+    // Kêu lặp cho tới khi người nhận bấm "đã nhận nhiệm vụ".
+    const onDutyRing = (payload) => {
+      toast.show(payload?.title ?? '📋 Nhận nhiệm vụ đi!', payload?.body ?? '');
+      playChime('normal');
+      vibrate('normal');
+      void showSystemNotification(payload?.title ?? '📋 Nhận nhiệm vụ đi!', payload?.body ?? '', 'normal', {
+        force: true,
+        tag: 'dearly-duty-ring',
+      });
+      void queryClient.invalidateQueries({ queryKey: ['duties'] });
+    };
+    connection.on('ReceiveDutyRing', onDutyRing);
     connection.on('ReceiveMessage', onMessage);
     connection.on('ReceiveReaction', onReaction);
     connection.on('ReceiveMessageUpdate', onMessageUpdate);
@@ -217,6 +230,7 @@ export function RealtimeBridge() {
       connection.off('ReceiveSleepFull', onSleepFull);
       connection.off('ReceiveHabitReminder', onHabitReminder);
       connection.off('ReceiveDuty', onDuty);
+      connection.off('ReceiveDutyRing', onDutyRing);
       connection.off('ReceiveMessage', onMessage);
       connection.off('ReceiveReaction', onReaction);
       connection.off('ReceiveMessageUpdate', onMessageUpdate);
