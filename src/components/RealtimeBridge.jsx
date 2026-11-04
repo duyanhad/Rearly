@@ -214,6 +214,8 @@ export function RealtimeBridge() {
         tag: 'dearly-duty-ring',
       });
       void queryClient.invalidateQueries({ queryKey: ['duties'] });
+      // Mở lại màn hình nhận nhiệm vụ (cùng kiểu màn nhận lời nhắn thoại).
+      window.dispatchEvent(new CustomEvent('dearly:duty-ring', { detail: payload }));
     };
     connection.on('ReceiveDutyRing', onDutyRing);
     connection.on('ReceiveMessage', onMessage);
