@@ -527,35 +527,42 @@ export function PartnerPage() {
                 const pending = pendingCountOf(c.id);
                 return (
                   <li key={c.id}>
-                    <div className="flex items-center gap-1 rounded-xl bg-slate-50 pr-1.5 transition hover:bg-water-50">
-                      <button
-                        type="button"
-                        onClick={() => {
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        setSelectedId(c.id);
+                        setKindFilter('water');
+                        lastTotal.current = null;
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
                           setSelectedId(c.id);
                           setKindFilter('water');
                           lastTotal.current = null;
-                        }}
-                        className="flex min-w-0 flex-1 items-center gap-3 p-3 text-left"
-                      >
-                        <Avatar url={c.avatarUrl} name={displayName(c)} size="lg" />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-1.5">
-                            <span className="truncate font-semibold text-slate-800">{displayName(c)}</span>
-                            {pending > 0 && (
-                              <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700">
-                                {pending}
-                              </span>
-                            )}
-                          </span>
-                          {c.nickname && (
-                            <span className="block truncate text-[11px] text-slate-400">{c.fullName}</span>
+                        }
+                      }}
+                      className="flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 p-3 transition hover:bg-water-50 focus-visible:ring-2 focus-visible:ring-water-300"
+                    >
+                      <Avatar url={c.avatarUrl} name={displayName(c)} size="lg" />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate font-semibold text-slate-800">{displayName(c)}</span>
+                          {pending > 0 && (
+                            <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700">
+                              {pending}
+                            </span>
                           )}
                         </span>
-                        <ChevronRight className="size-5 shrink-0 text-slate-300" />
-                      </button>
+                        {c.nickname && (
+                          <span className="block truncate text-[11px] text-slate-400">{c.fullName}</span>
+                        )}
+                      </span>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setNudgeTarget(c);
                           setNudgeOpen(true);
                         }}
@@ -565,6 +572,7 @@ export function PartnerPage() {
                       >
                         <BellRing className="size-4" />
                       </button>
+                      <ChevronRight className="size-5 shrink-0 text-slate-300" />
                     </div>
                   </li>
                 );
