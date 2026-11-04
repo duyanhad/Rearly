@@ -22,10 +22,13 @@ export function DutyAcceptOverlay() {
   const { data: mine = [] } = useQuery({
     queryKey: ['duties', 'mine'],
     queryFn: async () => (await dutyService.list('mine')).data,
-    refetchInterval: 20_000,
+    refetchInterval: 15_000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
-  const duty = mine.find((d) => d.needsAccept && !dismissed.includes(d.id)) ?? null;
+  const duty =
+    mine.find((d) => d.needsAccept && d.status === 'open' && !dismissed.includes(d.id)) ?? null;
 
   // Server kêu lại mỗi phút → mở lại màn hình dù người dùng đã đóng trước đó.
   useEffect(() => {
