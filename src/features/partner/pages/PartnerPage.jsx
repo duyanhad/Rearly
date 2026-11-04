@@ -300,12 +300,14 @@ export function PartnerPage() {
   const pendingCountOf = (userId) => proofs.filter((p) => p.userId === userId).length;
 
   // Chuông: chọn loại nhắc (nước/bữa ăn/thuốc…) + lời nhắn, gửi realtime/push.
+  // `nudgeTarget` = người được nhắc (mở được từ danh sách lẫn từ nhà của người đó).
+  const [nudgeTarget, setNudgeTarget] = useState(null);
   const [nudgeOpen, setNudgeOpen] = useState(false);
   const nudge = useMutation({
     mutationFn: async ({ userId, kind, message }) => socialService.nudge(userId, { kind, message }),
     onSuccess: () => {
       setNudgeOpen(false);
-      toast.show('Đã gửi nhắc nhở', `${selected ? displayName(selected) : 'Khách'} sẽ nhận thông báo ngay.`);
+      toast.show('Đã gửi nhắc nhở', `${nudgeTarget ? displayName(nudgeTarget) : 'Khách'} sẽ nhận thông báo ngay.`);
     },
     onError: (err) => toast.show('Không gửi được', errorMessage(err)),
   });
@@ -404,6 +406,17 @@ export function PartnerPage() {
   );
 
   // ---------- Bước 1: danh sách người được nhờ duyệt ----------
+  // Chuông nhắc nhở dùng chung cho cả 2 màn (danh sách và nhà của người đó).
+  const nudgeSheet =
+    nudgeOpen && nudgeTarget ? (
+      <NudgeSheet
+        name={displayName(nudgeTarget)}
+        sending={nudge.isPending}
+        onClose={() => setNudgeOpen(false)}
+        onSend={({ kind, message }) => nudge.mutate({ userId: nudgeTarget.id, kind, message })}
+      />
+    ) : null;
+
   if (!selected) {
     return (
       <div className="space-y-5">
@@ -416,6 +429,18 @@ export function PartnerPage() {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Người duyệt ảnh của tôi</p>
               <p className="truncate text-sm font-semibold text-slate-800">{myPartner.fullName}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setNudgeTarget(myPartner);
+                setNudgeOpen(true);
+              }}
+              aria-label={`Nhắc ${myPartner.fullName}`}
+              title="Nhắc nhở"
+              className="grid size-9 shrink-0 place-items-center rounded-full text-water-700 transition hover:bg-water-50"
+            >
+              <BellRing className="size-4" />
+            </button>
             <ShieldCheck className="size-4 shrink-0 text-water-600" />
           </section>
         )}
@@ -502,37 +527,52 @@ export function PartnerPage() {
                 const pending = pendingCountOf(c.id);
                 return (
                   <li key={c.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedId(c.id);
-                        setKindFilter('water');
-                        lastTotal.current = null;
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl bg-slate-50 p-3 text-left transition hover:bg-water-50"
-                    >
-                      <Avatar url={c.avatarUrl} name={displayName(c)} size="lg" />
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate font-semibold text-slate-800">{displayName(c)}</span>
-                          {pending > 0 && (
-                            <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700">
-                              {pending}
-                            </span>
+                    <div className="flex items-center gap-1 rounded-xl bg-slate-50 pr-1.5 transition hover:bg-water-50">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedId(c.id);
+                          setKindFilter('water');
+                          lastTotal.current = null;
+                        }}
+                        className="flex min-w-0 flex-1 items-center gap-3 p-3 text-left"
+                      >
+                        <Avatar url={c.avatarUrl} name={displayName(c)} size="lg" />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className="truncate font-semibold text-slate-800">{displayName(c)}</span>
+                            {pending > 0 && (
+                              <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700">
+                                {pending}
+                              </span>
+                            )}
+                          </span>
+                          {c.nickname && (
+                            <span className="block truncate text-[11px] text-slate-400">{c.fullName}</span>
                           )}
                         </span>
-                        {c.nickname && (
-                          <span className="block truncate text-[11px] text-slate-400">{c.fullName}</span>
-                        )}
-                      </span>
-                      <ChevronRight className="size-5 shrink-0 text-slate-300" />
-                    </button>
+                        <ChevronRight className="size-5 shrink-0 text-slate-300" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNudgeTarget(c);
+                          setNudgeOpen(true);
+                        }}
+                        aria-label={`Nhắc ${displayName(c)}`}
+                        title="Nhắc nhở"
+                        className="grid size-9 shrink-0 place-items-center rounded-full text-water-700 transition hover:bg-white"
+                      >
+                        <BellRing className="size-4" />
+                      </button>
+                    </div>
                   </li>
                 );
               })}
             </ul>
           </section>
         )}
+        {nudgeSheet}
       </div>
     );
   }
@@ -704,7 +744,10 @@ export function PartnerPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setNudgeOpen(true)}
+                onClick={() => {
+                  setNudgeTarget(selected);
+                  setNudgeOpen(true);
+                }}
                 disabled={!selected}
                 className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-water-700 hover:bg-water-50 disabled:opacity-50"
                 aria-label={`Nhắc ${displayName(selected)}`}
@@ -1028,14 +1071,7 @@ export function PartnerPage() {
       </section>
 
       {/* Dialog đặt biệt hiệu */}
-      {nudgeOpen && selected && (
-        <NudgeSheet
-          name={displayName(selected)}
-          sending={nudge.isPending}
-          onClose={() => setNudgeOpen(false)}
-          onSend={({ kind, message }) => nudge.mutate({ userId: selected.id, kind, message })}
-        />
-      )}
+      {nudgeSheet}
       {renaming && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
