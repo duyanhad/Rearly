@@ -99,7 +99,7 @@ export function DutySheet({ onClose, initialTab = 'mine' }) {
         aria-modal="true"
         aria-label="Nhiệm vụ"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[86vh] flex-col rounded-t-3xl bg-cream-50 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-2xl"
+        className="flex max-h-[86vh] w-full flex-col rounded-t-3xl bg-cream-50 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-3xl"
       >
         <div className="flex items-start gap-2 px-4 pt-4">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-water-50 text-water-700 ring-1 ring-water-100">
