@@ -23,12 +23,12 @@ export function dueLabel(iso) {
   return `${time} ${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}`;
 }
 
-/** Đếm ngược ngắn gọn cho thẻ nhiệm vụ (còn 2 giờ / quá 3 giờ). */
+/** Đếm ngược ngắn gọn cho thẻ nhiệm vụ (còn 2 giờ 5 phút / quá 3 giờ). */
 export function dueCountdown(iso) {
   const diffMs = new Date(iso).getTime() - Date.now();
-  const abs = Math.abs(diffMs);
-  const hours = Math.floor(abs / 3600_000);
-  const minutes = Math.round((abs % 3600_000) / 60_000);
+  const totalMinutes = Math.round(Math.abs(diffMs) / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
   const text = hours > 0 ? `${hours} giờ${minutes ? ` ${minutes} phút` : ''}` : `${minutes} phút`;
   return diffMs >= 0 ? `còn ${text}` : `quá ${text}`;
 }

@@ -253,8 +253,7 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
   const assignMedia = duty.media.filter((m) => m.side === 'assign');
   const reports = duty.media.filter((m) => m.side === 'report');
   const attempts = [...new Set(reports.map((m) => m.attempt))].sort((a, b) => b - a);
-  const canReport = !duty.mine && duty.status !== 'approved' && !duty.needsAccept;
-  const canReview = duty.mine && duty.status === 'submitted';
+  const canReport = !duty.mine && duty.status !== 'approved' && !duty.needsAccept;  const canReview = duty.mine && duty.status === 'submitted';
 
   const mediaBlock = (items) => (
     <div className="mt-1.5 space-y-1.5">
@@ -328,12 +327,10 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
           </div>
         </div>
 
-        {duty.needsAccept && (
+        {duty.needsAccept && !duty.mine && (
           <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
             <p className="text-[12px] font-semibold text-amber-800">Bạn chưa nhận nhiệm vụ này</p>
-            <p className="mt-0.5 text-[11px] text-amber-700">
-              App sẽ nhắc liên tục cho tới khi bạn bấm nhận.
-            </p>
+            <p className="mt-0.5 text-[11px] text-amber-700">App sẽ nhắc liên tục cho tới khi bạn bấm nhận.</p>
             <button
               type="button"
               onClick={() => accept.mutate()}
@@ -343,6 +340,12 @@ export function DutyDetailSheet({ duty, onClose, onEdit }) {
               <Check className="size-4" /> {accept.isPending ? 'Đang nhận…' : 'Đã nhận nhiệm vụ'}
             </button>
           </div>
+        )}
+
+        {duty.needsAccept && duty.mine && (
+          <p className="mt-2 rounded-xl bg-amber-50 px-2.5 py-2 text-[11px] text-amber-700 ring-1 ring-amber-200">
+            Đang chờ {duty.assigneeName} bấm “Đã nhận nhiệm vụ” — app sẽ nhắc họ mỗi phút.
+          </p>
         )}
 
         {assignMedia.length > 0 && (
