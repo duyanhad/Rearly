@@ -40,7 +40,7 @@ const groups = [
 const allItems = groups.flatMap((g) => g.items);
 
 const linkClass = (isActive) =>
-  `group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
+  `group relative flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors ${
     isActive
       ? 'bg-cream-100 text-water-800 shadow-sm'
       : 'text-cream-100/75 hover:bg-white/10 hover:text-white'
@@ -80,7 +80,7 @@ export function AdminLayout() {
         </div>
 
         {/* Menu: mobile cuộn ngang, desktop chia nhóm dọc */}
-        <nav className="flex gap-1 overflow-x-auto bg-[#3a1119] px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-1 md:flex-col md:gap-4 md:overflow-y-auto md:bg-transparent md:px-3 md:pb-4 md:pt-1">
+        <nav className="flex gap-1 overflow-x-auto bg-[#3a1119] pl-2 pr-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-1 md:flex-col md:gap-4 md:overflow-y-auto md:bg-transparent md:px-3 md:pb-4 md:pt-1">
           {groups.map((group, index) => (
             <div key={group.title} className="md:contents">
               {index > 0 && (
