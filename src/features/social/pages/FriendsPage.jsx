@@ -55,6 +55,8 @@ export function FriendsPage() {
     enabled: query.trim().length >= 2,
     queryFn: async () => (await userService.search(query)).data
   });
+  // Người đang duyệt ảnh cho mình (nếu có) — muốn đổi thì phải huỷ liên kết này trước.
+  const lockedPartner = friends.find((f) => f.isMyPartner) ?? null;
   const invalidate = () => {
     for (const key of ['friends', 'search', 'follow-requests', 'feed', 'following']) void queryClient.invalidateQueries({
       queryKey: [key]
@@ -224,12 +226,25 @@ export function FriendsPage() {
                       onClick={() => {
                         if (Date.now() - lastPartnerToggle.current < 800) return;
                         lastPartnerToggle.current = Date.now();
+                        // Đang có partner duyệt thì phải huỷ liên kết cũ trước khi mời người mới.
+                        if (lockedPartner && !f.isMyPartner && !f.isPendingPartner) {
+                          toast.show('Đang có partner duyệt', `Huỷ liên kết với ${lockedPartner.nickname || lockedPartner.fullName} trước khi chọn người duyệt mới.`);
+                          return;
+                        }
                         if (f.isMyPartner && !window.confirm(`Bỏ ${f.nickname || f.fullName} làm người duyệt? Người này sẽ không còn thấy phiếu của bạn để duyệt.`)) return;
                         partner.mutate(f.isMyPartner || f.isPendingPartner ? null : f.id);
                       }}
-                      disabled={partner.isPending}
-                      title={f.isMyPartner ? 'Bỏ chọn người duyệt' : f.isPendingPartner ? 'Đang chờ người này đồng ý · bấm để huỷ lời mời' : 'Chọn người này duyệt ảnh & nhắc uống nước'}
-                      className={`rounded-lg p-1.5 disabled:opacity-50 ${f.isMyPartner ? 'bg-water-600 text-white' : f.isPendingPartner ? 'bg-amber-100 text-amber-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
+                      disabled={partner.isPending || (Boolean(lockedPartner) && !f.isMyPartner && !f.isPendingPartner)}
+                      title={
+                        lockedPartner && !f.isMyPartner && !f.isPendingPartner
+                          ? `Đang có partner duyệt là ${lockedPartner.nickname || lockedPartner.fullName} — huỷ liên kết trước`
+                          : f.isMyPartner
+                            ? 'Bỏ chọn người duyệt'
+                            : f.isPendingPartner
+                              ? 'Đang chờ người này đồng ý · bấm để huỷ lời mời'
+                              : 'Chọn người này duyệt ảnh & nhắc uống nước'
+                      }
+                      className={`rounded-lg p-1.5 disabled:opacity-40 ${f.isMyPartner ? 'bg-water-600 text-white' : f.isPendingPartner ? 'bg-amber-100 text-amber-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
                       aria-label={f.isMyPartner ? `Bỏ ${f.fullName} khỏi làm người duyệt` : f.isPendingPartner ? `Huỷ lời mời ${f.fullName} duyệt ảnh` : `Chọn ${f.fullName} làm người duyệt`}
                       aria-pressed={f.isMyPartner}
                     >
